@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SHORT_TEXT
+  LONG_TEXT
+  FILE_UPLOAD
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum AttemptStatus {
+  STARTED
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  CANCELED
+}
+
+enum CorrectionStatus {
+  PENDING
+  REVIEWED
+  RETURNED
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdQuestions Question[]
+  createdExams     Exam[]
+  corrections      ManualCorrection[]
+}
+
+model Discipline {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classGroups ClassGroup[]
+  questions   Question[]
+  exams       Exam[]
+}
+
+model ClassGroup {
+  id           String      @id @default(uuid())
+  code         String      @unique
+  name         String
+  disciplineId String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  discipline Discipline? @relation(fields: [disciplineId], references: [id])
+  exams      Exam[]
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  label     String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+
+  questions QuestionTag[]
+}
+
+model Question {
+  id                String         @id @default(uuid())
+  code              String         @unique
+  type              QuestionType
+  title             String?
+  disciplineId      String
+  subject           String
+  topic             String?
+  difficulty        Difficulty
+  context           String?
+  statement         String
+  expectedFeedback  String?
+  answerExplanation String?
+  defaultWeight     Decimal        @default(1)
+  status            QuestionStatus @default(DRAFT)
+  createdBy         String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  archivedAt        DateTime?
+
+  discipline Discipline    @relation(fields: [disciplineId], references: [id])
+  author     AdminUser     @relation(fields: [createdBy], references: [id])
+  options    QuestionOption[]
+  tags       QuestionTag[]
+  exams      ExamQuestion[]
+  answers    Answer[]
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid())
+  questionId String
+  label      String
+  content    String
+  isCorrect  Boolean
+  position   Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  Answer[]
+}
+
+model QuestionTag {
+  questionId String
+  tagId      String
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, tagId])
+}
+
+model Exam {
+  id                    String     @id @default(uuid())
+  title                 String
+  description           String?
+  disciplineId          String
+  targetClassGroupId    String?
+  instructions          String
+  startAt               DateTime
+  endAt                 DateTime
+  timeLimitMinutes      Int?
+  status                ExamStatus @default(DRAFT)
+  showScoreAfterSubmit  Boolean    @default(false)
+  maxAttempts           Int        @default(1)
+  randomizeQuestions    Boolean    @default(false)
+  randomizeOptions      Boolean    @default(false)
+  createdBy             String
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  discipline Discipline        @relation(fields: [disciplineId], references: [id])
+  classGroup ClassGroup?       @relation(fields: [targetClassGroupId], references: [id])
+  author     AdminUser         @relation(fields: [createdBy], references: [id])
+  sections   ExamSection[]
+  questions  ExamQuestion[]
+  publicLinks PublicExamLink[]
+  attempts    StudentAttempt[]
+}
+
+model ExamSection {
+  id          String @id @default(uuid())
+  examId      String
+  title       String
+  description String?
+  position    Int
+
+  exam      Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questions ExamQuestion[]
+}
+
+model ExamQuestion {
+  id           String   @id @default(uuid())
+  examId        String
+  questionId    String
+  sectionId     String?
+  position      Int
+  customWeight  Decimal?
+  isRequired    Boolean  @default(true)
+
+  exam     Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id])
+  section  ExamSection? @relation(fields: [sectionId], references: [id])
+
+  @@unique([examId, position])
+}
+
+model PublicExamLink {
+  id        String   @id @default(uuid())
+  examId    String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  validFrom DateTime?
+  validUntil DateTime?
+  maxUses   Int?
+  usedCount Int      @default(0)
+  closedAt  DateTime?
+  createdAt DateTime @default(now())
+
+  exam     Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  attempts StudentAttempt[]
+}
+
+model StudentAttempt {
+  id              String        @id @default(uuid())
+  examId          String
+  publicLinkId    String
+  attemptNumber   Int
+  status          AttemptStatus @default(STARTED)
+  startedAt       DateTime      @default(now())
+  submittedAt     DateTime?
+  autoScore       Decimal       @default(0)
+  manualScore     Decimal       @default(0)
+  finalScore      Decimal       @default(0)
+  durationSeconds Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  exam       Exam                    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  publicLink PublicExamLink          @relation(fields: [publicLinkId], references: [id])
+  profile    StudentProfileSnapshot?
+  answers    Answer[]
+  feedback   FeedbackFormResponse?
+
+  @@index([examId, status])
+}
+
+model StudentProfileSnapshot {
+  id                 String @id @default(uuid())
+  attemptId          String @unique
+  studentName        String
+  classGroupName     String
+  disciplineInformed String
+
+  attempt StudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
+
+model Answer {
+  id               String  @id @default(uuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  shortTextAnswer  String?
+  longTextAnswer   String?
+  isCorrect        Boolean?
+  autoScore        Decimal @default(0)
+  manualScore      Decimal @default(0)
+  finalScore       Decimal @default(0)
+  confidenceLevel  Int
+  answeredAt       DateTime @default(now())
+
+  attempt      StudentAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question     Question          @relation(fields: [questionId], references: [id])
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+  attachments  AnswerAttachment[]
+  correction   ManualCorrection?
+
+  @@unique([attemptId, questionId])
+}
+
+model AnswerAttachment {
+  id              String   @id @default(uuid())
+  answerId        String
+  storageProvider String
+  filePath        String
+  originalName    String
+  mimeType        String
+  sizeBytes       BigInt
+  createdAt       DateTime @default(now())
+
+  answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+}
+
+model ManualCorrection {
+  id         String           @id @default(uuid())
+  answerId   String           @unique
+  reviewerId String
+  score      Decimal
+  comment    String?
+  status     CorrectionStatus @default(PENDING)
+  reviewedAt DateTime?
+
+  answer   Answer    @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  reviewer AdminUser @relation(fields: [reviewerId], references: [id])
+}
+
+model FeedbackFormResponse {
+  id                    String  @id @default(uuid())
+  attemptId             String  @unique
+  clarityScore          Int
+  difficultyScore       Int
+  timeAdequacyScore     Int
+  contentAlignmentScore Int
+  selfAssessmentScore   Int
+  confusingQuestionFlag Boolean
+  openComment           String?
+  createdAt             DateTime @default(now())
+
+  attempt StudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
