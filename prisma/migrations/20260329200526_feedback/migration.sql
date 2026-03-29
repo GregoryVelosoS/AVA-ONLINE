@@ -1,0 +1,4 @@
+-- Esta migration intermediária ficou obsoleta.
+-- Os campos `supportCode`, `studyTopics`, `studyLinks` e `complementaryNotes`
+-- passam a ser criados corretamente em `20260329214000_expand_question_feedback_and_visual_support`.
+-- Mantida como no-op para preservar o histórico local sem quebrar a cadeia de migrations.

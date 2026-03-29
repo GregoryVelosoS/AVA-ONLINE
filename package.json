@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "prisma generate",
+    "prebuild": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts"
@@ -17,9 +20,11 @@
     "cookie": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
     "next": "15.2.4",
+    "pdf-lib": "^1.17.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "recharts": "^2.15.1",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {

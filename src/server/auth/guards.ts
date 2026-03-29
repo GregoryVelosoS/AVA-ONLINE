@@ -12,3 +12,9 @@ export async function requireAdminSession() {
 
   return session;
 }
+
+export async function getOptionalAdminSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  return verifyAdminToken(token);
+}

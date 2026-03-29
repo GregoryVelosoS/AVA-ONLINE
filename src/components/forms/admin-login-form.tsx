@@ -34,9 +34,9 @@ export function AdminLoginForm() {
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <div>
-        <label className="mb-1 block text-sm font-medium">E-mail</label>
+        <label className="field-label">E-mail</label>
         <input
-          className="w-full rounded border border-slate-300 px-3 py-2"
+          className="input-base"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           type="email"
@@ -44,17 +44,17 @@ export function AdminLoginForm() {
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">Senha</label>
+        <label className="field-label">Senha</label>
         <input
-          className="w-full rounded border border-slate-300 px-3 py-2"
+          className="input-base"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           type="password"
           required
         />
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <button className="w-full rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-60" disabled={loading}>
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+      <button className="btn-primary w-full" disabled={loading}>
         {loading ? "Entrando..." : "Entrar"}
       </button>
     </form>

@@ -69,6 +69,7 @@ async function main() {
     create: {
       id: "demo-exam-id",
       title: "Prova Diagnóstica de Lógica",
+      publicCode: "DEMO2026",
       description: "Versão de demonstração",
       disciplineId: discipline.id,
       instructions: "Leia com atenção e selecione uma alternativa.",
@@ -80,7 +81,7 @@ async function main() {
         create: [{ questionId: question.id, position: 1 }]
       },
       publicLinks: {
-        create: [{ slug: "demo", isActive: true }]
+        create: [{ slug: "demo2026", isActive: true }]
       }
     }
   });
@@ -89,8 +90,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

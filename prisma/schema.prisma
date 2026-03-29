@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,6 +24,12 @@ enum QuestionStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+enum VisualSupportType {
+  NONE
+  ASSET
+  CODE
 }
 
 enum ExamStatus {
@@ -47,6 +53,41 @@ enum CorrectionStatus {
   RETURNED
 }
 
+enum IssueReportType {
+  SUGGESTION
+  BUG
+  QUESTION
+}
+
+enum IssueReportStatus {
+  NEW
+  IN_REVIEW
+  RESOLVED
+  ARCHIVED
+}
+
+enum FeedbackQuestionKey {
+  GENERAL_DIFFICULTY
+  DIFFICULT_CONTENTS
+  COMMON_DIFFICULTY_TYPE
+  SELF_PERFORMANCE
+  EXPLANATION_CLARITY
+  CLASS_PACE
+  EXERCISE_USEFULNESS
+  SOLO_CONFIDENCE
+  HELPFUL_CLASS_FORMATS
+  NEEDS_REVIEW
+  TOOL_DIFFICULTIES
+  FINAL_COMMENT
+}
+
+enum FeedbackAnswerType {
+  SINGLE_CHOICE
+  MULTI_SELECT
+  LINEAR_SCALE
+  OPEN_TEXT
+}
+
 model AdminUser {
   id           String   @id @default(uuid())
   name         String
@@ -60,6 +101,8 @@ model AdminUser {
   createdQuestions Question[]
   createdExams     Exam[]
   corrections      ManualCorrection[]
+  issueReports     IssueReport[]
+  reportShares     ReportShareLink[]
 }
 
 model Discipline {
@@ -106,8 +149,20 @@ model Question {
   difficulty        Difficulty
   context           String?
   statement         String
+  visualSupportType VisualSupportType @default(NONE)
+  supportCode       String?
   expectedFeedback  String?
   answerExplanation String?
+  studyTopics       String?
+  studyLinks        String?
+  referencePlaylist String?
+  complementaryNotes String?
+  supportImagePath  String?
+  supportImageName  String?
+  supportImageMime  String?
+  supportFilePath   String?
+  supportFileName   String?
+  supportFileMime   String?
   defaultWeight     Decimal        @default(1)
   status            QuestionStatus @default(DRAFT)
   createdBy         String
@@ -148,6 +203,7 @@ model QuestionTag {
 model Exam {
   id                    String     @id @default(uuid())
   title                 String
+  publicCode            String     @unique
   description           String?
   disciplineId          String
   targetClassGroupId    String?
@@ -171,6 +227,8 @@ model Exam {
   questions  ExamQuestion[]
   publicLinks PublicExamLink[]
   attempts    StudentAttempt[]
+  reportShares ReportShareLink[]
+  issueReports IssueReport[]
 }
 
 model ExamSection {
@@ -236,6 +294,7 @@ model StudentAttempt {
   profile    StudentProfileSnapshot?
   answers    Answer[]
   feedback   FeedbackFormResponse?
+  issueReports IssueReport[]
 
   @@index([examId, status])
 }
@@ -310,6 +369,61 @@ model FeedbackFormResponse {
   confusingQuestionFlag Boolean
   openComment           String?
   createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   attempt StudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  answers FeedbackAnswer[]
+}
+
+model FeedbackAnswer {
+  id              String             @id @default(uuid())
+  feedbackId      String
+  questionKey     FeedbackQuestionKey
+  answerType      FeedbackAnswerType
+  valueText       String?
+  valueScale      Int?
+  selectedOptions String?
+  createdAt       DateTime           @default(now())
+
+  feedback FeedbackFormResponse @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackId, questionKey])
+}
+
+model ReportShareLink {
+  id         String   @id @default(uuid())
+  examId      String
+  token      String   @unique
+  label      String?
+  isActive   Boolean  @default(true)
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  exam   Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  author AdminUser @relation(fields: [createdBy], references: [id])
+}
+
+model IssueReport {
+  id               String            @id @default(uuid())
+  type             IssueReportType
+  status           IssueReportStatus @default(NEW)
+  title            String
+  description      String
+  sourcePath       String
+  sourceUrl        String?
+  contextLabel     String?
+  screenshotPath   String?
+  screenshotName   String?
+  screenshotMime   String?
+  adminUserId      String?
+  examId           String?
+  attemptId        String?
+  internalNotes    String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  adminUser AdminUser?      @relation(fields: [adminUserId], references: [id])
+  exam      Exam?           @relation(fields: [examId], references: [id])
+  attempt   StudentAttempt? @relation(fields: [attemptId], references: [id])
 }

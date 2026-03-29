@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { answerSchema } from "@/server/validators/schemas";
 import { scoreObjectiveAnswer, recomputeAttemptScore } from "@/server/services/scoring";
+import { isAttemptTimeExpired } from "@/server/services/attempts";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -11,9 +12,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const attempt = await prisma.studentAttempt.findUnique({ where: { id: parsed.data.attemptId } });
+  const attempt = await prisma.studentAttempt.findUnique({
+    where: { id: parsed.data.attemptId },
+    include: {
+      exam: true
+    }
+  });
+
   if (!attempt || attempt.status === "SUBMITTED") {
     return NextResponse.json({ error: "Tentativa inválida" }, { status: 400 });
+  }
+
+  if (isAttemptTimeExpired(attempt)) {
+    return NextResponse.json({ error: "O tempo da prova se esgotou." }, { status: 409 });
   }
 
   const answer = await prisma.answer.upsert({
@@ -39,6 +50,15 @@ export async function POST(request: NextRequest) {
       confidenceLevel: parsed.data.confidenceLevel
     }
   });
+
+  if (attempt.status === "STARTED") {
+    await prisma.studentAttempt.update({
+      where: { id: parsed.data.attemptId },
+      data: {
+        status: "IN_PROGRESS"
+      }
+    });
+  }
 
   await scoreObjectiveAnswer(answer.id);
   await recomputeAttemptScore(parsed.data.attemptId);

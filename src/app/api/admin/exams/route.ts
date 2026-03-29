@@ -2,20 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
 import { examSchema } from "@/server/validators/schemas";
+import { normalizePublicCode } from "@/lib/exam-status";
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+function buildPublicSlug(publicCode: string) {
+  return normalizePublicCode(publicCode).toLowerCase();
 }
 
 export async function GET() {
   await requireAdminSession();
-  const data = await prisma.exam.findMany({ include: { questions: true, publicLinks: true } });
+
+  const data = await prisma.exam.findMany({
+    include: {
+      discipline: true,
+      classGroup: true,
+      questions: {
+        include: {
+          question: {
+            include: {
+              discipline: true
+            }
+          }
+        },
+        orderBy: { position: "asc" }
+      },
+      publicLinks: true,
+      attempts: {
+        select: {
+          id: true,
+          status: true
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
   return NextResponse.json(data);
 }
 
@@ -28,29 +48,58 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  if (parsed.data.status === "PUBLISHED" && parsed.data.questionIds.length === 0) {
+    return NextResponse.json({ error: "Uma prova publicada precisa ter pelo menos uma questão." }, { status: 400 });
+  }
+
+  const publicCode = normalizePublicCode(parsed.data.publicCode);
+  const existingCode = await prisma.exam.findUnique({
+    where: { publicCode }
+  });
+
+  if (existingCode) {
+    return NextResponse.json({ error: "Já existe uma prova com esse código público." }, { status: 409 });
+  }
+
+  const startAt = parsed.data.startAt ? new Date(parsed.data.startAt) : new Date();
+  const endAt = parsed.data.endAt
+    ? new Date(parsed.data.endAt)
+    : new Date(startAt.getTime() + 1000 * 60 * 60 * 24 * 30);
+
   const created = await prisma.exam.create({
     data: {
       title: parsed.data.title,
-      description: parsed.data.description,
+      publicCode,
+      description: parsed.data.description || null,
       disciplineId: parsed.data.disciplineId,
-      instructions: parsed.data.instructions,
-      startAt: new Date(parsed.data.startAt),
-      endAt: new Date(parsed.data.endAt),
+      targetClassGroupId: parsed.data.targetClassGroupId || null,
+      instructions: parsed.data.instructions || "Leia com atenção e responda conforme orientado pelo professor.",
+      startAt,
+      endAt,
+      timeLimitMinutes: parsed.data.timeLimitMinutes || null,
       status: parsed.data.status,
       maxAttempts: parsed.data.maxAttempts,
       createdBy: session.sub,
-      questions: {
-        create: parsed.data.questionIds.map((questionId, index) => ({
-          questionId,
-          position: index + 1
-        }))
-      },
+      questions:
+        parsed.data.questionIds.length > 0
+          ? {
+              create: parsed.data.questionIds.map((questionId, index) => ({
+                questionId,
+                position: index + 1
+              }))
+            }
+          : undefined,
       publicLinks: {
         create: {
-          slug: `${slugify(parsed.data.title)}-${Date.now()}`,
+          slug: buildPublicSlug(publicCode),
           isActive: parsed.data.status === "PUBLISHED"
         }
       }
+    },
+    include: {
+      discipline: true,
+      classGroup: true,
+      publicLinks: true
     }
   });
 
