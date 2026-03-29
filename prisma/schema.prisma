@@ -66,6 +66,11 @@ enum IssueReportStatus {
   ARCHIVED
 }
 
+enum UserRole {
+  ADM
+  VISUALIZADOR
+}
+
 enum FeedbackQuestionKey {
   GENERAL_DIFFICULTY
   DIFFICULT_CONTENTS
@@ -93,6 +98,7 @@ model AdminUser {
   name         String
   email        String   @unique
   passwordHash String
+  role         UserRole @default(ADM)
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())

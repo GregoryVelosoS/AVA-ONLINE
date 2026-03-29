@@ -73,7 +73,7 @@ export function AdminDashboardHome({
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
         <Link className="surface-panel p-5 text-center font-semibold text-slate-900 hover:border-red-200 hover:bg-red-50/40" href="/admin/exams">
           Gerenciar provas
         </Link>
@@ -91,6 +91,9 @@ export function AdminDashboardHome({
         </Link>
         <Link className="surface-panel p-5 text-center font-semibold text-slate-900 hover:border-red-200 hover:bg-red-50/40" href="/admin/disciplines">
           Disciplinas
+        </Link>
+        <Link className="surface-panel p-5 text-center font-semibold text-slate-900 hover:border-red-200 hover:bg-red-50/40" href="/admin/users">
+          Usuários
         </Link>
       </section>
     </div>

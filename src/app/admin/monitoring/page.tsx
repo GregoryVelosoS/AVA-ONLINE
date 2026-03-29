@@ -26,7 +26,7 @@ export default async function MonitoringPage({ searchParams }: PageProps) {
           <h1 className="section-title">Monitoramento em Tempo Real</h1>
           <p className="section-subtitle">Acompanhe a execução atual das provas, quem está em andamento e quem já concluiu.</p>
         </div>
-        <AdminNav current="/admin/monitoring" />
+        <AdminNav current="/admin/monitoring" role="ADM" />
       </header>
 
       <section className="surface-panel space-y-4 p-5 md:p-6">

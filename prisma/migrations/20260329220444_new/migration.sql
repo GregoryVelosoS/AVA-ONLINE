@@ -1,20 +1,7 @@
--- AlterTable
-ALTER TABLE `feedbackanswer` MODIFY `valueText` VARCHAR(191) NULL,
-    MODIFY `selectedOptions` VARCHAR(191) NULL;
-
--- AlterTable
-ALTER TABLE `feedbackformresponse` ALTER COLUMN `updatedAt` DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE `issuereport` MODIFY `description` VARCHAR(191) NOT NULL,
-    MODIFY `internalNotes` VARCHAR(191) NULL,
-    ALTER COLUMN `updatedAt` DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE `question` MODIFY `supportCode` VARCHAR(191) NULL,
-    MODIFY `studyTopics` VARCHAR(191) NULL,
-    MODIFY `studyLinks` VARCHAR(191) NULL,
-    MODIFY `complementaryNotes` VARCHAR(191) NULL;
-
--- AlterTable
-ALTER TABLE `reportsharelink` ALTER COLUMN `updatedAt` DROP DEFAULT;
+-- Esta migration intermediária ficou obsoleta.
+-- O conteúdo anterior tentava alterar tabelas que só passam a existir
+-- em migrations posteriores, como `FeedbackAnswer`, `IssueReport`
+-- e `ReportShareLink`, o que quebrava a aplicação no shadow database.
+--
+-- Mantida como no-op para preservar o histórico local sem quebrar
+-- a cadeia de migrations do Prisma.

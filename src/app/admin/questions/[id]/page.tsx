@@ -71,7 +71,7 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
           <h1 className="section-title">Editar questão</h1>
           <p className="section-subtitle">Ajuste manualmente os dados, o apoio visual e o conteúdo da questão.</p>
         </div>
-        <AdminNav current="/admin/questions" />
+        <AdminNav current="/admin/questions" role="ADM" />
       </header>
 
       <div className="flex justify-end">

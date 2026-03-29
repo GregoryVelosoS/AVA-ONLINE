@@ -29,7 +29,7 @@ export default async function AdminQuestionsPage() {
           <h1 className="section-title">Banco de Questões</h1>
           <p className="section-subtitle">Criação manual, edição individual e importação em lote com modelo padrão.</p>
         </div>
-        <AdminNav current="/admin/questions" />
+        <AdminNav current="/admin/questions" role="ADM" />
       </header>
 
       {disciplines.length === 0 ? (

@@ -1,4 +1,4 @@
-import { getAdminOrRedirect } from "@/lib/admin-session";
+import { getReportsUserOrRedirect } from "@/lib/admin-session";
 import { prisma } from "@/server/db/prisma";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ExamAnalyticsDashboard } from "@/components/admin/exam-analytics-dashboard";
@@ -20,7 +20,7 @@ type PageProps = {
 };
 
 export default async function ReportsPage({ searchParams }: PageProps) {
-  await getAdminOrRedirect();
+  const session = await getReportsUserOrRedirect();
   const filters = await searchParams;
 
   const [analytics, disciplines, classGroups] = await Promise.all([
@@ -42,7 +42,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
           <h1 className="section-title">Relatórios Consolidados</h1>
           <p className="section-subtitle">Analise resultados finais, feedback pedagógico, rankings, fragilidades e exportações da prova.</p>
         </div>
-        <AdminNav current="/admin/reports" />
+        <AdminNav current="/admin/reports" role={session.role} />
       </header>
 
       <section className="surface-panel space-y-5 p-5 md:p-6">
@@ -149,7 +149,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         </form>
       </section>
 
-      {analytics.selectedExam ? (
+      {analytics.selectedExam && session.role === "ADM" ? (
         <ReportActionsPanel
           examId={analytics.selectedExam.id}
           examTitle={analytics.selectedExam.title}

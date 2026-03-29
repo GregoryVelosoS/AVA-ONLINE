@@ -1,12 +1,36 @@
 import { cookies } from "next/headers";
-import { verifyAdminToken } from "./jwt";
+import { UserRole, verifyAdminToken } from "./jwt";
 
-export async function requireAdminSession() {
+async function readSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
-  const session = verifyAdminToken(token);
+  return verifyAdminToken(token);
+}
 
-  if (!session) {
+export async function requireAdminSession() {
+  const session = await readSession();
+
+  if (!session || session.role !== "ADM") {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return session;
+}
+
+export async function requireReportsSession() {
+  const session = await readSession();
+
+  if (!session || !["ADM", "VISUALIZADOR"].includes(session.role)) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return session;
+}
+
+export async function requireSessionByRole(allowedRoles: UserRole[]) {
+  const session = await readSession();
+
+  if (!session || !allowedRoles.includes(session.role)) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -14,7 +38,5 @@ export async function requireAdminSession() {
 }
 
 export async function getOptionalAdminSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("admin_token")?.value;
-  return verifyAdminToken(token);
+  return readSession();
 }

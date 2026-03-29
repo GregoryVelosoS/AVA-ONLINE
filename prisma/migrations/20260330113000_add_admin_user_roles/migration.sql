@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `AdminUser`
+ADD COLUMN `role` ENUM('ADM', 'VISUALIZADOR') NOT NULL DEFAULT 'ADM';

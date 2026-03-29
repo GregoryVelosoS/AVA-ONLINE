@@ -27,7 +27,7 @@ export default async function AdminExamsPage() {
           <h1 className="section-title">Provas</h1>
           <p className="section-subtitle">Gerencie o ciclo de vida completo das provas com código público, ativação, desativação e exclusão.</p>
         </div>
-        <AdminNav current="/admin/exams" />
+        <AdminNav current="/admin/exams" role="ADM" />
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const links = [
+type UserRole = "ADM" | "VISUALIZADOR";
+
+const adminLinks = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/exams", label: "Provas" },
   { href: "/admin/questions", label: "Questões" },
@@ -13,12 +15,23 @@ const links = [
   { href: "/admin/class-groups", label: "Turmas" },
   { href: "/admin/monitoring", label: "Monitoramento" },
   { href: "/admin/reports", label: "Relatórios" },
-  { href: "/admin/issues", label: "Sugestões" }
+  { href: "/admin/issues", label: "Sugestões" },
+  { href: "/admin/users", label: "Usuários" }
 ];
 
-export function AdminNav({ current }: { current?: string }) {
+const viewerLinks = [{ href: "/admin/reports", label: "Relatórios" }];
+
+export function AdminNav({
+  current,
+  role = "ADM"
+}: {
+  current?: string;
+  role?: UserRole;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  const links = useMemo(() => (role === "VISUALIZADOR" ? viewerLinks : adminLinks), [role]);
 
   async function logout() {
     setLoading(true);
@@ -51,7 +64,12 @@ export function AdminNav({ current }: { current?: string }) {
           })}
         </nav>
 
-        <button className="btn-danger self-start border-red-400/40 bg-white text-red-700 hover:bg-red-50" disabled={loading} onClick={logout} type="button">
+        <button
+          className="btn-danger self-start border-red-400/40 bg-white text-red-700 hover:bg-red-50"
+          disabled={loading}
+          onClick={logout}
+          type="button"
+        >
           {loading ? "Saindo..." : "Logout"}
         </button>
       </div>

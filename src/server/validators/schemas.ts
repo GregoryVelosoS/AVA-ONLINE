@@ -9,6 +9,23 @@ export const loginSchema = z.object({
   password: z.string().min(6)
 });
 
+export const userRoleSchema = z.enum(["ADM", "VISUALIZADOR"]);
+
+export const userCreateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(160),
+  role: userRoleSchema,
+  password: z.string().min(6).max(120)
+});
+
+export const userUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(160),
+  role: userRoleSchema,
+  isActive: z.boolean(),
+  password: z.string().min(6).max(120).optional().or(z.literal(""))
+});
+
 export const questionOptionSchema = z.object({
   label: z.string().min(1),
   content: z.string().min(1),

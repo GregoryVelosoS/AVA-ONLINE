@@ -17,7 +17,7 @@ export default async function AdminDisciplinesPage() {
           <h1 className="section-title">Disciplinas</h1>
           <p className="section-subtitle">Cadastre, pesquise, edite e exclua as disciplinas usadas nas provas e questões.</p>
         </div>
-        <AdminNav current="/admin/disciplines" />
+        <AdminNav current="/admin/disciplines" role="ADM" />
       </header>
 
       <CatalogManager endpoint="/api/admin/disciplines" itemLabel="Disciplina" items={disciplines} />

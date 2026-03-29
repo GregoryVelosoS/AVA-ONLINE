@@ -2,10 +2,13 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
+export type UserRole = "ADM" | "VISUALIZADOR";
+
 export type AdminSession = {
   sub: string;
+  name: string;
   email: string;
-  role: "ADMIN";
+  role: UserRole;
 };
 
 export function signAdminToken(payload: AdminSession): string {

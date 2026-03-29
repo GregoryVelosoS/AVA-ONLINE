@@ -69,7 +69,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
           <h1 className="section-title">Editar prova</h1>
           <p className="section-subtitle">Ajuste dados principais, duração e monte a sequência de questões da avaliação.</p>
         </div>
-        <AdminNav current="/admin/exams" />
+        <AdminNav current="/admin/exams" role="ADM" />
       </header>
 
       <ExamEditor

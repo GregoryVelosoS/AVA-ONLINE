@@ -22,9 +22,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Credenciais inválidas" }, { status: 401 });
   }
 
-  const token = signAdminToken({ sub: admin.id, email: admin.email, role: "ADMIN" });
+  const token = signAdminToken({
+    sub: admin.id,
+    name: admin.name,
+    email: admin.email,
+    role: admin.role
+  });
 
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({
+    ok: true,
+    role: admin.role,
+    redirectTo: admin.role === "VISUALIZADOR" ? "/admin/reports" : "/admin/dashboard"
+  });
   response.cookies.set("admin_token", token, {
     httpOnly: true,
     sameSite: "lax",

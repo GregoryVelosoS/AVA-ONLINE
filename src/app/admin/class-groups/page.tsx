@@ -25,7 +25,7 @@ export default async function AdminClassGroupsPage() {
           <h1 className="section-title">Turmas</h1>
           <p className="section-subtitle">Cadastre, pesquise, edite e exclua as turmas usadas nas provas e na identificação do aluno.</p>
         </div>
-        <AdminNav current="/admin/class-groups" />
+        <AdminNav current="/admin/class-groups" role="ADM" />
       </header>
 
       <CatalogManager

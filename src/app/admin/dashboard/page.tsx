@@ -42,7 +42,7 @@ export default async function AdminDashboardPage() {
             <p className="section-subtitle">Resumo da operação atual, última prova aplicada e atalhos rápidos para gestão.</p>
           </div>
         </div>
-        <AdminNav current="/admin/dashboard" />
+        <AdminNav current="/admin/dashboard" role="ADM" />
       </header>
 
       <AdminDashboardHome

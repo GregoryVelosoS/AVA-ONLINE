@@ -37,7 +37,7 @@ export default async function AdminIssuesPage({ searchParams }: PageProps) {
           <h1 className="section-title">Sugestões e Reportes</h1>
           <p className="section-subtitle">Visualize, filtre e acompanhe os registros enviados a partir de qualquer página do sistema.</p>
         </div>
-        <AdminNav current="/admin/issues" />
+        <AdminNav current="/admin/issues" role="ADM" />
       </header>
 
       <section className="surface-panel space-y-4 p-5">
