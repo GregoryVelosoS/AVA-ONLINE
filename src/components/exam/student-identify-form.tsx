@@ -14,6 +14,7 @@ type ResolvedExam = {
   description: string | null;
   disciplineId: string;
   disciplineName: string;
+  targetClassGroupName?: string | null;
   timeLimitMinutes?: number | null;
   instructions?: string | null;
 };
@@ -31,13 +32,16 @@ export function StudentIdentifyForm({
   const [publicCode, setPublicCode] = useState(initialExam?.publicCode ?? "");
   const [resolvedExam, setResolvedExam] = useState<ResolvedExam | null>(initialExam ?? null);
   const [studentName, setStudentName] = useState("");
-  const [classGroupName, setClassGroupName] = useState(classGroups[0]?.name ?? "");
+  const [classGroupName, setClassGroupName] = useState(initialExam?.targetClassGroupName ?? classGroups[0]?.name ?? "");
   const [disciplineInformed, setDisciplineInformed] = useState(
     initialExam?.disciplineName ?? disciplines.find((discipline) => discipline.id === initialExam?.disciplineId)?.name ?? disciplines[0]?.name ?? ""
   );
   const [error, setError] = useState<string | null>(null);
   const [loadingLookup, setLoadingLookup] = useState(false);
   const [loadingStart, setLoadingStart] = useState(false);
+
+  const hasClassGroupOptions = classGroups.length > 0;
+  const hasDisciplineOptions = disciplines.length > 0;
 
   const selectedDisciplineName = useMemo(
     () => disciplines.find((discipline) => discipline.id === resolvedExam?.disciplineId)?.name ?? disciplineInformed,
@@ -62,13 +66,18 @@ export function StudentIdentifyForm({
 
     if (!response.ok || !payload.exam) {
       setResolvedExam(null);
-      setError(payload.error || "Não foi possível validar o código informado.");
+      setError(payload.error || "Nao foi possivel validar o codigo informado.");
       setLoadingLookup(false);
       return;
     }
 
     setResolvedExam(payload.exam);
     setDisciplineInformed(payload.exam.disciplineName);
+
+    if (!hasClassGroupOptions) {
+      setClassGroupName(payload.exam.targetClassGroupName ?? "");
+    }
+
     setLoadingLookup(false);
   }
 
@@ -78,7 +87,7 @@ export function StudentIdentifyForm({
     setLoadingStart(true);
 
     if (!resolvedExam) {
-      setError("Valide o código da prova antes de continuar.");
+      setError("Valide o codigo da prova antes de continuar.");
       setLoadingStart(false);
       return;
     }
@@ -96,7 +105,7 @@ export function StudentIdentifyForm({
 
     if (!response.ok) {
       const payload = (await response.json()) as { error?: string };
-      setError(payload.error || "Não foi possível iniciar a prova.");
+      setError(payload.error || "Nao foi possivel iniciar a prova.");
       setLoadingStart(false);
       return;
     }
@@ -110,7 +119,7 @@ export function StudentIdentifyForm({
       {!resolvedExam ? (
         <form className="space-y-5" onSubmit={validateCode}>
           <div>
-            <label className="field-label">Código da prova</label>
+            <label className="field-label">Codigo da prova</label>
             <input
               className="input-base"
               placeholder="Ex.: LOGICA2026"
@@ -131,9 +140,9 @@ export function StudentIdentifyForm({
           <div className="rounded-[28px] border border-red-100 bg-red-50/80 p-5">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Prova validada</p>
             <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{resolvedExam.title}</h3>
-            <p className="mt-2 text-sm text-slate-600">{resolvedExam.description || "Siga para a identificação e início da prova."}</p>
+            <p className="mt-2 text-sm text-slate-600">{resolvedExam.description || "Siga para a identificacao e inicio da prova."}</p>
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
-              Código {resolvedExam.publicCode} · {resolvedExam.timeLimitMinutes ? `${resolvedExam.timeLimitMinutes} min` : "sem limite"}
+              Codigo {resolvedExam.publicCode} · {resolvedExam.timeLimitMinutes ? `${resolvedExam.timeLimitMinutes} min` : "sem limite"}
             </p>
             {resolvedExam.instructions ? <p className="mt-3 text-sm text-slate-700">{resolvedExam.instructions}</p> : null}
           </div>
@@ -152,25 +161,46 @@ export function StudentIdentifyForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="field-label">Turma</label>
-              <select className="input-base" required value={classGroupName} onChange={(event) => setClassGroupName(event.target.value)}>
-                {classGroups.map((classGroup) => (
-                  <option key={classGroup.id} value={classGroup.name}>
-                    {classGroup.name}
-                  </option>
-                ))}
-              </select>
+              {hasClassGroupOptions ? (
+                <select className="input-base" required value={classGroupName} onChange={(event) => setClassGroupName(event.target.value)}>
+                  {classGroups.map((classGroup) => (
+                    <option key={classGroup.id} value={classGroup.name}>
+                      {classGroup.name}
+                    </option>
+                  ))}
+                </select>
+              ) : resolvedExam.targetClassGroupName ? (
+                <input className="input-base" readOnly required value={classGroupName} />
+              ) : (
+                <input
+                  className="input-base"
+                  placeholder="Informe sua turma"
+                  required
+                  value={classGroupName}
+                  onChange={(event) => setClassGroupName(event.target.value)}
+                />
+              )}
+              {!hasClassGroupOptions ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  Nenhuma turma foi carregada do cadastro. Informe a turma manualmente para nao bloquear o acesso.
+                </p>
+              ) : null}
             </div>
 
             <div>
               <label className="field-label">Disciplina</label>
-              <select className="input-base" required value={disciplineInformed} onChange={(event) => setDisciplineInformed(event.target.value)}>
-                {disciplines.map((discipline) => (
-                  <option key={discipline.id} value={discipline.name}>
-                    {discipline.name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs text-slate-500">Sugestão da prova: {selectedDisciplineName}</p>
+              {hasDisciplineOptions ? (
+                <select className="input-base" required value={disciplineInformed} onChange={(event) => setDisciplineInformed(event.target.value)}>
+                  {disciplines.map((discipline) => (
+                    <option key={discipline.id} value={discipline.name}>
+                      {discipline.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input className="input-base" readOnly required value={disciplineInformed} />
+              )}
+              <p className="mt-2 text-xs text-slate-500">Sugestao da prova: {selectedDisciplineName}</p>
             </div>
           </div>
 
@@ -178,7 +208,7 @@ export function StudentIdentifyForm({
 
           <div className="flex flex-wrap gap-3">
             <button className="btn-secondary" onClick={() => setResolvedExam(null)} type="button">
-              Informar outro código
+              Informar outro codigo
             </button>
             <button className="btn-primary flex-1" disabled={loadingStart} type="submit">
               {loadingStart ? "Iniciando..." : "Iniciar prova"}

@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db/prisma";
 import { StudentIdentifyForm } from "@/components/exam/student-identify-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [disciplines, classGroups] = await Promise.all([
     prisma.discipline.findMany({ orderBy: { name: "asc" } }),

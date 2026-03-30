@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     where: { publicCode },
     include: {
       discipline: true,
+      classGroup: true,
       publicLinks: true
     }
   });
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
       publicCode: exam.publicCode,
       disciplineId: exam.disciplineId,
       disciplineName: exam.discipline.name,
+      targetClassGroupName: exam.classGroup?.name ?? null,
       timeLimitMinutes: exam.timeLimitMinutes,
       description: exam.description,
       instructions: exam.instructions

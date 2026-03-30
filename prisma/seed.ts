@@ -23,10 +23,25 @@ async function main() {
 
   const discipline = await prisma.discipline.upsert({
     where: { code: "LOG" },
-    update: {},
+    update: {
+      name: "Logica de Programacao"
+    },
     create: {
       code: "LOG",
-      name: "Lógica de Programação"
+      name: "Logica de Programacao"
+    }
+  });
+
+  const classGroup = await prisma.classGroup.upsert({
+    where: { code: "DDS1" },
+    update: {
+      name: "DDS 1",
+      disciplineId: discipline.id
+    },
+    create: {
+      code: "DDS1",
+      name: "DDS 1",
+      disciplineId: discipline.id
     }
   });
 
@@ -44,10 +59,10 @@ async function main() {
       type: QuestionType.MULTIPLE_CHOICE,
       disciplineId: discipline.id,
       subject: "Operadores",
-      topic: "Aritméticos",
+      topic: "Aritmeticos",
       difficulty: Difficulty.EASY,
-      context: "No VisualG, calcular resto da divisão de 15 por 4.",
-      statement: "Qual expressão retorna o resto correto?",
+      context: "No VisualG, calcular resto da divisao de 15 por 4.",
+      statement: "Qual expressao retorna o resto correto?",
       defaultWeight: 1,
       status: QuestionStatus.ACTIVE,
       createdBy: admin.id,
@@ -70,14 +85,21 @@ async function main() {
 
   const exam = await prisma.exam.upsert({
     where: { id: "demo-exam-id" },
-    update: {},
+    update: {
+      title: "Prova Diagnostica de Logica",
+      publicCode: "DEMO2026",
+      disciplineId: discipline.id,
+      targetClassGroupId: classGroup.id,
+      status: ExamStatus.PUBLISHED
+    },
     create: {
       id: "demo-exam-id",
-      title: "Prova Diagnóstica de Lógica",
+      title: "Prova Diagnostica de Logica",
       publicCode: "DEMO2026",
-      description: "Versão de demonstração",
+      description: "Versao de demonstracao",
       disciplineId: discipline.id,
-      instructions: "Leia com atenção e selecione uma alternativa.",
+      targetClassGroupId: classGroup.id,
+      instructions: "Leia com atencao e selecione uma alternativa.",
       startAt: new Date("2025-01-01T00:00:00.000Z"),
       endAt: new Date("2030-01-01T00:00:00.000Z"),
       status: ExamStatus.PUBLISHED,
@@ -91,7 +113,7 @@ async function main() {
     }
   });
 
-  console.log("Seed concluído", { admin: admin.email, exam: exam.title });
+  console.log("Seed concluido", { admin: admin.email, exam: exam.title, classGroup: classGroup.name });
 }
 
 main()
