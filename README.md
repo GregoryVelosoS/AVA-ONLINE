@@ -6,7 +6,8 @@ O projeto possui:
 - area publica do aluno com acesso por codigo da prova;
 - area administrativa protegida com perfis `ADM` e `VISUALIZADOR`;
 - monitoramento em tempo real por polling;
-- relatorios consolidados com exportacao em PDF;
+- resultado final do aluno com exportacao individual em PDF;
+- relatorios consolidados com exportacao visual em PDF;
 - link compartilhavel de visualizacao de relatorios;
 - modulo global de sugestoes e reporte de problemas;
 - uploads compativeis com ambiente local e com Vercel Blob em producao.
@@ -27,6 +28,8 @@ O projeto possui:
 - Recharts
 - Zod
 - pdf-lib
+- html2canvas
+- jspdf
 - xlsx
 - @vercel/blob
 

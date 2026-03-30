@@ -47,7 +47,8 @@ Hoje o sistema possui quatro contextos de acesso:
 7. responde as questoes com nivel de confianca;
 8. envia a prova;
 9. responde o formulario pedagogico final;
-10. visualiza o fechamento da prova com desempenho e orientacoes.
+10. visualiza o fechamento da prova com desempenho e orientacoes;
+11. pode exportar o proprio resultado final em PDF.
 
 ## 4. Provas
 
@@ -154,7 +155,8 @@ Depois do envio, o sistema pode mostrar:
 - explicacao de resposta;
 - temas para revisao;
 - materiais sugeridos;
-- resumo final de estudo.
+- resumo final de estudo;
+- botao para exportar o resultado individual em PDF.
 
 ## 10. Dashboard admin
 
@@ -188,7 +190,7 @@ A area de relatorios concentra:
 - feedback final da turma.
 
 Tambem permite:
-- exportacao PDF;
+- exportacao PDF visual do relatorio atual, preservando cards, graficos, tabelas e blocos analiticos;
 - link compartilhavel;
 - acesso por perfil `VISUALIZADOR`.
 
@@ -225,11 +227,13 @@ Se quiser apresentar rapidamente:
 3. mostre a identificacao do aluno
 4. mostre a tela da prova com timer e confianca
 5. mostre a etapa final de feedback
-6. entre como `ADM`
-7. mostre dashboard, provas, relatorios e usuarios
-8. mostre um login `VISUALIZADOR`
-9. mostre o botao global de sugestoes
-10. mostre a area administrativa desses registros
+6. mostre a tela final com exportacao individual em PDF
+7. entre como `ADM`
+8. mostre dashboard, provas, relatorios e usuarios
+9. mostre a exportacao visual do PDF em relatorios
+10. mostre um login `VISUALIZADOR`
+11. mostre o botao global de sugestoes
+12. mostre a area administrativa desses registros
 
 ## 16. Resumo executivo
 

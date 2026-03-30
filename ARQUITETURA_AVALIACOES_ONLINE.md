@@ -25,6 +25,8 @@ O AVA Online e uma aplicacao web full stack para:
 - Zod
 - Recharts
 - pdf-lib
+- html2canvas
+- jspdf
 - xlsx
 - @vercel/blob
 
@@ -176,6 +178,7 @@ Responsavel por:
 
 Servicos centrais:
 - `src/server/services/analytics.ts`
+- `src/server/services/attempt-result.ts`
 - `src/server/services/monitoring.ts`
 - `src/server/services/attempts.ts`
 
@@ -204,6 +207,7 @@ Funcoes principais:
 8. aluno envia a prova
 9. aluno responde formulario final
 10. sistema mostra fechamento da prova
+11. aluno pode exportar o resultado individual em PDF
 
 ### 6.2 Fluxo do ADM
 
@@ -243,7 +247,7 @@ Mostra:
 - desempenho por questao
 - ranking
 - feedback da turma
-- exportacao PDF
+- exportacao PDF visual do container analitico atual
 - link compartilhavel
 
 ## 8. Modelo de autenticacao e autorizacao
@@ -342,6 +346,7 @@ Eles retornam:
 - `/attempt/[attemptId]`
 - `/attempt/[attemptId]/feedback`
 - `/submitted/[attemptId]`
+- `/api/public/attempts/[attemptId]/export/pdf`
 - `/viewer/reports/[token]`
 
 ### Internas
@@ -356,7 +361,40 @@ Eles retornam:
 - `/admin/issues`
 - `/admin/users`
 
-## 12. Ambientes
+## 12. Exportacoes implementadas
+
+### Resultado individual do aluno
+
+O fechamento da prova em `/submitted/[attemptId]` agora permite exportar em PDF:
+- dados gerais da tentativa
+- score e percentual
+- resultado por questao
+- resposta do aluno
+- resposta correta, quando aplicavel
+- feedback esperado
+- explicacao da resposta
+- temas e materiais para revisao
+- resumo final consolidado
+
+Implementacao principal:
+- `src/server/services/attempt-result.ts`
+- `src/app/api/public/attempts/[attemptId]/export/pdf/route.ts`
+
+### Relatorios consolidados
+
+O PDF dos relatorios nao depende mais de `window.print()` nem de uma composicao simplificada no backend.
+
+Agora a exportacao:
+- captura a area util do relatorio visivel em tela
+- preserva cards, graficos, tabelas e blocos analiticos
+- pagina automaticamente o conteudo longo
+- gera um PDF fiel ao estado atual dos filtros aplicados
+
+Implementacao principal:
+- `src/app/admin/reports/page.tsx`
+- `src/components/admin/report-actions-panel.tsx`
+
+## 13. Ambientes
 
 ### Desenvolvimento local
 
@@ -378,7 +416,7 @@ Variaveis centrais:
 - `NEXT_PUBLIC_APP_URL`
 - `BLOB_READ_WRITE_TOKEN`
 
-## 13. Documentos relacionados
+## 14. Documentos relacionados
 
 - [README.md](README.md)
 - [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)

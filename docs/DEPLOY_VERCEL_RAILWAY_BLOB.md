@@ -174,6 +174,7 @@ Se precisar, atualize a variavel e rode novo deploy.
 - informar codigo da prova
 - iniciar tentativa
 - enviar prova
+- validar a tela final com `Exportar PDF`
 
 ### Fluxo admin
 - login em `/admin/login`
@@ -181,6 +182,7 @@ Se precisar, atualize a variavel e rode novo deploy.
 - provas
 - relatorios
 - usuarios
+- exportacao visual do PDF em `/admin/reports`
 
 ### Fluxo visualizador
 - login com usuario `VISUALIZADOR`
@@ -265,4 +267,6 @@ Ao fim do processo, voce tera:
 - banco online;
 - uploads persistentes;
 - login interno funcionando;
-- relatorios e monitoramento online.
+- relatorios e monitoramento online;
+- exportacao individual do resultado do aluno;
+- exportacao visual dos relatorios em PDF.

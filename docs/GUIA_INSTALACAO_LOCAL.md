@@ -122,6 +122,7 @@ npx.cmd prisma migrate reset
 A seed cria:
 - usuario `ADM` inicial;
 - disciplina inicial;
+- turma inicial;
 - tag inicial;
 - questao exemplo;
 - prova demo com codigo publico.
@@ -182,13 +183,17 @@ Depois de subir o projeto:
 1. abra `http://localhost:3000`
 2. informe `DEMO2026`
 3. avance para identificacao do aluno
-4. abra `http://localhost:3000/admin/login`
-5. entre com o usuario seed
-6. teste:
+4. preencha nome, turma e disciplina
+5. inicie a prova
+6. finalize a prova e valide o botao `Exportar PDF` na tela final
+7. abra `http://localhost:3000/admin/login`
+8. entre com o usuario seed
+9. teste:
 - `/admin/dashboard`
 - `/admin/exams`
 - `/admin/reports`
 - `/admin/users`
+- exportacao PDF do relatorio na pagina de relatorios
 
 ## 13. Uploads no ambiente local
 
@@ -257,4 +262,4 @@ Siga esta ordem:
 6. rodar `npx prisma migrate dev`
 7. rodar `npm run prisma:seed`
 8. rodar `npm run dev`
-9. validar login, prova demo e relatorios
+9. validar login, prova demo, exportacao individual do aluno e relatorios
