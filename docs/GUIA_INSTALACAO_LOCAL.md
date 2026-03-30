@@ -1,41 +1,29 @@
-# Guia de Instalação Local
+# Guia de Instalacao Local
 
-Este documento explica, passo a passo, como instalar e rodar o projeto AVA Online localmente.
+Este documento explica, passo a passo, como instalar e rodar o AVA Online localmente.
 
-## 1. Visão geral do que você vai precisar
+## 1. Pre-requisitos
 
-Antes de iniciar, tenha instalado na máquina:
+Tenha instalado na maquina:
 - Node.js 20 ou superior
 - MySQL 8 ou superior
 - npm
 - Git
 
-Também é recomendado ter:
+Opcional, mas recomendado:
 - VS Code
-- MySQL Workbench, HeidiSQL, DBeaver ou outro cliente de banco
+- DBeaver, MySQL Workbench, HeidiSQL ou outro cliente SQL
 
-## 2. Tecnologias usadas no projeto
+## 2. Baixar o projeto
 
-O projeto roda com:
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- Prisma
-- MySQL
-
-## 3. Baixar o projeto
-
-Se o projeto ainda não estiver na sua máquina:
+Se ainda nao estiver com o projeto na maquina:
 
 ```bash
 git clone <url-do-repositorio>
 cd ava-online
 ```
 
-Se ele já estiver aberto no VS Code, basta seguir os próximos passos.
-
-## 4. Instalar dependências
+## 3. Instalar dependencias
 
 ### Linux / macOS
 ```bash
@@ -43,17 +31,13 @@ npm install
 ```
 
 ### Windows
-Se o PowerShell bloquear scripts do `npm`, use:
-
 ```powershell
 npm.cmd install
 ```
 
-## 5. Configurar o arquivo `.env`
+## 4. Configurar `.env`
 
-O projeto já possui um modelo em `.env.example`.
-
-Crie uma cópia para `.env`:
+Copie o modelo:
 
 ### Linux / macOS
 ```bash
@@ -65,32 +49,37 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-Conteúdo base esperado:
+Conteudo base:
 
 ```env
 DATABASE_URL="mysql://root:@localhost:3306/ava_online"
 JWT_SECRET="change-me-super-secret"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 UPLOAD_DIR="./uploads"
+BLOB_READ_WRITE_TOKEN=""
 ```
 
-## 6. Configurar o banco MySQL
+### O que cada variavel faz
+- `DATABASE_URL`: conexao com o MySQL
+- `JWT_SECRET`: assinatura dos tokens de login
+- `NEXT_PUBLIC_APP_URL`: URL da aplicacao
+- `UPLOAD_DIR`: pasta local de uploads em desenvolvimento
+- `BLOB_READ_WRITE_TOKEN`: storage persistente no Vercel Blob
 
-O projeto usa MySQL.
+Importante:
+- no ambiente local, `BLOB_READ_WRITE_TOKEN` pode ficar vazio;
+- sem essa variavel, o projeto usa `UPLOAD_DIR`;
+- com essa variavel, o projeto usa Vercel Blob.
 
-Você precisa:
-1. garantir que o serviço do MySQL esteja rodando;
-2. criar o banco `ava_online`;
-3. ajustar usuário e senha no `.env`.
+## 5. Criar o banco MySQL
 
-### Exemplo para criar o banco
-No MySQL:
+Crie o banco:
 
 ```sql
 CREATE DATABASE ava_online;
 ```
 
-Se seu MySQL tiver usuário e senha diferentes de `root` sem senha, ajuste a `DATABASE_URL`.
+Se seu MySQL tiver usuario e senha diferentes, ajuste a `DATABASE_URL`.
 
 Exemplo:
 
@@ -98,7 +87,7 @@ Exemplo:
 DATABASE_URL="mysql://root:minha_senha@localhost:3306/ava_online"
 ```
 
-## 7. Gerar o Prisma Client
+## 6. Gerar Prisma Client
 
 ### Linux / macOS
 ```bash
@@ -110,9 +99,7 @@ npx prisma generate
 npx.cmd prisma generate
 ```
 
-## 8. Rodar as migrations
-
-Esse passo cria todas as tabelas e estrutura o banco com base no schema atual.
+## 7. Rodar migrations
 
 ### Linux / macOS
 ```bash
@@ -124,20 +111,20 @@ npx prisma migrate dev
 npx.cmd prisma migrate dev
 ```
 
-Se quiser dar um nome manual à migration no seu ambiente:
+Se o banco local estiver inconsistente e voce puder apagar os dados de desenvolvimento:
 
 ```powershell
-npx.cmd prisma migrate dev --name init
+npx.cmd prisma migrate reset
 ```
 
-## 9. Popular o banco com dados iniciais
+## 8. Rodar a seed
 
-O projeto possui seed com:
-- usuário administrador padrão;
+A seed cria:
+- usuario `ADM` inicial;
 - disciplina inicial;
 - tag inicial;
-- questão exemplo;
-- prova demo publicada.
+- questao exemplo;
+- prova demo com codigo publico.
 
 ### Linux / macOS
 ```bash
@@ -149,7 +136,7 @@ npm run prisma:seed
 npm.cmd run prisma:seed
 ```
 
-## 10. Subir o projeto
+## 9. Subir a aplicacao
 
 ### Linux / macOS
 ```bash
@@ -161,32 +148,61 @@ npm run dev
 npm.cmd run dev
 ```
 
-Depois acesse:
-- Aplicação: `http://localhost:3000`
-- Login admin: `http://localhost:3000/admin/login`
+Acesse:
+- Aplicacao: `http://localhost:3000`
+- Login interno: `http://localhost:3000/admin/login`
 
-## 11. Credenciais iniciais
+## 10. Credenciais iniciais
 
-Após rodar a seed, você pode entrar no admin com:
+Depois da seed:
 
 - E-mail: `admin@ava.local`
 - Senha: `admin123`
 
-Também existe uma prova demo com código público:
+Prova demo:
+- Codigo publico: `DEMO2026`
 
-- `DEMO2026`
+## 11. Perfis internos
 
-## 12. Fluxo básico para validar que tudo funcionou
+Hoje o sistema possui dois perfis internos:
 
-Faça este teste rápido:
+### ADM
+- acesso total;
+- pode gerenciar provas, questoes, turmas, disciplinas, monitoramento, relatorios, sugestoes e usuarios.
 
-1. abra `http://localhost:3000`;
-2. informe o código `DEMO2026`;
-3. avance para a etapa de identificação do aluno;
-4. entre no admin em `http://localhost:3000/admin/login`;
-5. confirme se as telas de dashboard, provas, monitoramento e relatórios carregam.
+### VISUALIZADOR
+- acesso somente a relatorios;
+- nao ve menus administrativos criticos;
+- nao pode criar, editar ou excluir dados do sistema.
 
-## 13. Scripts úteis do projeto
+## 12. Teste rapido de validacao
+
+Depois de subir o projeto:
+
+1. abra `http://localhost:3000`
+2. informe `DEMO2026`
+3. avance para identificacao do aluno
+4. abra `http://localhost:3000/admin/login`
+5. entre com o usuario seed
+6. teste:
+- `/admin/dashboard`
+- `/admin/exams`
+- `/admin/reports`
+- `/admin/users`
+
+## 13. Uploads no ambiente local
+
+Sem `BLOB_READ_WRITE_TOKEN`, o sistema salva arquivos localmente em:
+
+```env
+UPLOAD_DIR="./uploads"
+```
+
+Isso atende o ambiente local.
+
+Em producao no Vercel, o recomendado e usar `BLOB_READ_WRITE_TOKEN` com Vercel Blob.
+
+## 14. Scripts uteis
 
 ```bash
 npm run dev
@@ -197,152 +213,48 @@ npm run prisma:migrate
 npm run prisma:seed
 ```
 
-## 14. Como validar em produção local antes de apresentar
+## 15. Problemas comuns
 
-Se quiser testar o build real:
+### PowerShell bloqueando `npm` ou `npx`
 
-### Linux / macOS
-```bash
-npm run build
-npm run start
-```
-
-### Windows
-```powershell
-npm.cmd run build
-npm.cmd run start
-```
-
-## 15. Estrutura principal do projeto
-
-Pastas mais importantes:
-
-- `src/app`
-  rotas, páginas e APIs do Next.js
-
-- `src/components`
-  componentes reutilizáveis de admin, aluno, dashboard e interface
-
-- `src/server`
-  serviços, validações, autenticação e acesso ao banco
-
-- `prisma`
-  schema, migrations e seed
-
-- `docs`
-  documentação do projeto
-
-## 16. Rotas principais
-
-### Públicas
-- `/`
-- `/attempt/[attemptId]`
-- `/attempt/[attemptId]/feedback`
-- `/submitted/[attemptId]`
-
-### Admin
-- `/admin/login`
-- `/admin/dashboard`
-- `/admin/exams`
-- `/admin/questions`
-- `/admin/disciplines`
-- `/admin/class-groups`
-- `/admin/monitoring`
-- `/admin/reports`
-- `/admin/issues`
-
-## 17. Problemas comuns e como resolver
-
-### 17.1 PowerShell bloqueando `npm` ou `npx`
-
-Use `npm.cmd` e `npx.cmd` em vez de `npm` e `npx`.
-
-Exemplo:
+Use:
 
 ```powershell
 npm.cmd run dev
 npx.cmd prisma migrate dev
 ```
 
-### 17.2 Erro de autenticação no MySQL
+### Erro de autenticacao no MySQL
 
-Se aparecer erro de credencial:
-- confira usuário e senha do MySQL;
-- revise a `DATABASE_URL`;
-- confirme se o banco `ava_online` existe;
-- confirme se o MySQL está ativo na porta `3306`.
+Confira:
+- usuario
+- senha
+- porta
+- banco criado
 
-### 17.3 Erro de migration antiga ou banco inconsistente
+### Prisma travado no Windows com `EPERM`
 
-Se o banco local estiver desalinado com as migrations e você puder perder os dados de desenvolvimento, use:
+Pare o `next dev`, rode de novo `prisma generate` e depois suba a aplicacao novamente.
+
+### Erro em migrations antigas
+
+Se estiver em ambiente de desenvolvimento e puder apagar dados:
 
 ```powershell
 npx.cmd prisma migrate reset
-```
-
-Depois rode novamente:
-
-```powershell
 npm.cmd run prisma:seed
 ```
 
-Importante:
-- isso apaga os dados do banco local de desenvolvimento;
-- não use em ambiente com dados que precisem ser preservados.
+## 16. Ordem recomendada
 
-### 17.4 Prisma travado no Windows com erro de `EPERM`
+Siga esta ordem:
 
-Às vezes o `next dev` mantém o engine do Prisma bloqueado.
-
-Se isso acontecer:
-1. pare o servidor `npm run dev`;
-2. rode novamente `npx.cmd prisma generate`;
-3. depois suba a aplicação outra vez.
-
-### 17.5 Porta 3000 ocupada
-
-Pare o processo que já está usando a porta ou rode o projeto em outra porta.
-
-Exemplo:
-
-```powershell
-$env:PORT=3001; npm.cmd run dev
-```
-
-## 18. O que o projeto já entrega hoje
-
-O sistema já possui:
-- login admin protegido;
-- dashboard inicial do admin;
-- gestão de provas, questões, turmas e disciplinas;
-- acesso público do aluno por código da prova;
-- prova com timer e feedback visual;
-- monitoramento em tempo real;
-- relatórios consolidados;
-- exportação em PDF;
-- link compartilhável de visualização de relatório;
-- módulo de sugestões e reporte de problemas com imagem;
-- feedback pedagógico final estruturado.
-
-## 19. Pontos que merecem atenção no uso local
-
-No estado atual do projeto:
-- o fluxo principal está funcional;
-- a seed serve para demonstração;
-- alguns dados de apresentação dependem de existirem tentativas reais no banco;
-- quanto mais respostas você gerar, mais completos ficam monitoramento e relatórios.
-
-## 20. Ordem recomendada de setup
-
-Se você quiser o passo mais seguro, siga exatamente esta ordem:
-
-1. instalar Node.js e MySQL;
-2. criar o banco `ava_online`;
-3. copiar `.env.example` para `.env`;
-4. ajustar `DATABASE_URL`;
-5. rodar `npm install`;
-6. rodar `npx prisma generate`;
-7. rodar `npx prisma migrate dev`;
-8. rodar `npm run prisma:seed`;
-9. rodar `npm run dev`;
-10. acessar a aplicação e validar login + prova demo.
+1. instalar Node.js e MySQL
+2. copiar `.env.example` para `.env`
+3. ajustar `DATABASE_URL`
+4. rodar `npm install`
+5. rodar `npx prisma generate`
+6. rodar `npx prisma migrate dev`
+7. rodar `npm run prisma:seed`
+8. rodar `npm run dev`
+9. validar login, prova demo e relatorios

@@ -1,17 +1,21 @@
 # AVA Online
 
-Sistema web para criação, aplicação, monitoramento e análise de avaliações online.
+Sistema web para criacao, aplicacao, monitoramento e analise de avaliacoes online.
 
 O projeto possui:
-- área pública do aluno com acesso por código da prova;
-- área administrativa protegida para gestão da aplicação;
-- monitoramento em tempo real;
-- relatórios consolidados com exportação em PDF;
-- módulo global de sugestões e reporte de problemas.
+- area publica do aluno com acesso por codigo da prova;
+- area administrativa protegida com perfis `ADM` e `VISUALIZADOR`;
+- monitoramento em tempo real por polling;
+- relatorios consolidados com exportacao em PDF;
+- link compartilhavel de visualizacao de relatorios;
+- modulo global de sugestoes e reporte de problemas;
+- uploads compativeis com ambiente local e com Vercel Blob em producao.
 
-## Documentação
-- Guia completo de instalação local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
-- Documento de apresentação do sistema: [docs/APRESENTACAO_DO_SISTEMA.md](docs/APRESENTACAO_DO_SISTEMA.md)
+## Documentacao
+- Guia completo de instalacao local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
+- Guia de deploy online com Vercel + Railway + Vercel Blob: [docs/DEPLOY_VERCEL_RAILWAY_BLOB.md](docs/DEPLOY_VERCEL_RAILWAY_BLOB.md)
+- Documento de apresentacao do sistema: [docs/APRESENTACAO_DO_SISTEMA.md](docs/APRESENTACAO_DO_SISTEMA.md)
+- Arquitetura tecnica atual: [ARQUITETURA_AVALIACOES_ONLINE.md](ARQUITETURA_AVALIACOES_ONLINE.md)
 
 ## Stack
 - Next.js 15
@@ -24,19 +28,34 @@ O projeto possui:
 - Zod
 - pdf-lib
 - xlsx
+- @vercel/blob
 
-## Acessos rápidos
-- Aplicação: `http://localhost:3000`
-- Login do admin: `http://localhost:3000/admin/login`
+## Acessos rapidos
+- Aplicacao: `http://localhost:3000`
+- Login interno: `http://localhost:3000/admin/login`
 
 Credenciais da seed:
-- Usuário: `admin@ava.local`
+- Usuario: `admin@ava.local`
 - Senha: `admin123`
 
-Código público da prova demo:
+Codigo publico da prova demo:
 - `DEMO2026`
 
-## Scripts úteis
+## Variaveis de ambiente principais
+```env
+DATABASE_URL="mysql://root:@localhost:3306/ava_online"
+JWT_SECRET="change-me-super-secret"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+UPLOAD_DIR="./uploads"
+BLOB_READ_WRITE_TOKEN=""
+```
+
+Notas:
+- `UPLOAD_DIR` e usado no ambiente local.
+- `BLOB_READ_WRITE_TOKEN` ativa uploads persistentes no Vercel Blob.
+- Em producao no Vercel, o recomendado e usar `BLOB_READ_WRITE_TOKEN`.
+
+## Scripts uteis
 ```bash
 npm run dev
 npm run build
@@ -45,14 +64,14 @@ npm run prisma:migrate
 npm run prisma:seed
 ```
 
-No Windows com bloqueio de execução do PowerShell, prefira:
+No Windows com bloqueio de execucao do PowerShell, prefira:
 ```powershell
 npm.cmd run dev
 npx.cmd prisma migrate dev
 npm.cmd run prisma:seed
 ```
 
-## Observação importante
-Se você estiver começando o projeto do zero no ambiente local, leia primeiro o guia:
-
-[docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
+## Observacao importante
+Se voce estiver comecando do zero:
+1. leia o guia local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
+2. para publicar online, siga o guia: [docs/DEPLOY_VERCEL_RAILWAY_BLOB.md](docs/DEPLOY_VERCEL_RAILWAY_BLOB.md)

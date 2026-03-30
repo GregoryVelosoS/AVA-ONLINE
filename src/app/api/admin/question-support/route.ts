@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
   const data = new Uint8Array(await file.arrayBuffer());
   const storedPath = await saveQuestionSupportAsset({
     data,
+    mimeType: file.type,
     originalName: file.name,
     kind
   });

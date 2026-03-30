@@ -1,20 +1,8 @@
--- AlterTable
-ALTER TABLE `feedbackanswer` MODIFY `valueText` VARCHAR(191) NULL,
-    MODIFY `selectedOptions` VARCHAR(191) NULL;
-
--- AlterTable
-ALTER TABLE `feedbackformresponse` ALTER COLUMN `updatedAt` DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE `issuereport` MODIFY `description` VARCHAR(191) NOT NULL,
-    MODIFY `internalNotes` VARCHAR(191) NULL,
-    ALTER COLUMN `updatedAt` DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE `question` MODIFY `supportCode` VARCHAR(191) NULL,
-    MODIFY `studyTopics` VARCHAR(191) NULL,
-    MODIFY `studyLinks` VARCHAR(191) NULL,
-    MODIFY `complementaryNotes` VARCHAR(191) NULL;
-
--- AlterTable
-ALTER TABLE `reportsharelink` ALTER COLUMN `updatedAt` DROP DEFAULT;
+-- Esta migration intermediária ficou obsoleta.
+-- O conteúdo anterior repetia alterações em tabelas que ainda não existiam
+-- naquele ponto da cadeia, como `FeedbackAnswer`, `IssueReport`
+-- e `ReportShareLink`, o que quebrava `migrate dev`, `migrate reset`
+-- e qualquer criação do shadow database.
+--
+-- Mantida como no-op para preservar o histórico local sem quebrar
+-- a sequência de migrations.

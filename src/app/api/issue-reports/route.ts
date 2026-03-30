@@ -81,7 +81,8 @@ export async function POST(request: NextRequest) {
     const buffer = new Uint8Array(await screenshot.arrayBuffer());
     const fileName = await saveIssueReportScreenshot({
       data: buffer,
-      originalName: screenshot.name
+      originalName: screenshot.name,
+      mimeType: screenshot.type
     });
 
     screenshotPayload = {

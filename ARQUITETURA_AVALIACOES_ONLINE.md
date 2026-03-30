@@ -1,101 +1,94 @@
 # Arquitetura do AVA Online
 
-Este documento descreve a arquitetura atual do projeto com base no que está implementado no repositório.
+Este documento descreve a arquitetura atual do projeto com base no que esta implementado no repositorio.
 
-Ele substitui a versão anterior mais conceitual e agora reflete:
-- stack real em uso;
-- organização atual das rotas;
-- modelo de dados atual;
-- fluxo público do aluno;
-- responsabilidades de monitoramento e relatórios;
-- mecanismos de autenticação, exportação e compartilhamento;
-- módulo global de sugestões e reporte de problemas.
+## 1. Visao geral
 
-## 1. Visão geral
-
-O AVA Online é uma aplicação web full stack para:
-- cadastrar questões;
+O AVA Online e uma aplicacao web full stack para:
+- cadastrar questoes;
 - montar provas;
-- liberar aplicação para aluno por código público;
-- acompanhar a execução em tempo real;
-- gerar relatórios consolidados;
-- coletar feedback pedagógico;
-- registrar sugestões e problemas da interface.
-
-Hoje o sistema trabalha com três contextos principais:
-- `Admin`: acesso autenticado e controle completo;
-- `Aluno`: acesso público, sem cadastro, via código da prova;
-- `Visualização externa`: acesso por link compartilhável de relatório.
+- liberar acesso do aluno por codigo publico;
+- acompanhar aplicacao em tempo real;
+- gerar relatorios consolidados;
+- coletar feedback pedagogico;
+- registrar sugestoes e problemas;
+- controlar usuarios internos com perfis diferentes.
 
 ## 2. Stack atual
 
-- `Next.js 15` com App Router
-- `React 19`
-- `TypeScript`
-- `Tailwind CSS`
-- `Prisma`
-- `MySQL`
-- `Zod`
-- `Recharts`
-- `pdf-lib`
-- `xlsx`
+- Next.js 15 com App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- Prisma
+- MySQL
+- Zod
+- Recharts
+- pdf-lib
+- xlsx
+- @vercel/blob
 
-## 3. Decisões arquiteturais atuais
+## 3. Decisoes arquiteturais
 
-### 3.1 Frontend e backend no mesmo projeto
+### 3.1 Projeto full stack unico
 
-O projeto usa a arquitetura do Next.js App Router com:
-- páginas server-side;
-- componentes client-side quando necessário;
-- rotas de API em `src/app/api`.
+O projeto usa:
+- paginas server-side;
+- componentes client-side quando necessario;
+- APIs em `src/app/api`;
+- servicos internos em `src/server/services`.
 
-Isso permite manter:
-- interface;
-- validação;
-- acesso ao banco;
-- autenticação;
-- serviços de analytics
+### 3.2 Persistencia
 
-no mesmo repositório, com baixo acoplamento externo.
+Banco principal:
+- MySQL
 
-### 3.2 Banco relacional com Prisma
+Camada ORM:
+- Prisma
 
-O banco principal é `MySQL`.
+Versionamento:
+- migrations
+- seed
 
-O Prisma é usado para:
-- schema;
-- migrations;
-- client tipado;
-- seed inicial.
+### 3.3 Autenticacao
 
-### 3.3 Autenticação administrativa simples e consistente
+A autenticacao interna atual usa:
+- `AdminUser`
+- email e senha
+- hash com `bcryptjs`
+- JWT em cookie HTTP-only
+- protecao por middleware e guards
 
-O projeto não usa NextAuth/Auth.js.
+### 3.4 Perfis internos
 
-A autenticação administrativa atual funciona com:
-- login por e-mail e senha;
-- senha com `bcryptjs`;
-- JWT assinado no backend;
-- cookie HTTP-only `admin_token`;
-- proteção de rotas administrativas via `middleware.ts`;
-- guards de servidor em `src/server/auth`.
+Perfis suportados:
+- `ADM`
+- `VISUALIZADOR`
 
-### 3.4 Monitoramento por polling
+Regras:
+- `ADM` tem acesso total
+- `VISUALIZADOR` acessa apenas relatorios
 
-O monitoramento em tempo real hoje usa polling periódico.
+### 3.5 Monitoramento
 
-Não existe SSE/WebSocket implementado neste momento.
+O monitoramento em tempo real usa polling.
 
-### 3.5 Compartilhamento de relatórios por link
+Nao ha SSE ou WebSocket implementado neste momento.
 
-Em vez de um perfil autenticado próprio para “visualizador”, o projeto implementa:
-- geração de link compartilhável por token;
-- visualização externa em modo leitura;
-- ativação e desativação desse link.
+### 3.6 Uploads
 
-Essa foi a solução mais compatível com a arquitetura atual.
+O projeto trabalha em dois modos:
 
-## 4. Estrutura principal do projeto
+#### Local
+- usa `UPLOAD_DIR`
+
+#### Producao no Vercel
+- usa `Vercel Blob`
+- ativado por `BLOB_READ_WRITE_TOKEN`
+
+Essa estrategia evita quebrar o ambiente local e permite storage persistente online.
+
+## 4. Estrutura principal
 
 ```txt
 src/
@@ -112,6 +105,7 @@ src/
       questions/
       reports/
       settings/
+      users/
     api/
       admin/**
       assets/**
@@ -138,6 +132,7 @@ src/
     db/
     services/
     validators/
+    uploads.ts
   prisma/
     schema.prisma
     migrations/
@@ -145,174 +140,143 @@ src/
 docs/
 ```
 
-## 5. Módulos e responsabilidades
+## 5. Modulos principais
 
-### 5.1 Área pública
+### 5.1 Area publica
 
-Responsável por:
-- entrada do aluno por código da prova;
-- validação do código;
-- identificação do aluno;
-- aplicação da prova;
-- timer;
-- envio final;
-- feedback pedagógico;
-- tela final com retorno e orientações.
+Responsavel por:
+- validacao de codigo da prova
+- identificacao do aluno
+- aplicacao da prova
+- timer
+- envio
+- feedback final
 
-Pontos principais:
-- [src/app/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/page.tsx)
-- [src/components/exam/student-identify-form.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/components/exam/student-identify-form.tsx)
-- [src/app/attempt/[attemptId]/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/attempt/%5BattemptId%5D/page.tsx)
-- [src/components/exam/attempt-runner.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/components/exam/attempt-runner.tsx)
-- [src/app/attempt/[attemptId]/feedback/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/attempt/%5BattemptId%5D/feedback/page.tsx)
-- [src/app/submitted/[attemptId]/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/submitted/%5BattemptId%5D/page.tsx)
+Arquivos centrais:
+- `src/app/page.tsx`
+- `src/components/exam/student-identify-form.tsx`
+- `src/app/attempt/[attemptId]/page.tsx`
+- `src/components/exam/attempt-runner.tsx`
 
-### 5.2 Área administrativa
+### 5.2 Area administrativa
 
-Responsável por:
-- login e logout;
-- dashboard inicial;
-- gestão de provas;
-- gestão de questões;
-- cadastro de turmas;
-- cadastro de disciplinas;
-- monitoramento em tempo real;
-- relatórios consolidados;
-- gestão de sugestões e problemas.
+Responsavel por:
+- login interno
+- dashboard
+- provas
+- questoes
+- turmas
+- disciplinas
+- monitoramento
+- relatorios
+- sugestoes
+- usuarios
 
-Pontos principais:
-- [src/app/admin/login/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/login/page.tsx)
-- [src/app/admin/dashboard/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/dashboard/page.tsx)
-- [src/app/admin/exams/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/exams/page.tsx)
-- [src/app/admin/questions/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/questions/page.tsx)
-- [src/app/admin/monitoring/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/monitoring/page.tsx)
-- [src/app/admin/reports/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/reports/page.tsx)
-- [src/app/admin/issues/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/issues/page.tsx)
+### 5.3 Servicos
 
-### 5.3 Serviços de backend
+Servicos centrais:
+- `src/server/services/analytics.ts`
+- `src/server/services/monitoring.ts`
+- `src/server/services/attempts.ts`
 
-Responsáveis por centralizar:
-- métricas;
-- relatórios;
-- monitoramento;
-- regras de negócio das tentativas;
-- validações de entrada.
+### 5.4 Uploads
 
-Pontos principais:
-- [src/server/services/analytics.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/server/services/analytics.ts)
-- [src/server/services/monitoring.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/server/services/monitoring.ts)
-- [src/server/services/attempts.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/server/services/attempts.ts)
-- [src/server/validators/schemas.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/server/validators/schemas.ts)
+Responsavel por abstrair o storage:
+- `src/server/uploads.ts`
 
-## 6. Fluxos centrais do sistema
+Funcoes principais:
+- salvar apoio visual de questoes
+- salvar imagem de issue report
+- remover assets gerenciados
+- decidir entre pasta local e Vercel Blob
+
+## 6. Fluxos principais
 
 ### 6.1 Fluxo do aluno
 
-1. O aluno abre `/`.
-2. Informa o código público da prova.
-3. O sistema valida o código em `/api/public/exams/lookup`.
-4. Se a prova estiver disponível, libera a segunda etapa.
-5. O aluno informa nome, turma e disciplina.
-6. O sistema cria a tentativa em `/api/public/attempts/start`.
-7. O aluno responde as questões na tela da prova.
-8. As respostas são persistidas em `/api/public/attempts/answer`.
-9. Se o tempo acabar, o sistema pode finalizar via `/api/public/attempts/timeout`.
-10. Ao concluir, envia a prova em `/api/public/attempts/submit`.
-11. O aluno responde o formulário final de feedback.
-12. O sistema mostra a tela final com resultado e orientações.
+1. aluno abre `/`
+2. informa codigo da prova
+3. sistema valida codigo
+4. aluno informa nome, turma e disciplina
+5. sistema cria tentativa
+6. aluno responde
+7. sistema salva respostas
+8. aluno envia a prova
+9. aluno responde formulario final
+10. sistema mostra fechamento da prova
 
-### 6.2 Fluxo do admin
+### 6.2 Fluxo do ADM
 
-1. O admin acessa `/admin/login`.
-2. O login gera um cookie JWT HTTP-only.
-3. O `middleware.ts` protege as rotas `/admin/*`.
-4. Após o login, o admin acessa o dashboard.
-5. Pode navegar entre provas, questões, turmas, disciplinas, monitoramento, relatórios e sugestões.
+1. login em `/admin/login`
+2. middleware valida cookie
+3. guards validam perfil
+4. ADM acessa todas as areas internas
 
-### 6.3 Fluxo de prova
+### 6.3 Fluxo do VISUALIZADOR
 
-1. O admin cria a prova.
-2. Define nome, código público, disciplina, duração e status.
-3. Associa questões.
-4. Publica ou ativa a prova.
-5. O aluno entra via código público.
-6. A prova pode ser desativada, encerrada, arquivada ou excluída conforme o caso.
+1. login em `/admin/login`
+2. token carrega `role=VISUALIZADOR`
+3. menu mostra apenas relatorios
+4. tentativas de abrir outras areas admin sao bloqueadas
 
-## 7. Separação entre monitoramento e relatórios
+## 7. Separacao entre monitoramento e relatorios
 
-Essa separação é uma decisão importante na arquitetura atual.
-
-### 7.1 Monitoramento
+### Monitoramento
 
 Responsabilidade:
-- acompanhamento operacional em tempo real da aplicação.
+- acompanhamento operacional da aplicacao
 
 Mostra:
-- provas em andamento;
-- alunos em andamento;
-- alunos concluídos;
-- tempo médio decorrido;
-- atualização automática por polling.
+- provas em andamento
+- alunos em andamento
+- concluidos
+- tempo medio decorrido
 
-Arquivos principais:
-- [src/app/admin/monitoring/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/monitoring/page.tsx)
-- [src/app/api/admin/monitoring/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/monitoring/route.ts)
-- [src/server/services/monitoring.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/server/services/monitoring.ts)
-
-### 7.2 Relatórios
+### Relatorios
 
 Responsabilidade:
-- análise consolidada e pedagógica da prova.
+- analise consolidada e pedagogica
 
 Mostra:
-- resumo geral;
-- desempenho por questão;
-- ranking de alunos;
-- indicadores pedagógicos;
-- feedback final da turma;
-- exportação PDF;
-- compartilhamento externo por link.
+- resumo da prova
+- desempenho por aluno
+- desempenho por questao
+- ranking
+- feedback da turma
+- exportacao PDF
+- link compartilhavel
 
-Arquivos principais:
-- [src/app/admin/reports/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/reports/page.tsx)
-- [src/components/admin/exam-analytics-dashboard.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/components/admin/exam-analytics-dashboard.tsx)
-- [src/app/api/admin/reports/export/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/reports/export/route.ts)
-- [src/app/api/admin/reports/share/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/reports/share/route.ts)
+## 8. Modelo de autenticacao e autorizacao
 
-## 8. Modelo de autenticação e autorização
+### Token
 
-### 8.1 Login
+O token carrega:
+- `sub`
+- `name`
+- `email`
+- `role`
 
-O endpoint de login é:
-- [src/app/api/auth/login/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/auth/login/route.ts)
+### Middleware
 
-Ele:
-- valida e-mail e senha;
-- busca o admin no banco;
-- compara com `bcryptjs`;
-- gera JWT;
-- salva o cookie `admin_token`.
+O `middleware.ts`:
+- protege `/admin/*`
+- protege `/api/admin/*`
+- redireciona `VISUALIZADOR` para `/admin/reports`
 
-### 8.2 Logout
+### Guards
 
-O endpoint de logout é:
-- [src/app/api/auth/logout/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/auth/logout/route.ts)
-
-### 8.3 Proteção de rotas
-
-O `middleware.ts` protege todas as rotas de admin, exceto login:
-- [middleware.ts](d:/Projetos%20SENAI/AVA-ONLINE/middleware.ts)
-
-No servidor, guards complementares fazem a validação da sessão:
+Guards atuais:
 - `requireAdminSession`
+- `requireReportsSession`
+- `requireSessionByRole`
 - `getOptionalAdminSession`
 
 ## 9. Modelo de dados atual
 
-O schema principal está em:
-- [prisma/schema.prisma](d:/Projetos%20SENAI/AVA-ONLINE/prisma/schema.prisma)
+Schema principal:
+- `prisma/schema.prisma`
 
-### 9.1 Entidades principais
+### Entidades principais
 
 - `AdminUser`
 - `Discipline`
@@ -335,165 +299,44 @@ O schema principal está em:
 - `ReportShareLink`
 - `IssueReport`
 
-### 9.2 Pontos importantes do schema
+### Ponto novo importante
 
-#### `Question`
-Armazena:
-- tipo da questão;
-- contexto;
-- comando;
-- suporte visual;
-- explicação;
-- temas de estudo;
-- links de apoio;
-- peso padrão.
+`AdminUser` agora possui:
+- `role`
+- `isActive`
 
-#### `Exam`
-Armazena:
-- nome;
-- `publicCode` único;
-- disciplina;
-- turma alvo opcional;
-- janela de aplicação;
-- duração;
-- status;
-- configurações de prova.
+Perfis suportados:
+- `ADM`
+- `VISUALIZADOR`
 
-#### `StudentAttempt`
-Armazena:
-- status da tentativa;
-- notas;
-- duração;
-- vínculo com prova e link público.
+## 10. Uploads e assets
 
-#### `FeedbackFormResponse` e `FeedbackAnswer`
-Armazenam:
-- feedback final estruturado da prova;
-- respostas escalares;
-- respostas abertas;
-- seleção única e múltipla.
+### Apoio visual de questoes
 
-#### `ReportShareLink`
-Armazena:
-- token de compartilhamento;
-- estado ativo/inativo;
-- prova relacionada;
-- admin criador.
+Endpoint:
+- `src/app/api/admin/question-support/route.ts`
 
-#### `IssueReport`
-Armazena:
-- tipo do registro;
-- título e descrição;
-- status;
-- rota de origem;
-- contexto;
-- imagem opcional;
-- vínculo opcional com admin, prova e tentativa.
+Uso:
+- upload de imagem
+- upload de arquivo complementar
 
-## 10. Tipos e enums atuais
+### Imagens de sugestoes e reportes
 
-O sistema usa enums centrais no Prisma:
+Endpoint:
+- `src/app/api/issue-reports/route.ts`
 
-- `QuestionType`
-  - `MULTIPLE_CHOICE`
-  - `SHORT_TEXT`
-  - `LONG_TEXT`
-  - `FILE_UPLOAD`
+### Resolucao de URL
 
-- `Difficulty`
-  - `EASY`
-  - `MEDIUM`
-  - `HARD`
+Helpers:
+- `src/lib/assets.ts`
 
-- `VisualSupportType`
-  - `NONE`
-  - `ASSET`
-  - `CODE`
+Eles retornam:
+- URL externa direta quando o asset ja esta no Blob
+- rota interna quando o asset esta salvo localmente
 
-- `ExamStatus`
-  - `DRAFT`
-  - `PUBLISHED`
-  - `CLOSED`
-  - `ARCHIVED`
+## 11. Rotas principais
 
-- `AttemptStatus`
-  - `STARTED`
-  - `IN_PROGRESS`
-  - `SUBMITTED`
-  - `EXPIRED`
-  - `CANCELED`
-
-- `IssueReportType`
-  - `SUGGESTION`
-  - `BUG`
-  - `QUESTION`
-
-- `IssueReportStatus`
-  - `NEW`
-  - `IN_REVIEW`
-  - `RESOLVED`
-  - `ARCHIVED`
-
-## 11. Questões e apoio visual
-
-Na arquitetura atual, uma questão pode conter:
-- contexto;
-- suporte visual por arquivo/imagem;
-- suporte visual por código;
-- comando da questão;
-- alternativas, quando objetiva.
-
-Essa ordem é respeitada:
-- no cadastro;
-- na edição;
-- na renderização para o aluno.
-
-Campos relacionados:
-- `visualSupportType`
-- `supportCode`
-- `supportImagePath`
-- `supportFilePath`
-
-Uploads são atendidos por:
-- [src/app/api/admin/question-support/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/question-support/route.ts)
-- [src/app/api/assets/question-support/[filename]/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/assets/question-support/%5Bfilename%5D/route.ts)
-
-## 12. Exportação e compartilhamento
-
-### 12.1 Exportação PDF
-
-Hoje a exportação implementada é PDF.
-
-Rota:
-- [src/app/api/admin/reports/export/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/reports/export/route.ts)
-
-### 12.2 Compartilhamento externo
-
-Hoje o compartilhamento externo é feito por token.
-
-Rotas:
-- criação/gestão: [src/app/api/admin/reports/share/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/admin/reports/share/route.ts)
-- visualização: [src/app/viewer/reports/[token]/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/viewer/reports/%5Btoken%5D/page.tsx)
-
-## 13. Módulo global de sugestões e reporte de problemas
-
-Esse módulo foi acoplado globalmente ao layout.
-
-Integração:
-- [src/app/layout.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/layout.tsx)
-- [src/components/feedback/global-issue-widget.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/components/feedback/global-issue-widget.tsx)
-
-Rotas:
-- envio/listagem: [src/app/api/issue-reports/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/issue-reports/route.ts)
-- atualização: [src/app/api/issue-reports/[id]/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/issue-reports/%5Bid%5D/route.ts)
-- asset: [src/app/api/assets/issue-reports/[filename]/route.ts](d:/Projetos%20SENAI/AVA-ONLINE/src/app/api/assets/issue-reports/%5Bfilename%5D/route.ts)
-
-Área administrativa:
-- [src/app/admin/issues/page.tsx](d:/Projetos%20SENAI/AVA-ONLINE/src/app/admin/issues/page.tsx)
-
-## 14. Rotas principais
-
-### Públicas
+### Publicas
 - `/`
 - `/exam/[slug]`
 - `/attempt/[attemptId]`
@@ -501,7 +344,7 @@ Rotas:
 - `/submitted/[attemptId]`
 - `/viewer/reports/[token]`
 
-### Admin
+### Internas
 - `/admin/login`
 - `/admin/dashboard`
 - `/admin/exams`
@@ -511,55 +354,33 @@ Rotas:
 - `/admin/monitoring`
 - `/admin/reports`
 - `/admin/issues`
+- `/admin/users`
 
-### APIs principais
-- `/api/auth/login`
-- `/api/auth/logout`
-- `/api/public/exams/lookup`
-- `/api/public/attempts/start`
-- `/api/public/attempts/answer`
-- `/api/public/attempts/submit`
-- `/api/public/attempts/timeout`
-- `/api/admin/exams`
-- `/api/admin/exams/[id]`
-- `/api/admin/exams/[id]/lifecycle`
-- `/api/admin/questions`
-- `/api/admin/questions/import`
-- `/api/admin/reports/export`
-- `/api/admin/reports/share`
-- `/api/admin/monitoring`
-- `/api/issue-reports`
+## 12. Ambientes
 
-## 15. Estado visual e identidade
+### Desenvolvimento local
 
-O projeto foi refinado para uma identidade baseada em:
-- vermelho;
-- preto;
-- branco.
+Recomendado:
+- MySQL local
+- `UPLOAD_DIR`
+- sem `BLOB_READ_WRITE_TOKEN`
 
-Essa direção foi aplicada em:
-- tela pública;
-- login admin;
-- dashboard;
-- formulários;
-- relatórios;
-- monitoramento;
-- cards;
-- estados selecionados na prova;
-- feedback visual de sucesso e erro.
+### Producao
 
-## 16. Limites e próximos passos naturais
+Recomendado:
+- Vercel
+- Railway MySQL
+- Vercel Blob
 
-A arquitetura atual está funcional, mas há alguns pontos que podem evoluir em fases futuras:
-- autenticação própria para perfil visualizador, se isso for necessário;
-- exportações adicionais além do PDF;
-- expansão do fluxo de correção manual;
-- upload real de resposta do aluno para questões `FILE_UPLOAD`, se o produto exigir esse fechamento completo;
-- testes automatizados mais amplos.
+Variaveis centrais:
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `NEXT_PUBLIC_APP_URL`
+- `BLOB_READ_WRITE_TOKEN`
 
-## 17. Documentos relacionados
+## 13. Documentos relacionados
 
-Para complementar esta visão arquitetural:
-- setup local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
-- apresentação funcional: [docs/APRESENTACAO_DO_SISTEMA.md](docs/APRESENTACAO_DO_SISTEMA.md)
-- visão geral rápida: [README.md](README.md)
+- [README.md](README.md)
+- [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
+- [docs/DEPLOY_VERCEL_RAILWAY_BLOB.md](docs/DEPLOY_VERCEL_RAILWAY_BLOB.md)
+- [docs/APRESENTACAO_DO_SISTEMA.md](docs/APRESENTACAO_DO_SISTEMA.md)
