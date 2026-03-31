@@ -30,33 +30,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Prova não encontrada" }, { status: 404 });
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    await tx.examQuestion.deleteMany({
-      where: { examId: id }
-    });
-
-    return tx.exam.update({
-      where: { id },
-      data: {
-        questions:
-          parsed.data.questionIds.length > 0
-            ? {
-                create: parsed.data.questionIds.map((questionId, index) => ({
-                  questionId,
-                  position: index + 1
-                }))
-              }
-            : undefined
-      },
-      include: {
-        questions: {
-          include: {
-            question: true
-          },
-          orderBy: { position: "asc" }
-        }
+  const updated = await prisma.exam.update({
+    where: { id },
+    data: {
+      questions: {
+        deleteMany: {},
+        ...(parsed.data.questionIds.length > 0
+          ? {
+              create: parsed.data.questionIds.map((questionId, index) => ({
+                questionId,
+                position: index + 1
+              }))
+            }
+          : {})
       }
-    });
+    },
+    include: {
+      questions: {
+        include: {
+          question: true
+        },
+        orderBy: { position: "asc" }
+      }
+    }
   });
 
   return NextResponse.json(updated);

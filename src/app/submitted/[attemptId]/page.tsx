@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VisualSupportBlock } from "@/components/questions/visual-support-block";
+import { AttemptResultIdCard } from "@/components/exam/attempt-result-id-card";
 import { getAttemptResultSummary } from "@/server/services/attempt-result";
 
 function formatScore(value: number) {
@@ -34,8 +35,12 @@ export default async function SubmittedPage({
             {result.profile ? `Resultado de ${result.profile.studentName}. ` : ""}
             Seu envio foi registrado e o reenvio indevido continua bloqueado pelo fluxo atual.
           </p>
-          <p className="text-sm text-slate-500">Protocolo da tentativa: {attemptId}</p>
+          <p className="text-sm text-slate-500">
+            {result.exam.publicCode} · {result.exam.disciplineName} · {result.exam.classGroupName}
+          </p>
         </div>
+
+        <AttemptResultIdCard resultLookupCode={result.resultLookupCode} />
 
         <div className="grid gap-4 md:grid-cols-4">
           <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">

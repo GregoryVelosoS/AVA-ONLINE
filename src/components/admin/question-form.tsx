@@ -11,6 +11,11 @@ type Discipline = {
   name: string;
 };
 
+type Theme = {
+  id: string;
+  name: string;
+};
+
 type QuestionType = "MULTIPLE_CHOICE" | "SHORT_TEXT" | "LONG_TEXT" | "FILE_UPLOAD";
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 type QuestionStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
@@ -55,6 +60,7 @@ export type QuestionFormState = {
   supportFileMime: string;
   defaultWeight: number;
   status: QuestionStatus;
+  themeIds: string[];
   options: OptionState[];
 };
 
@@ -90,16 +96,19 @@ function createDefaultState(disciplines: Discipline[]): QuestionFormState {
     supportFileMime: "",
     defaultWeight: 1,
     status: "ACTIVE",
+    themeIds: [],
     options: defaultOptions
   };
 }
 
 export function QuestionForm({
   disciplines,
+  themes = [],
   initialQuestion,
   mode
 }: {
   disciplines: Discipline[];
+  themes?: Theme[];
   initialQuestion?: QuestionFormState;
   mode: "create" | "edit";
 }) {
@@ -258,6 +267,15 @@ export function QuestionForm({
             supportFileName: "",
             supportFileMime: ""
           })
+    }));
+  }
+
+  function toggleTheme(themeId: string) {
+    setForm((current) => ({
+      ...current,
+      themeIds: current.themeIds.includes(themeId)
+        ? current.themeIds.filter((id) => id !== themeId)
+        : [...current.themeIds, themeId]
     }));
   }
 

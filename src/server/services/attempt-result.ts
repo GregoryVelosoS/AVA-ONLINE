@@ -71,6 +71,7 @@ export type AttemptResultQuestion = {
 
 export type AttemptResultSummary = {
   id: string;
+  resultLookupCode: string;
   status: "STARTED" | "IN_PROGRESS" | "SUBMITTED" | "EXPIRED" | "CANCELED";
   startedAt: Date;
   submittedAt: Date | null;
@@ -80,13 +81,18 @@ export type AttemptResultSummary = {
     title: string;
     publicCode: string;
     disciplineName: string;
+    classGroupName: string;
     instructions: string;
     timeLimitMinutes: number | null;
   };
   profile: {
     studentName: string;
+    classGroupId: string | null;
     classGroupName: string;
+    disciplineId: string | null;
     disciplineInformed: string;
+    attemptOrigin: string | null;
+    contextValidationNote: string | null;
   } | null;
   totalScore: number;
   maxScore: number;
@@ -112,6 +118,11 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
             include: {
               options: {
                 orderBy: { position: "asc" }
+              },
+              themes: {
+                include: {
+                  theme: true
+                }
               }
             }
           }
@@ -120,12 +131,18 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
       exam: {
         include: {
           discipline: true,
+          classGroup: true,
           questions: {
             include: {
               question: {
                 include: {
                   options: {
                     orderBy: { position: "asc" }
+                  },
+                  themes: {
+                    include: {
+                      theme: true
+                    }
                   }
                 }
               }
@@ -167,11 +184,14 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
       resultStatus = "pending";
     }
 
-    const studyTopics = getQuestionStudyTopics({
-      studyTopics: question.studyTopics,
-      subject: question.subject,
-      topic: question.topic
-    });
+    const studyTopics = uniqueValues([
+      ...question.themes.map((item) => item.theme.name),
+      ...getQuestionStudyTopics({
+        studyTopics: question.studyTopics,
+        subject: question.subject,
+        topic: question.topic
+      })
+    ]);
     const studyLinks = splitResourceText(question.studyLinks);
     const referenceLinks = uniqueValues([
       ...studyLinks,
@@ -228,6 +248,7 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
 
   return {
     id: attempt.id,
+    resultLookupCode: attempt.resultLookupCode,
     status: attempt.status,
     startedAt: attempt.startedAt,
     submittedAt: attempt.submittedAt,
@@ -237,14 +258,19 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
       title: attempt.exam.title,
       publicCode: attempt.exam.publicCode,
       disciplineName: attempt.exam.discipline.name,
+      classGroupName: attempt.exam.classGroup.name,
       instructions: attempt.exam.instructions,
       timeLimitMinutes: attempt.exam.timeLimitMinutes
     },
     profile: attempt.profile
       ? {
           studentName: attempt.profile.studentName,
+          classGroupId: attempt.profile.classGroupId,
           classGroupName: attempt.profile.classGroupName,
-          disciplineInformed: attempt.profile.disciplineInformed
+          disciplineId: attempt.profile.disciplineId,
+          disciplineInformed: attempt.profile.disciplineInformed,
+          attemptOrigin: attempt.profile.attemptOrigin,
+          contextValidationNote: attempt.profile.contextValidationNote
         }
       : null,
     totalScore,

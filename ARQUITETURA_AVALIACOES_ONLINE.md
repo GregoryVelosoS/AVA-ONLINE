@@ -7,7 +7,9 @@ Este documento descreve a arquitetura atual do projeto com base no que esta impl
 O AVA Online e uma aplicacao web full stack para:
 - cadastrar questoes;
 - montar provas;
+- vincular temas em provas e questoes;
 - liberar acesso do aluno por codigo publico;
+- permitir reconsulta publica por ID da tentativa;
 - acompanhar aplicacao em tempo real;
 - gerar relatorios consolidados;
 - coletar feedback pedagogico;
@@ -107,6 +109,7 @@ src/
       questions/
       reports/
       settings/
+      themes/
       users/
     api/
       admin/**
@@ -118,6 +121,7 @@ src/
     exam/[slug]/
     submitted/[attemptId]/
     viewer/reports/[token]/
+    loading.tsx
     layout.tsx
     page.tsx
   components/
@@ -140,6 +144,7 @@ src/
     migrations/
     seed.ts
 docs/
+backups/
 ```
 
 ## 5. Modulos principais
@@ -148,15 +153,17 @@ docs/
 
 Responsavel por:
 - validacao de codigo da prova
-- identificacao do aluno
+- identificacao simplificada do aluno
 - aplicacao da prova
 - timer
 - envio
 - feedback final
+- consulta publica por ID da tentativa
 
 Arquivos centrais:
 - `src/app/page.tsx`
 - `src/components/exam/student-identify-form.tsx`
+- `src/components/exam/attempt-lookup-form.tsx`
 - `src/app/attempt/[attemptId]/page.tsx`
 - `src/components/exam/attempt-runner.tsx`
 
@@ -167,10 +174,12 @@ Responsavel por:
 - dashboard
 - provas
 - questoes
+- temas
 - turmas
 - disciplinas
 - monitoramento
 - relatorios
+- configuracoes
 - sugestoes
 - usuarios
 
@@ -181,6 +190,9 @@ Servicos centrais:
 - `src/server/services/attempt-result.ts`
 - `src/server/services/monitoring.ts`
 - `src/server/services/attempts.ts`
+- `src/server/services/exam-bindings.ts`
+- `src/server/services/catalog-import.ts`
+- `src/server/services/system-backup.ts`
 
 ### 5.4 Uploads
 
@@ -200,14 +212,15 @@ Funcoes principais:
 1. aluno abre `/`
 2. informa codigo da prova
 3. sistema valida codigo
-4. aluno informa nome, turma e disciplina
-5. sistema cria tentativa
+4. aluno informa apenas o nome
+5. sistema herda turma e disciplina da prova e cria tentativa com `resultLookupCode`
 6. aluno responde
 7. sistema salva respostas
 8. aluno envia a prova
 9. aluno responde formulario final
 10. sistema mostra fechamento da prova
 11. aluno pode exportar o resultado individual em PDF
+12. aluno pode reutilizar o `resultLookupCode` para consultar o desempenho posteriormente
 
 ### 6.2 Fluxo do ADM
 
@@ -286,10 +299,13 @@ Schema principal:
 - `Discipline`
 - `ClassGroup`
 - `Tag`
+- `Theme`
 - `Question`
 - `QuestionOption`
 - `QuestionTag`
+- `QuestionTheme`
 - `Exam`
+- `ExamTheme`
 - `ExamSection`
 - `ExamQuestion`
 - `PublicExamLink`
@@ -312,6 +328,12 @@ Schema principal:
 Perfis suportados:
 - `ADM`
 - `VISUALIZADOR`
+
+Outros pontos novos:
+- `Exam.targetClassGroupId` passou a ser obrigatorio
+- `StudentAttempt.resultLookupCode` identifica a consulta publica posterior
+- `StudentProfileSnapshot` passou a guardar ids de turma/disciplina, origem da tentativa e nota de validacao de contexto
+- `Theme`, `ExamTheme` e `QuestionTheme` estruturam o eixo analitico por conteudo
 
 ## 10. Uploads e assets
 
@@ -346,6 +368,7 @@ Eles retornam:
 - `/attempt/[attemptId]`
 - `/attempt/[attemptId]/feedback`
 - `/submitted/[attemptId]`
+- `/api/public/attempts/lookup`
 - `/api/public/attempts/[attemptId]/export/pdf`
 - `/viewer/reports/[token]`
 
@@ -354,11 +377,13 @@ Eles retornam:
 - `/admin/dashboard`
 - `/admin/exams`
 - `/admin/questions`
+- `/admin/themes`
 - `/admin/disciplines`
 - `/admin/class-groups`
 - `/admin/monitoring`
 - `/admin/reports`
 - `/admin/issues`
+- `/admin/settings`
 - `/admin/users`
 
 ## 12. Exportacoes implementadas
@@ -402,6 +427,15 @@ Recomendado:
 - MySQL local
 - `UPLOAD_DIR`
 - sem `BLOB_READ_WRITE_TOKEN`
+
+Operacoes de manutencao:
+- `npm run db:backup`
+- `npm run db:reset:safe`
+- `npm run db:reset:safe:seed`
+
+Observacao:
+- o reset administrativo em `/admin/settings` gera backup automatico em `backups/db/ano/mes`
+- o backup local contem snapshot estruturado das entidades relevantes da base
 
 ### Producao
 

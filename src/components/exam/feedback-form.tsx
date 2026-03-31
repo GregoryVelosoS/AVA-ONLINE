@@ -82,7 +82,7 @@ export function FeedbackForm({
 
   function getClientValidationMessage() {
     if (form.generalDifficulty == null) return "Avalie a dificuldade geral da prova.";
-    if (form.difficultContents.length === 0) return "Selecione ao menos um conteúdo com maior dificuldade.";
+    if (contentOptions.length > 0 && form.difficultContents.length === 0) return "Selecione ao menos um conteúdo com maior dificuldade.";
     if (!form.commonDifficultyType) return "Selecione o tipo de dificuldade mais comum.";
     if (form.selfPerformance == null) return "Avalie a sua percepção de desempenho.";
     if (form.explanationClarity == null) return "Avalie a clareza das explicações.";
@@ -214,32 +214,38 @@ export function FeedbackForm({
             ) : null}
 
             {question.type === "MULTI_SELECT" ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                {question.options?.map((option) => {
-                  const selected = Array.isArray(currentValue) && currentValue.includes(option);
+              question.options && question.options.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {question.options.map((option) => {
+                    const selected = Array.isArray(currentValue) && currentValue.includes(option);
 
-                  return (
-                    <button
-                      key={option}
-                      className={[
-                        "rounded-2xl border px-4 py-4 text-left transition",
-                        selected
-                          ? "border-red-500 bg-red-50 text-slate-950 ring-4 ring-red-100"
-                          : "border-slate-200 bg-white hover:border-red-200 hover:bg-red-50/40"
-                      ].join(" ")}
-                      onClick={() =>
-                        toggleMultiSelect(
-                          field as "difficultContents" | "helpfulClassFormats" | "toolDifficulties",
-                          option
-                        )
-                      }
-                      type="button"
-                    >
-                      <p className="text-sm font-semibold">{option}</p>
-                    </button>
-                  );
-                })}
-              </div>
+                    return (
+                      <button
+                        key={option}
+                        className={[
+                          "rounded-2xl border px-4 py-4 text-left transition",
+                          selected
+                            ? "border-red-500 bg-red-50 text-slate-950 ring-4 ring-red-100"
+                            : "border-slate-200 bg-white hover:border-red-200 hover:bg-red-50/40"
+                        ].join(" ")}
+                        onClick={() =>
+                          toggleMultiSelect(
+                            field as "difficultContents" | "helpfulClassFormats" | "toolDifficulties",
+                            option
+                          )
+                        }
+                        type="button"
+                      >
+                        <p className="text-sm font-semibold">{option}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  {question.emptyStateMessage || "Nenhuma opção disponível."}
+                </p>
+              )
             ) : null}
 
             {question.type === "OPEN_TEXT" ? (

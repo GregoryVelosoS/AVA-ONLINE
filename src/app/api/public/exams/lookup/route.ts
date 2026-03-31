@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
       publicCode: exam.publicCode,
       disciplineId: exam.disciplineId,
       disciplineName: exam.discipline.name,
-      targetClassGroupName: exam.classGroup?.name ?? null,
+      targetClassGroupId: exam.classGroup.id,
+      targetClassGroupName: exam.classGroup.name,
       timeLimitMinutes: exam.timeLimitMinutes,
       description: exam.description,
       instructions: exam.instructions

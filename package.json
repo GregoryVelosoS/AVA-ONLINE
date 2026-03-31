@@ -12,7 +12,10 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "db:backup": "tsx prisma/safe-reset.ts --backup-only",
+    "db:reset:safe": "tsx prisma/safe-reset.ts",
+    "db:reset:safe:seed": "tsx prisma/safe-reset.ts --seed"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

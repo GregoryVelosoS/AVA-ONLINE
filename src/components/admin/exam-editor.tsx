@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,6 +14,13 @@ type Discipline = {
 
 type ClassGroup = {
   id: string;
+  name: string;
+  disciplineId?: string | null;
+};
+
+type Theme = {
+  id: string;
+  code: string;
   name: string;
 };
 
@@ -34,13 +41,14 @@ type Exam = {
   publicCode: string;
   description: string | null;
   disciplineId: string;
-  targetClassGroupId: string | null;
+  targetClassGroupId: string;
   instructions: string;
   startAt: string;
   endAt: string;
   timeLimitMinutes: number | null;
   status: "DRAFT" | "PUBLISHED" | "CLOSED" | "ARCHIVED";
   maxAttempts: number;
+  themeIds: string[];
   publicLinks: { slug: string; isActive: boolean }[];
   questions: { questionId: string; position: number; question: Question }[];
 };
@@ -55,11 +63,13 @@ export function ExamEditor({
   exam,
   disciplines,
   classGroups,
+  themes,
   availableQuestions
 }: {
   exam: Exam;
   disciplines: Discipline[];
   classGroups: ClassGroup[];
+  themes: Theme[];
   availableQuestions: Question[];
 }) {
   const router = useRouter();
@@ -70,18 +80,33 @@ export function ExamEditor({
     publicCode: exam.publicCode,
     description: exam.description ?? "",
     disciplineId: exam.disciplineId,
-    targetClassGroupId: exam.targetClassGroupId ?? "",
+    targetClassGroupId: exam.targetClassGroupId,
     instructions: exam.instructions,
     startAt: toLocalInputValue(exam.startAt),
     endAt: toLocalInputValue(exam.endAt),
     timeLimitMinutes: exam.timeLimitMinutes ?? 60,
     status: exam.status,
     maxAttempts: exam.maxAttempts,
+    themeIds: exam.themeIds,
     questionIds: exam.questions.map((item) => item.questionId)
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [questionMessage, setQuestionMessage] = useState<string | null>(null);
+
+  const availableClassGroups = useMemo(
+    () => classGroups.filter((classGroup) => !classGroup.disciplineId || classGroup.disciplineId === form.disciplineId),
+    [classGroups, form.disciplineId]
+  );
+
+  function toggleTheme(themeId: string) {
+    setForm((current) => ({
+      ...current,
+      themeIds: current.themeIds.includes(themeId)
+        ? current.themeIds.filter((id) => id !== themeId)
+        : [...current.themeIds, themeId]
+    }));
+  }
 
   function moveQuestion(index: number, direction: -1 | 1) {
     setForm((current) => {
@@ -173,19 +198,32 @@ export function ExamEditor({
 
   return (
     <div className="space-y-6">
-      <form className="surface-panel space-y-4 p-5 md:p-6" onSubmit={saveExam}>
+      <form className="surface-panel space-y-5 p-5 md:p-6" onSubmit={saveExam}>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="field-label">Nome da prova</label>
             <input className="input-base" required value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
           </div>
+
           <div>
             <label className="field-label">Código público</label>
             <input className="input-base" required value={form.publicCode} onChange={(event) => setForm((current) => ({ ...current, publicCode: event.target.value.toUpperCase() }))} />
           </div>
+
           <div>
-            <label className="field-label">Disciplina</label>
-            <select className="input-base" required value={form.disciplineId} onChange={(event) => setForm((current) => ({ ...current, disciplineId: event.target.value }))}>
+            <label className="field-label">Disciplina vinculada</label>
+            <select
+              className="input-base"
+              required
+              value={form.disciplineId}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  disciplineId: event.target.value,
+                  targetClassGroupId: ""
+                }))
+              }
+            >
               {disciplines.map((discipline) => (
                 <option key={discipline.id} value={discipline.id}>
                   {discipline.name}
@@ -193,17 +231,19 @@ export function ExamEditor({
               ))}
             </select>
           </div>
+
           <div>
-            <label className="field-label">Turma-alvo</label>
-            <select className="input-base" value={form.targetClassGroupId} onChange={(event) => setForm((current) => ({ ...current, targetClassGroupId: event.target.value }))}>
-              <option value="">Sem turma fixa</option>
-              {classGroups.map((classGroup) => (
+            <label className="field-label">Turma vinculada</label>
+            <select className="input-base" required value={form.targetClassGroupId} onChange={(event) => setForm((current) => ({ ...current, targetClassGroupId: event.target.value }))}>
+              <option value="">Selecione a turma</option>
+              {availableClassGroups.map((classGroup) => (
                 <option key={classGroup.id} value={classGroup.id}>
                   {classGroup.name}
                 </option>
               ))}
             </select>
           </div>
+
           <div>
             <label className="field-label">Status</label>
             <select className="input-base" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Exam["status"] }))}>
@@ -213,37 +253,74 @@ export function ExamEditor({
               <option value="ARCHIVED">Arquivada</option>
             </select>
           </div>
+
           <div>
             <label className="field-label">Duração da prova (minutos)</label>
             <input className="input-base" max={1440} min={1} type="number" value={form.timeLimitMinutes} onChange={(event) => setForm((current) => ({ ...current, timeLimitMinutes: Number(event.target.value) }))} />
           </div>
+
           <div>
             <label className="field-label">Início</label>
             <input className="input-base" required type="datetime-local" value={form.startAt} onChange={(event) => setForm((current) => ({ ...current, startAt: event.target.value }))} />
           </div>
+
           <div>
             <label className="field-label">Fim</label>
             <input className="input-base" required type="datetime-local" value={form.endAt} onChange={(event) => setForm((current) => ({ ...current, endAt: event.target.value }))} />
           </div>
+
           <div>
             <label className="field-label">Máximo de tentativas</label>
             <input className="input-base" min={1} type="number" value={form.maxAttempts} onChange={(event) => setForm((current) => ({ ...current, maxAttempts: Number(event.target.value) }))} />
           </div>
+
           <div className="md:col-span-2">
             <label className="field-label">Descrição</label>
             <textarea className="input-base min-h-24" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
           </div>
+
           <div className="md:col-span-2">
             <label className="field-label">Instruções</label>
             <textarea className="input-base min-h-24" value={form.instructions} onChange={(event) => setForm((current) => ({ ...current, instructions: event.target.value }))} />
           </div>
         </div>
 
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-3">
+            <p className="field-label">Temas vinculados à prova</p>
+            <p className="text-sm text-slate-500">Somente esses temas aparecerão na pergunta final sobre conteúdos com maior dificuldade.</p>
+          </div>
+
+          {themes.length === 0 ? (
+            <p className="text-sm text-slate-500">Nenhum tema cadastrado. Cadastre primeiro em Temas.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {themes.map((theme) => {
+                const selected = form.themeIds.includes(theme.id);
+
+                return (
+                  <button
+                    key={theme.id}
+                    className={[
+                      "rounded-full border px-3 py-2 text-sm font-semibold transition",
+                      selected ? "border-red-500 bg-red-50 text-red-700" : "border-slate-200 bg-white text-slate-700 hover:border-red-200"
+                    ].join(" ")}
+                    onClick={() => toggleTheme(theme.id)}
+                    type="button"
+                  >
+                    {theme.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {exam.publicLinks[0] ? <StatusBanner message={`Link público atual: /exam/${exam.publicLinks[0].slug} (${exam.publicLinks[0].isActive ? "ativo" : "inativo"})`} tone="info" /> : null}
         {error ? <StatusBanner tone="error" message={error} /> : null}
         {success ? <StatusBanner tone="success" message={success} /> : null}
 
-        <button className="btn-primary" disabled={isPending} type="submit">
+        <button className="btn-primary" disabled={isPending || !form.targetClassGroupId} type="submit">
           {isPending ? "Salvando..." : "Salvar dados da prova"}
         </button>
       </form>

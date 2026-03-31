@@ -59,6 +59,7 @@ const questionBaseSchema = z.object({
   supportFileMime: optionalText,
   defaultWeight: z.coerce.number().positive().default(1),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("ACTIVE"),
+  themeIds: z.array(z.string().uuid()).default([]),
   options: z.array(questionOptionSchema).default([])
 });
 
@@ -106,13 +107,14 @@ export const examSchema = z.object({
     .regex(/^[A-Za-z0-9_-]+$/, "Use apenas letras, números, hífen ou underline."),
   description: optionalText,
   disciplineId: z.string().uuid(),
-  targetClassGroupId: optionalUuid,
+  targetClassGroupId: z.string().uuid(),
   instructions: optionalText,
   startAt: z.string().datetime().optional().or(z.literal("")),
   endAt: z.string().datetime().optional().or(z.literal("")),
   timeLimitMinutes: z.coerce.number().int().min(1).max(1440).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"]).default("DRAFT"),
   maxAttempts: z.coerce.number().int().min(1).default(1),
+  themeIds: z.array(z.string().uuid()).default([]),
   questionIds: z.array(z.string().uuid()).default([])
 });
 
@@ -127,15 +129,69 @@ export const classGroupSchema = z.object({
   disciplineId: optionalUuid
 });
 
+export const themeSchema = z.object({
+  code: z.string().trim().min(2).max(20),
+  name: z.string().trim().min(2).max(120),
+  description: optionalText
+});
+
+export const catalogImportEntitySchema = z.enum(["disciplines", "themes", "class-groups"]);
+
+export const catalogImportDisciplineSchema = z.object({
+  code: z.string().trim().min(2).max(20),
+  name: z.string().trim().min(2).max(120)
+});
+
+export const catalogImportThemeSchema = z.object({
+  code: z.string().trim().min(2).max(20),
+  name: z.string().trim().min(2).max(120),
+  description: optionalText
+});
+
+export const catalogImportClassGroupSchema = z.object({
+  code: z.string().trim().min(2).max(20),
+  name: z.string().trim().min(2).max(120),
+  disciplineId: optionalUuid,
+  disciplineCode: optionalText,
+  disciplineName: optionalText
+});
+
+export const catalogImportSchema = z.discriminatedUnion("entity", [
+  z.object({
+    entity: z.literal("disciplines"),
+    items: z.array(catalogImportDisciplineSchema).min(1)
+  }),
+  z.object({
+    entity: z.literal("themes"),
+    items: z.array(catalogImportThemeSchema).min(1)
+  }),
+  z.object({
+    entity: z.literal("class-groups"),
+    items: z.array(catalogImportClassGroupSchema).min(1)
+  })
+]);
+
+export const systemResetSchema = z.object({
+  confirmationText: z.string().trim().min(1)
+});
+
 export const startAttemptSchema = z.object({
   publicCode: z.string().trim().min(4).max(20),
   studentName: z.string().min(2),
-  classGroupName: z.string().min(2),
-  disciplineInformed: z.string().min(2)
+  attemptOrigin: z.string().trim().min(2).max(80).optional().default("PUBLIC_HOME")
 });
 
 export const examLookupSchema = z.object({
   publicCode: z.string().trim().min(4).max(20)
+});
+
+export const attemptLookupSchema = z.object({
+  resultLookupCode: z
+    .string()
+    .trim()
+    .min(6)
+    .max(40)
+    .regex(/^[A-Za-z0-9_-]+$/, "Use apenas letras, números, hífen ou underline.")
 });
 
 export const answerSchema = z.object({
@@ -150,7 +206,7 @@ export const answerSchema = z.object({
 export const feedbackSchema = z.object({
   attemptId: z.string().uuid(),
   generalDifficulty: z.number().int().min(1).max(5),
-  difficultContents: z.array(z.string().min(1)).min(1),
+  difficultContents: z.array(z.string().min(1)).default([]),
   commonDifficultyType: z.string().min(1),
   selfPerformance: z.number().int().min(1).max(5),
   explanationClarity: z.number().int().min(1).max(5),

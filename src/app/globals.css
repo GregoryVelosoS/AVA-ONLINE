@@ -66,3 +66,20 @@ body {
     @apply text-sm text-slate-600 md:text-base;
   }
 }
+
+.skeleton-block {
+  background:
+    linear-gradient(90deg, rgba(226, 232, 240, 0.65) 0%, rgba(248, 250, 252, 0.95) 50%, rgba(226, 232, 240, 0.65) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.25s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

@@ -4,6 +4,8 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { StatusBanner } from "@/components/ui/status-banner";
 
 type ShareLink = {
@@ -25,7 +27,7 @@ function safeFilenamePart(value: string) {
 async function buildReportPdf(examTitle: string, examCode?: string) {
   const root = document.getElementById("report-export-root");
   if (!root) {
-    throw new Error("A area do relatorio nao foi encontrada para exportacao.");
+    throw new Error("A área do relatório não foi encontrada para exportação.");
   }
 
   if ("fonts" in document) {
@@ -34,21 +36,21 @@ async function buildReportPdf(examTitle: string, examCode?: string) {
   await new Promise((resolve) => window.setTimeout(resolve, 250));
 
   const canvas = await html2canvas(root, {
-    scale: 2,
-    useCORS: true,
     backgroundColor: "#ffffff",
     logging: false,
-    windowWidth: root.scrollWidth,
-    windowHeight: root.scrollHeight,
+    scale: 2,
     scrollX: 0,
-    scrollY: -window.scrollY
+    scrollY: -window.scrollY,
+    useCORS: true,
+    windowHeight: root.scrollHeight,
+    windowWidth: root.scrollWidth
   });
 
   const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
+    compress: true,
     format: "a4",
-    compress: true
+    orientation: "portrait",
+    unit: "mm"
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -70,22 +72,12 @@ async function buildReportPdf(examTitle: string, examCode?: string) {
 
     const context = pageCanvas.getContext("2d");
     if (!context) {
-      throw new Error("Nao foi possivel preparar a exportacao do PDF.");
+      throw new Error("Não foi possível preparar a exportação do PDF.");
     }
 
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    context.drawImage(
-      canvas,
-      0,
-      renderedHeight,
-      canvas.width,
-      currentSliceHeight,
-      0,
-      0,
-      pageCanvas.width,
-      pageCanvas.height
-    );
+    context.drawImage(canvas, 0, renderedHeight, canvas.width, currentSliceHeight, 0, 0, pageCanvas.width, pageCanvas.height);
 
     const sliceData = pageCanvas.toDataURL("image/png");
     const renderedHeightMm = currentSliceHeight / pixelsPerMm;
@@ -115,49 +107,63 @@ export function ReportActionsPanel({
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [activeShareActionId, setActiveShareActionId] = useState<string | null>(null);
+  const [isRefreshing, startRefreshTransition] = useTransition();
+  const [isCreatingLink, setIsCreatingLink] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   async function createShareLink() {
     setMessage(null);
-    const response = await fetch("/api/admin/reports/share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        examId,
-        label: `Visualizacao de ${examTitle}`
-      })
-    });
+    setIsCreatingLink(true);
 
-    const payload = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setMessage(payload.error || "Nao foi possivel gerar o link de visualizacao.");
-      return;
+    try {
+      const response = await fetch("/api/admin/reports/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          examId,
+          label: `Visualizacao de ${examTitle}`
+        })
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(payload.error || "Nao foi possivel gerar o link de visualizacao.");
+        return;
+      }
+
+      setMessage("Link de visualizacao gerado com sucesso.");
+      startRefreshTransition(() => router.refresh());
+    } finally {
+      setIsCreatingLink(false);
     }
-
-    setMessage("Link de visualizacao gerado com sucesso.");
-    startTransition(() => router.refresh());
   }
 
   async function toggleShareLink(id: string, isActive: boolean) {
     setMessage(null);
-    const response = await fetch("/api/admin/reports/share", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id,
-        isActive
-      })
-    });
+    setActiveShareActionId(id);
 
-    const payload = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setMessage(payload.error || "Nao foi possivel atualizar o link.");
-      return;
+    try {
+      const response = await fetch("/api/admin/reports/share", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          isActive
+        })
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(payload.error || "Nao foi possivel atualizar o link.");
+        return;
+      }
+
+      setMessage("Link de visualizacao atualizado.");
+      startRefreshTransition(() => router.refresh());
+    } finally {
+      setActiveShareActionId(null);
     }
-
-    setMessage("Link de visualizacao atualizado.");
-    startTransition(() => router.refresh());
   }
 
   async function exportPdf() {
@@ -166,6 +172,7 @@ export function ReportActionsPanel({
 
     try {
       await buildReportPdf(examTitle, examCode);
+      setMessage("Exportacao do PDF concluida.");
     } catch (error) {
       const fallback = "Nao foi possivel exportar o PDF do relatorio.";
       setMessage(error instanceof Error ? error.message || fallback : fallback);
@@ -175,23 +182,26 @@ export function ReportActionsPanel({
   }
 
   return (
-    <section className="surface-panel space-y-4 p-5">
+    <section className="surface-panel relative space-y-4 p-5">
+      <LoadingOverlay active={isCreatingLink || isExporting || isRefreshing} label={isExporting ? "Gerando PDF..." : isCreatingLink ? "Gerando link..." : "Atualizando relatórios..."} />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Compartilhamento e exportacao</p>
           <h3 className="mt-2 text-xl font-black tracking-tight text-slate-950">Resultados externos da prova</h3>
         </div>
+
         <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary" disabled={isExporting} onClick={exportPdf} type="button">
-            {isExporting ? "Preparando PDF..." : "Exportar PDF"}
-          </button>
-          <button className="btn-primary" disabled={isPending} onClick={createShareLink} type="button">
+          <LoadingButton loading={isExporting} loadingText="Preparando PDF..." onClick={exportPdf} type="button" variant="secondary">
+            Exportar PDF
+          </LoadingButton>
+          <LoadingButton loading={isCreatingLink} loadingText="Gerando link..." onClick={createShareLink} type="button">
             Gerar link visualizador
-          </button>
+          </LoadingButton>
         </div>
       </div>
 
-      {message ? <StatusBanner message={message} tone={message.includes("sucesso") ? "success" : "error"} /> : null}
+      {message ? <StatusBanner message={message} tone={message.includes("sucesso") || message.includes("concluida") ? "success" : "error"} /> : null}
 
       <div className="space-y-3">
         {shareLinks.length === 0 ? (
@@ -199,17 +209,26 @@ export function ReportActionsPanel({
         ) : (
           shareLinks.map((shareLink) => {
             const viewerUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/viewer/reports/${shareLink.token}`;
+            const rowBusy = activeShareActionId === shareLink.id;
 
             return (
-              <div key={shareLink.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div key={shareLink.id} className="relative rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <LoadingOverlay active={rowBusy} label="Atualizando link..." />
+
                 <p className="break-all text-sm font-semibold text-slate-900">{viewerUrl}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="btn-secondary" onClick={() => navigator.clipboard.writeText(viewerUrl)} type="button">
+                  <LoadingButton onClick={() => navigator.clipboard.writeText(viewerUrl)} type="button" variant="secondary">
                     Copiar link
-                  </button>
-                  <button className="btn-secondary" onClick={() => toggleShareLink(shareLink.id, !shareLink.isActive)} type="button">
+                  </LoadingButton>
+                  <LoadingButton
+                    loading={rowBusy}
+                    loadingText={shareLink.isActive ? "Desativando..." : "Reativando..."}
+                    onClick={() => toggleShareLink(shareLink.id, !shareLink.isActive)}
+                    type="button"
+                    variant="secondary"
+                  >
                     {shareLink.isActive ? "Desativar link" : "Reativar link"}
-                  </button>
+                  </LoadingButton>
                 </div>
               </div>
             );

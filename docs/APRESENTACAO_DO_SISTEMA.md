@@ -6,6 +6,7 @@ Este documento resume o que o AVA Online faz hoje e ajuda na apresentacao do pro
 
 O AVA Online e uma plataforma para:
 - criar provas e questoes;
+- organizar temas e cruzar desempenho por conteudo;
 - aplicar avaliacoes online;
 - acompanhar a aplicacao em tempo real;
 - analisar resultados consolidados;
@@ -19,7 +20,7 @@ Hoje o sistema possui quatro contextos de acesso:
 
 ### ADM
 - acesso total ao sistema;
-- gerencia provas, questoes, turmas, disciplinas, usuarios, monitoramento, relatorios e sugestoes.
+- gerencia provas, questoes, temas, turmas, disciplinas, usuarios, monitoramento, relatorios, configuracoes e sugestoes.
 
 ### VISUALIZADOR
 - acesso apenas a relatorios;
@@ -29,7 +30,7 @@ Hoje o sistema possui quatro contextos de acesso:
 ### Aluno
 - sem cadastro formal;
 - entra pelo codigo da prova;
-- informa nome, turma e disciplina;
+- informa apenas o nome;
 - realiza a prova e responde o feedback final.
 
 ### Visualizacao externa por link
@@ -39,16 +40,19 @@ Hoje o sistema possui quatro contextos de acesso:
 ## 3. Fluxo do aluno
 
 1. o aluno entra na pagina inicial;
-2. informa o codigo da prova;
-3. o sistema valida disponibilidade e status;
-4. abre a etapa de identificacao;
-5. o aluno informa nome, turma e disciplina;
-6. inicia a prova;
-7. responde as questoes com nivel de confianca;
-8. envia a prova;
-9. responde o formulario pedagogico final;
-10. visualiza o fechamento da prova com desempenho e orientacoes;
-11. pode exportar o proprio resultado final em PDF.
+2. escolhe entre iniciar uma prova ou consultar uma tentativa anterior;
+3. informa o codigo da prova;
+4. o sistema valida disponibilidade e status;
+5. abre a etapa de identificacao;
+6. o aluno informa apenas o nome;
+7. turma e disciplina sao herdadas da prova;
+8. inicia a prova;
+9. responde as questoes com nivel de confianca;
+10. envia a prova;
+11. responde o formulario pedagogico final;
+12. visualiza o fechamento da prova com desempenho e orientacoes;
+13. pode exportar o proprio resultado final em PDF;
+14. pode copiar o ID da tentativa para consultar esse resultado futuramente.
 
 ## 4. Provas
 
@@ -56,6 +60,8 @@ Cada prova hoje pode ter:
 - nome;
 - codigo publico unico;
 - disciplina;
+- turma obrigatoria;
+- temas vinculados;
 - duracao;
 - status.
 
@@ -68,6 +74,11 @@ O admin pode:
 - excluir;
 - monitorar;
 - abrir relatorios.
+
+As provas tambem alimentam:
+- feedback final baseado em temas cadastrados;
+- analytics por tema;
+- consulta publica posterior por ID da tentativa.
 
 ## 5. Questoes
 
@@ -84,6 +95,7 @@ A estrutura visual segue:
 4. alternativas
 
 Cada questao pode ter tambem:
+- temas vinculados;
 - feedback esperado;
 - explicacao da resposta;
 - temas para estudo;
@@ -110,6 +122,15 @@ O projeto agora suporta dois modos de armazenamento:
 Isso vale para:
 - apoio visual de questoes;
 - imagem de sugestoes e reportes.
+
+Tambem passaram a existir indicadores visuais consistentes de carregamento em:
+- login e logout;
+- navegacao entre telas;
+- CRUD administrativo;
+- importacoes e exportacoes;
+- monitoramento;
+- inicio e consulta de tentativa;
+- envio do feedback final.
 
 ## 7. Tela da prova
 
@@ -145,10 +166,13 @@ Ao final da prova, o aluno responde um formulario estruturado com:
 - dificuldade com ferramentas;
 - comentario final.
 
+Os conteudos com maior dificuldade agora priorizam os temas vinculados a prova.
+
 ## 9. Tela final do aluno
 
 Depois do envio, o sistema pode mostrar:
 - confirmacao de envio;
+- ID da tentativa para consulta futura;
 - pontuacao;
 - acertos e erros;
 - lista das questoes;
@@ -165,6 +189,11 @@ O dashboard inicial apresenta:
 - resumo da ultima prova;
 - indicadores recentes;
 - atalhos para modulos principais.
+
+Na area administrativa tambem existem:
+- cadastro de temas;
+- importacao em lote de disciplinas, temas e turmas;
+- painel de configuracoes com backup e reset seguro.
 
 ## 11. Monitoramento
 
@@ -194,6 +223,8 @@ Tambem permite:
 - link compartilhavel;
 - acesso por perfil `VISUALIZADOR`.
 
+O cruzamento analitico agora pode considerar temas vinculados diretamente em provas e questoes.
+
 ## 13. Sugestoes e reportes
 
 Existe um botao global em todas as paginas:
@@ -212,9 +243,13 @@ Na administracao existe uma area propria para triagem desses registros.
 
 Os principais pontos fortes do sistema sao:
 - acesso do aluno por codigo simples;
+- reconsulta publica por ID da tentativa;
 - separacao entre monitoramento e relatorios;
 - leitura pedagogica alem da nota;
+- temas analiticos vinculados ao feedback e aos relatorios;
 - suporte visual e organizacao melhor das questoes;
+- importacao em massa para cadastros base;
+- reset protegido com backup automatico;
 - controle de usuarios internos por perfil;
 - canal de melhoria continua do proprio sistema.
 
@@ -227,13 +262,15 @@ Se quiser apresentar rapidamente:
 3. mostre a identificacao do aluno
 4. mostre a tela da prova com timer e confianca
 5. mostre a etapa final de feedback
-6. mostre a tela final com exportacao individual em PDF
+6. mostre a tela final com exportacao individual em PDF e o ID da tentativa
 7. entre como `ADM`
-8. mostre dashboard, provas, relatorios e usuarios
-9. mostre a exportacao visual do PDF em relatorios
-10. mostre um login `VISUALIZADOR`
-11. mostre o botao global de sugestoes
-12. mostre a area administrativa desses registros
+8. mostre dashboard, provas, temas, relatorios e usuarios
+9. mostre a importacao em lote de turmas, disciplinas ou temas
+10. mostre a exportacao visual do PDF em relatorios
+11. mostre a pagina de configuracoes com backup/reset seguro
+12. mostre um login `VISUALIZADOR`
+13. mostre o botao global de sugestoes
+14. mostre a area administrativa desses registros
 
 ## 16. Resumo executivo
 

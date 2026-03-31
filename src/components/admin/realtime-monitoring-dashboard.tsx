@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { StatusBanner } from "@/components/ui/status-banner";
 
 type MonitoringData = {
   updatedAt: string;
@@ -39,6 +41,8 @@ export function RealtimeMonitoringDashboard({
   examId?: string;
 }) {
   const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = window.setInterval(async () => {
@@ -47,6 +51,9 @@ export function RealtimeMonitoringDashboard({
         params.set("examId", examId);
       }
 
+      setLoading(true);
+      setError(null);
+
       const response = await fetch(`/api/admin/monitoring${params.toString() ? `?${params.toString()}` : ""}`, {
         cache: "no-store"
       });
@@ -54,7 +61,11 @@ export function RealtimeMonitoringDashboard({
       if (response.ok) {
         const payload = (await response.json()) as MonitoringData;
         setData(payload);
+      } else {
+        setError("Não foi possível atualizar o monitoramento em tempo real.");
       }
+
+      setLoading(false);
     }, 15000);
 
     return () => window.clearInterval(interval);
@@ -62,6 +73,9 @@ export function RealtimeMonitoringDashboard({
 
   return (
     <div className="space-y-6">
+      {loading ? <StatusBanner message="Atualizando monitoramento em tempo real..." tone="info" /> : null}
+      {error ? <StatusBanner message={error} tone="error" /> : null}
+
       <section className="grid gap-4 md:grid-cols-4">
         <div className="surface-panel p-5">
           <p className="text-sm text-slate-500">Provas com execução ativa</p>
@@ -88,7 +102,9 @@ export function RealtimeMonitoringDashboard({
 
       <div className="space-y-4">
         {data.exams.map((exam) => (
-          <section key={exam.id} className="surface-panel space-y-4 p-5">
+          <section key={exam.id} className="surface-panel relative space-y-4 p-5">
+            <LoadingOverlay active={loading} label="Atualizando dashboard..." />
+
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-red-700">Código {exam.publicCode}</p>

@@ -13,11 +13,12 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
-  const [exam, disciplines, classGroups, questions] = await Promise.all([
+  const [exam, disciplines, classGroups, themes, questions] = await Promise.all([
     prisma.exam.findUnique({
       where: { id },
       include: {
         publicLinks: true,
+        themes: true,
         questions: {
           include: {
             question: {
@@ -41,6 +42,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
     }),
     prisma.discipline.findMany({ orderBy: { name: "asc" } }),
     prisma.classGroup.findMany({ orderBy: { name: "asc" } }),
+    prisma.theme.findMany({ orderBy: { name: "asc" } }),
     prisma.question.findMany({
       select: {
         id: true,
@@ -67,7 +69,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
       <header className="space-y-4">
         <div>
           <h1 className="section-title">Editar prova</h1>
-          <p className="section-subtitle">Ajuste dados principais, duração e monte a sequência de questões da avaliação.</p>
+          <p className="section-subtitle">Ajuste dados principais, vínculo obrigatório, duração, temas e sequência de questões.</p>
         </div>
         <AdminNav current="/admin/exams" role="ADM" />
       </header>
@@ -86,6 +88,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
           timeLimitMinutes: exam.timeLimitMinutes,
           status: exam.status,
           maxAttempts: exam.maxAttempts,
+          themeIds: exam.themes.map((item) => item.themeId),
           publicLinks: exam.publicLinks.map((publicLink) => ({
             slug: publicLink.slug,
             isActive: publicLink.isActive
@@ -97,7 +100,12 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
           }))
         }}
         disciplines={disciplines}
-        classGroups={classGroups}
+        classGroups={classGroups.map((classGroup) => ({
+          id: classGroup.id,
+          name: classGroup.name,
+          disciplineId: classGroup.disciplineId
+        }))}
+        themes={themes}
         availableQuestions={questions}
       />
     </main>

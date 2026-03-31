@@ -51,6 +51,18 @@ async function main() {
     create: { label: "#OP-ARIT", color: "#1d4ed8" }
   });
 
+  const theme = await prisma.theme.upsert({
+    where: { code: "OPER" },
+    update: {
+      name: "Operadores"
+    },
+    create: {
+      code: "OPER",
+      name: "Operadores",
+      description: "Operadores aritmeticos e modulo."
+    }
+  });
+
   const question = await prisma.question.upsert({
     where: { code: "Q-001" },
     update: {},
@@ -83,6 +95,12 @@ async function main() {
     create: { questionId: question.id, tagId: tag.id }
   });
 
+  await prisma.questionTheme.upsert({
+    where: { questionId_themeId: { questionId: question.id, themeId: theme.id } },
+    update: {},
+    create: { questionId: question.id, themeId: theme.id }
+  });
+
   const exam = await prisma.exam.upsert({
     where: { id: "demo-exam-id" },
     update: {
@@ -111,6 +129,12 @@ async function main() {
         create: [{ slug: "demo2026", isActive: true }]
       }
     }
+  });
+
+  await prisma.examTheme.upsert({
+    where: { examId_themeId: { examId: exam.id, themeId: theme.id } },
+    update: {},
+    create: { examId: exam.id, themeId: theme.id }
   });
 
   console.log("Seed concluido", { admin: admin.email, exam: exam.title, classGroup: classGroup.name });

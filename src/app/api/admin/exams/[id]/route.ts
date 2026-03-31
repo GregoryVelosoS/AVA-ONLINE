@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
+import { getExamBindingValidationError } from "@/server/services/exam-bindings";
 import { examSchema } from "@/server/validators/schemas";
 import { normalizePublicCode } from "@/lib/exam-status";
 
@@ -21,6 +22,11 @@ export async function GET(_: NextRequest, context: RouteContext) {
     include: {
       discipline: true,
       classGroup: true,
+      themes: {
+        include: {
+          theme: true
+        }
+      },
       publicLinks: true,
       questions: {
         include: {
@@ -81,70 +87,91 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Uma prova publicada precisa ter pelo menos uma questão." }, { status: 400 });
   }
 
+  const bindingError = await getExamBindingValidationError({
+    disciplineId: parsed.data.disciplineId,
+    targetClassGroupId: parsed.data.targetClassGroupId,
+    themeIds: parsed.data.themeIds
+  });
+
+  if (bindingError) {
+    return NextResponse.json({ error: bindingError }, { status: 400 });
+  }
+
   const startAt = parsed.data.startAt ? new Date(parsed.data.startAt) : existing.startAt;
   const endAt = parsed.data.endAt ? new Date(parsed.data.endAt) : existing.endAt;
 
-  const updated = await prisma.$transaction(async (tx) => {
-    await tx.examQuestion.deleteMany({
-      where: { examId: id }
-    });
-
-    return tx.exam.update({
-      where: { id },
-      data: {
-        title: parsed.data.title,
-        publicCode,
-        description: parsed.data.description || null,
-        disciplineId: parsed.data.disciplineId,
-        targetClassGroupId: parsed.data.targetClassGroupId || null,
-        instructions: parsed.data.instructions || "Leia com atenção e responda conforme orientado pelo professor.",
-        startAt,
-        endAt,
-        timeLimitMinutes: parsed.data.timeLimitMinutes || null,
-        status: parsed.data.status,
-        maxAttempts: parsed.data.maxAttempts,
-        questions:
-          questionIds.length > 0
-            ? {
-                create: questionIds.map((questionId, index) => ({
-                  questionId,
-                  position: index + 1
-                }))
-              }
-            : undefined,
-        publicLinks: existing.publicLinks[0]
+  const updated = await prisma.exam.update({
+    where: { id },
+    data: {
+      title: parsed.data.title,
+      publicCode,
+      description: parsed.data.description || null,
+      disciplineId: parsed.data.disciplineId,
+      targetClassGroupId: parsed.data.targetClassGroupId,
+      instructions: parsed.data.instructions || "Leia com atenção e responda conforme orientado pelo professor.",
+      startAt,
+      endAt,
+      timeLimitMinutes: parsed.data.timeLimitMinutes || null,
+      status: parsed.data.status,
+      maxAttempts: parsed.data.maxAttempts,
+      themes: {
+        deleteMany: {},
+        ...(parsed.data.themeIds.length > 0
           ? {
-              updateMany: {
-                where: {},
-                data: {
-                  slug: buildPublicSlug(publicCode),
-                  isActive: parsed.data.status === "PUBLISHED"
-                }
-              }
+              create: Array.from(new Set(parsed.data.themeIds)).map((themeId) => ({
+                themeId
+              }))
             }
-          : {
-              create: {
+          : {})
+      },
+      questions: {
+        deleteMany: {},
+        ...(questionIds.length > 0
+          ? {
+              create: questionIds.map((questionId, index) => ({
+                questionId,
+                position: index + 1
+              }))
+            }
+          : {})
+      },
+      publicLinks: existing.publicLinks[0]
+        ? {
+            updateMany: {
+              where: {},
+              data: {
                 slug: buildPublicSlug(publicCode),
                 isActive: parsed.data.status === "PUBLISHED"
               }
             }
-      },
-      include: {
-        discipline: true,
-        classGroup: true,
-        publicLinks: true,
-        questions: {
-          include: {
-            question: {
-              include: {
-                discipline: true
-              }
+          }
+        : {
+            create: {
+              slug: buildPublicSlug(publicCode),
+              isActive: parsed.data.status === "PUBLISHED"
             }
-          },
-          orderBy: { position: "asc" }
+          }
+    },
+    include: {
+      discipline: true,
+      classGroup: true,
+      themes: {
+        include: {
+          theme: true
         }
+      },
+      publicLinks: true,
+      questions: {
+        include: {
+          question: {
+            include: {
+              discipline: true
+            }
+          }
+        },
+        orderBy: { position: "asc" }
       }
-    });
+    }
   });
 
   return NextResponse.json(updated);

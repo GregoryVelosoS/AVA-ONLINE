@@ -162,6 +162,11 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
                   tag: true
                 }
               },
+              themes: {
+                include: {
+                  theme: true
+                }
+              },
               options: {
                 orderBy: { position: "asc" }
               }
@@ -175,7 +180,15 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
           profile: true,
           answers: {
             include: {
-              question: true,
+              question: {
+                include: {
+                  themes: {
+                    include: {
+                      theme: true
+                    }
+                  }
+                }
+              },
               selectedOption: true
             }
           },
@@ -416,11 +429,14 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       tagPerformanceMap.set(tagRelation.tag.label, tagEntry);
     });
 
-    const studyTopics = getQuestionStudyTopics({
-      studyTopics: question.studyTopics,
-      subject: question.subject,
-      topic: question.topic
-    });
+    const studyTopics = uniqueByValue([
+      ...question.themes.map((item) => item.theme.name),
+      ...getQuestionStudyTopics({
+        studyTopics: question.studyTopics,
+        subject: question.subject,
+        topic: question.topic
+      })
+    ]);
     const incorrectCount = answers.filter((answer) => answer.isCorrect === false).length;
     studyTopics.forEach((topic) => {
       themeWeaknessMap.set(topic, (themeWeaknessMap.get(topic) || 0) + incorrectCount);
@@ -501,11 +517,14 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
             attempt.answers
               .filter((answer) => answer.isCorrect === false)
               .flatMap((answer) =>
-                getQuestionStudyTopics({
-                  studyTopics: answer.question.studyTopics,
-                  subject: answer.question.subject,
-                  topic: answer.question.topic
-                })
+                uniqueByValue([
+                  ...answer.question.themes.map((item) => item.theme.name),
+                  ...getQuestionStudyTopics({
+                    studyTopics: answer.question.studyTopics,
+                    subject: answer.question.subject,
+                    topic: answer.question.topic
+                  })
+                ])
               )
           );
 

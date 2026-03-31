@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
+import { getExamBindingValidationError } from "@/server/services/exam-bindings";
 import { examSchema } from "@/server/validators/schemas";
 import { normalizePublicCode } from "@/lib/exam-status";
 
@@ -15,6 +16,11 @@ export async function GET() {
     include: {
       discipline: true,
       classGroup: true,
+      themes: {
+        include: {
+          theme: true
+        }
+      },
       questions: {
         include: {
           question: {
@@ -61,6 +67,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Já existe uma prova com esse código público." }, { status: 409 });
   }
 
+  const bindingError = await getExamBindingValidationError({
+    disciplineId: parsed.data.disciplineId,
+    targetClassGroupId: parsed.data.targetClassGroupId,
+    themeIds: parsed.data.themeIds
+  });
+
+  if (bindingError) {
+    return NextResponse.json({ error: bindingError }, { status: 400 });
+  }
+
   const startAt = parsed.data.startAt ? new Date(parsed.data.startAt) : new Date();
   const endAt = parsed.data.endAt
     ? new Date(parsed.data.endAt)
@@ -72,7 +88,7 @@ export async function POST(request: NextRequest) {
       publicCode,
       description: parsed.data.description || null,
       disciplineId: parsed.data.disciplineId,
-      targetClassGroupId: parsed.data.targetClassGroupId || null,
+      targetClassGroupId: parsed.data.targetClassGroupId,
       instructions: parsed.data.instructions || "Leia com atenção e responda conforme orientado pelo professor.",
       startAt,
       endAt,
@@ -80,6 +96,14 @@ export async function POST(request: NextRequest) {
       status: parsed.data.status,
       maxAttempts: parsed.data.maxAttempts,
       createdBy: session.sub,
+      themes:
+        parsed.data.themeIds.length > 0
+          ? {
+              create: Array.from(new Set(parsed.data.themeIds)).map((themeId) => ({
+                themeId
+              }))
+            }
+          : undefined,
       questions:
         parsed.data.questionIds.length > 0
           ? {
@@ -99,6 +123,11 @@ export async function POST(request: NextRequest) {
     include: {
       discipline: true,
       classGroup: true,
+      themes: {
+        include: {
+          theme: true
+        }
+      },
       publicLinks: true
     }
   });

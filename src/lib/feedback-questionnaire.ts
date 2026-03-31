@@ -22,6 +22,7 @@ export type FeedbackQuestionDefinition = {
   title: string;
   description?: string;
   options?: string[];
+  emptyStateMessage?: string;
 };
 
 export const feedbackScaleOptions = [
@@ -76,8 +77,9 @@ export function buildFeedbackQuestions(contentOptions: string[]) {
       key: "DIFFICULT_CONTENTS",
       type: "MULTI_SELECT",
       title: "Quais conteúdos trouxeram mais dificuldade?",
-      description: "Selecione todos os tópicos que merecem revisão.",
-      options: normalizedContents.length > 0 ? normalizedContents : ["Sem tópicos mapeados nesta prova"]
+      description: normalizedContents.length > 0 ? "Selecione todos os tópicos que merecem revisão." : "Esta prova ainda não possui temas cadastrados.",
+      options: normalizedContents,
+      emptyStateMessage: "Nenhum tema foi vinculado a esta prova. O restante do feedback continua disponível normalmente."
     },
     {
       key: "COMMON_DIFFICULTY_TYPE",

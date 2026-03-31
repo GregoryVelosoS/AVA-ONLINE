@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 type UserRole = "ADM" | "VISUALIZADOR";
 
@@ -13,10 +14,12 @@ const adminLinks = [
   { href: "/admin/questions", label: "Questões" },
   { href: "/admin/disciplines", label: "Disciplinas" },
   { href: "/admin/class-groups", label: "Turmas" },
+  { href: "/admin/themes", label: "Temas" },
   { href: "/admin/monitoring", label: "Monitoramento" },
   { href: "/admin/reports", label: "Relatórios" },
   { href: "/admin/issues", label: "Sugestões" },
-  { href: "/admin/users", label: "Usuários" }
+  { href: "/admin/users", label: "Usuários" },
+  { href: "/admin/settings", label: "Configurações" }
 ];
 
 const viewerLinks = [{ href: "/admin/reports", label: "Relatórios" }];
@@ -64,14 +67,16 @@ export function AdminNav({
           })}
         </nav>
 
-        <button
-          className="btn-danger self-start border-red-400/40 bg-white text-red-700 hover:bg-red-50"
-          disabled={loading}
+        <LoadingButton
+          className="self-start border-red-400/40 bg-white text-red-700 hover:bg-red-50"
+          loading={loading}
+          loadingText="Saindo..."
           onClick={logout}
           type="button"
+          variant="danger"
         >
-          {loading ? "Saindo..." : "Logout"}
-        </button>
+          Logout
+        </LoadingButton>
       </div>
     </div>
   );

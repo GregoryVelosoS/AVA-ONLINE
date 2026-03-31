@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Route } from "next";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 export function QuestionDeleteButton({
   questionId,
@@ -40,8 +41,8 @@ export function QuestionDeleteButton({
   }
 
   return (
-    <button className="btn-danger" disabled={loading} onClick={handleDelete} type="button">
-      {loading ? "Excluindo..." : "Excluir questão"}
-    </button>
+    <LoadingButton loading={loading} loadingText="Excluindo..." onClick={handleDelete} type="button" variant="danger">
+      Excluir questão
+    </LoadingButton>
   );
 }

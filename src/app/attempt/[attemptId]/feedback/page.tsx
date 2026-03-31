@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { FeedbackForm } from "@/components/exam/feedback-form";
 import { prisma } from "@/server/db/prisma";
-import { getQuestionStudyTopics } from "@/lib/question-feedback";
 
 export default async function FeedbackPage({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = await params;
@@ -11,11 +10,10 @@ export default async function FeedbackPage({ params }: { params: Promise<{ attem
       profile: true,
       exam: {
         include: {
-          questions: {
+          themes: {
             include: {
-              question: true
-            },
-            orderBy: { position: "asc" }
+              theme: true
+            }
           }
         }
       }
@@ -26,17 +24,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ attem
     notFound();
   }
 
-  const contentOptions = Array.from(
-    new Set(
-      attempt.exam.questions.flatMap((examQuestion) =>
-        getQuestionStudyTopics({
-          studyTopics: examQuestion.question.studyTopics,
-          subject: examQuestion.question.subject,
-          topic: examQuestion.question.topic
-        })
-      )
-    )
-  );
+  const contentOptions = attempt.exam.themes.map((item) => item.theme.name);
 
   return (
     <main className="container-page space-y-4">
@@ -47,11 +35,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ attem
           responda rapidamente para gerar indicadores pedagógicos da turma e liberar sua análise final da prova.
         </p>
       </div>
-      <FeedbackForm
-        attemptId={attemptId}
-        contentOptions={contentOptions}
-        examTitle={attempt.exam.title}
-      />
+      <FeedbackForm attemptId={attemptId} contentOptions={contentOptions} examTitle={attempt.exam.title} />
     </main>
   );
 }

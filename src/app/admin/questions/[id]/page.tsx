@@ -4,6 +4,7 @@ import { prisma } from "@/server/db/prisma";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { QuestionForm, type QuestionFormState } from "@/components/admin/question-form";
 import { QuestionDeleteButton } from "@/components/admin/question-delete-button";
+import { QuestionThemePanel } from "@/components/admin/question-theme-panel";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -14,16 +15,18 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
 
   const { id } = await params;
 
-  const [question, disciplines] = await Promise.all([
+  const [question, disciplines, themes] = await Promise.all([
     prisma.question.findUnique({
       where: { id },
       include: {
         options: {
           orderBy: { position: "asc" }
-        }
+        },
+        themes: true
       }
     }),
-    prisma.discipline.findMany({ orderBy: { name: "asc" } })
+    prisma.discipline.findMany({ orderBy: { name: "asc" } }),
+    prisma.theme.findMany({ orderBy: { name: "asc" } })
   ]);
 
   if (!question) {
@@ -57,6 +60,7 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
     supportFileMime: question.supportFileMime ?? "",
     defaultWeight: Number(question.defaultWeight),
     status: question.status,
+    themeIds: question.themes.map((item) => item.themeId),
     options: question.options.map((option) => ({
       label: option.label,
       content: option.content,
@@ -69,7 +73,7 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
       <header className="space-y-4">
         <div>
           <h1 className="section-title">Editar questão</h1>
-          <p className="section-subtitle">Ajuste manualmente os dados, o apoio visual e o conteúdo da questão.</p>
+          <p className="section-subtitle">Ajuste manualmente os dados, o apoio visual, os temas e o conteúdo da questão.</p>
         </div>
         <AdminNav current="/admin/questions" role="ADM" />
       </header>
@@ -77,6 +81,15 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
       <div className="flex justify-end">
         <QuestionDeleteButton questionId={question.id} redirectTo="/admin/questions" />
       </div>
+
+      <QuestionThemePanel
+        questionId={question.id}
+        themes={themes.map((theme) => ({
+          id: theme.id,
+          name: theme.name
+        }))}
+        initialThemeIds={question.themes.map((item) => item.themeId)}
+      />
 
       <QuestionForm disciplines={disciplines} initialQuestion={initialQuestion} mode="edit" />
     </main>

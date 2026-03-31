@@ -16,7 +16,12 @@ export async function GET(_: NextRequest, context: RouteContext) {
     where: { id },
     include: {
       discipline: true,
-      options: { orderBy: { position: "asc" } }
+      options: { orderBy: { position: "asc" } },
+      themes: {
+        include: {
+          theme: true
+        }
+      }
     }
   });
 
@@ -50,8 +55,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const oldImagePath = existing.supportImagePath;
   const oldFilePath = existing.supportFilePath;
 
+  if (parsed.data.themeIds.length > 0) {
+    const themeCount = await prisma.theme.count({
+      where: {
+        id: {
+          in: Array.from(new Set(parsed.data.themeIds))
+        }
+      }
+    });
+
+    if (themeCount !== Array.from(new Set(parsed.data.themeIds)).length) {
+      return NextResponse.json({ error: "Um ou mais temas selecionados não foram encontrados." }, { status: 400 });
+    }
+  }
+
   const updated = await prisma.$transaction(async (tx) => {
     await tx.questionOption.deleteMany({
+      where: { questionId: id }
+    });
+
+    await tx.questionTheme.deleteMany({
       where: { questionId: id }
     });
 
@@ -83,6 +106,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         supportFileMime: parsed.data.supportFileMime || null,
         defaultWeight: parsed.data.defaultWeight,
         status: parsed.data.status,
+        themes:
+          parsed.data.themeIds.length > 0
+            ? {
+                create: Array.from(new Set(parsed.data.themeIds)).map((themeId) => ({
+                  themeId
+                }))
+              }
+            : undefined,
         options:
           parsed.data.type === "MULTIPLE_CHOICE"
             ? {
@@ -97,7 +128,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       },
       include: {
         discipline: true,
-        options: { orderBy: { position: "asc" } }
+        options: { orderBy: { position: "asc" } },
+        themes: {
+          include: {
+            theme: true
+          }
+        }
       }
     });
   });

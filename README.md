@@ -4,13 +4,36 @@ Sistema web para criacao, aplicacao, monitoramento e analise de avaliacoes onlin
 
 O projeto possui:
 - area publica do aluno com acesso por codigo da prova;
+- consulta publica posterior por ID da tentativa;
 - area administrativa protegida com perfis `ADM` e `VISUALIZADOR`;
+- cadastro e vinculo de temas em provas e questoes;
+- importacao em massa de disciplinas, temas e turmas por JSON e Excel;
 - monitoramento em tempo real por polling;
 - resultado final do aluno com exportacao individual em PDF;
 - relatorios consolidados com exportacao visual em PDF;
 - link compartilhavel de visualizacao de relatorios;
 - modulo global de sugestoes e reporte de problemas;
+- painel de configuracoes com backup e reset seguro da base;
+- feedback visual de carregamento em acoes assincronas relevantes;
 - uploads compativeis com ambiente local e com Vercel Blob em producao.
+
+## Atualizacoes desde o ultimo commit
+- temas passaram a ser entidade propria, com vinculo em questoes e provas;
+- provas agora exigem vinculo obrigatorio com turma e podem concentrar temas para feedback e analytics;
+- a home publica foi dividida em dois fluxos:
+  - realizar prova por codigo;
+  - consultar desempenho por `ID da tentativa`;
+- a identificacao do aluno ficou mais enxuta:
+  - o sistema usa turma e disciplina da propria prova;
+  - o formulario solicita apenas o nome do aluno;
+- o resultado final agora destaca o `ID da tentativa` para consulta posterior;
+- disciplinas, temas e turmas passaram a aceitar importacao em lote por JSON e `.xlsx`, com modelo padrao, preview e validacao;
+- foi criado o modulo `Configuracoes` para backup manual, backup automatico antes de reset e listagem de backups recentes;
+- foram adicionados scripts seguros de manutencao da base:
+  - `npm run db:backup`
+  - `npm run db:reset:safe`
+  - `npm run db:reset:safe:seed`
+- o frontend ganhou estados de loading reutilizaveis em navegacao, CRUD, importacao, exportacao, monitoramento e fluxo publico.
 
 ## Documentacao
 - Guia completo de instalacao local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
@@ -65,6 +88,9 @@ npm run build
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
+npm run db:backup
+npm run db:reset:safe
+npm run db:reset:safe:seed
 ```
 
 No Windows com bloqueio de execucao do PowerShell, prefira:

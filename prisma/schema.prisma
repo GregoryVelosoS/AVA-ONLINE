@@ -135,6 +135,18 @@ model ClassGroup {
   exams      Exam[]
 }
 
+model Theme {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  exams     ExamTheme[]
+  questions QuestionTheme[]
+}
+
 model Tag {
   id        String   @id @default(uuid())
   label     String   @unique
@@ -180,6 +192,7 @@ model Question {
   author     AdminUser     @relation(fields: [createdBy], references: [id])
   options    QuestionOption[]
   tags       QuestionTag[]
+  themes     QuestionTheme[]
   exams      ExamQuestion[]
   answers    Answer[]
 }
@@ -212,7 +225,7 @@ model Exam {
   publicCode            String     @unique
   description           String?
   disciplineId          String
-  targetClassGroupId    String?
+  targetClassGroupId    String
   instructions          String
   startAt               DateTime
   endAt                 DateTime
@@ -227,14 +240,37 @@ model Exam {
   updatedAt             DateTime   @updatedAt
 
   discipline Discipline        @relation(fields: [disciplineId], references: [id])
-  classGroup ClassGroup?       @relation(fields: [targetClassGroupId], references: [id])
+  classGroup ClassGroup        @relation(fields: [targetClassGroupId], references: [id])
   author     AdminUser         @relation(fields: [createdBy], references: [id])
   sections   ExamSection[]
   questions  ExamQuestion[]
+  themes      ExamTheme[]
   publicLinks PublicExamLink[]
   attempts    StudentAttempt[]
   reportShares ReportShareLink[]
   issueReports IssueReport[]
+}
+
+model ExamTheme {
+  examId     String
+  themeId    String
+  createdAt  DateTime @default(now())
+
+  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  theme  Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([examId, themeId])
+}
+
+model QuestionTheme {
+  questionId String
+  themeId    String
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, themeId])
 }
 
 model ExamSection {
@@ -284,6 +320,7 @@ model StudentAttempt {
   id              String        @id @default(uuid())
   examId          String
   publicLinkId    String
+  resultLookupCode String       @unique
   attemptNumber   Int
   status          AttemptStatus @default(STARTED)
   startedAt       DateTime      @default(now())
@@ -309,8 +346,12 @@ model StudentProfileSnapshot {
   id                 String @id @default(uuid())
   attemptId          String @unique
   studentName        String
+  classGroupId       String?
   classGroupName     String
+  disciplineId       String?
   disciplineInformed String
+  attemptOrigin      String?
+  contextValidationNote String?
 
   attempt StudentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 }

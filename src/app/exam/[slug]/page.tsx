@@ -7,24 +7,17 @@ import { getExamAvailabilityMessage } from "@/lib/exam-status";
 export default async function PublicExamPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const [link, disciplines, classGroups] = await Promise.all([
-    prisma.publicExamLink.findUnique({
-      where: { slug },
-      include: {
-        exam: {
-          include: {
-            discipline: true
-          }
+  const link = await prisma.publicExamLink.findUnique({
+    where: { slug },
+    include: {
+      exam: {
+        include: {
+          discipline: true,
+          classGroup: true
         }
       }
-    }),
-    prisma.discipline.findMany({
-      orderBy: { name: "asc" }
-    }),
-    prisma.classGroup.findMany({
-      orderBy: { name: "asc" }
-    })
-  ]);
+    }
+  });
 
   if (!link) {
     notFound();
@@ -49,20 +42,18 @@ export default async function PublicExamPage({ params }: { params: Promise<{ slu
           <strong>Instruções:</strong> {link.exam.instructions}
         </p>
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-red-700">
-          Código {link.exam.publicCode} · {link.exam.timeLimitMinutes ? `${link.exam.timeLimitMinutes} minutos de duração` : "Sem limite de tempo definido"}
+          Código {link.exam.publicCode} · {link.exam.classGroup.name} · {link.exam.discipline.name}
         </p>
         <StudentIdentifyForm
-          classGroups={classGroups.map((classGroup) => ({ id: classGroup.id, name: classGroup.name }))}
-          disciplines={disciplines.map((discipline) => ({
-            id: discipline.id,
-            name: discipline.name
-          }))}
+          initialOrigin="PUBLIC_LINK"
           initialExam={{
             title: link.exam.title,
             publicCode: link.exam.publicCode,
             description: link.exam.description,
             disciplineId: link.exam.disciplineId,
             disciplineName: link.exam.discipline.name,
+            targetClassGroupId: link.exam.targetClassGroupId,
+            targetClassGroupName: link.exam.classGroup.name,
             timeLimitMinutes: link.exam.timeLimitMinutes,
             instructions: link.exam.instructions
           }}

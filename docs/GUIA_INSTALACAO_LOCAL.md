@@ -114,7 +114,13 @@ npx.cmd prisma migrate dev
 Se o banco local estiver inconsistente e voce puder apagar os dados de desenvolvimento:
 
 ```powershell
-npx.cmd prisma migrate reset
+npm.cmd run db:reset:safe
+```
+
+Se quiser resetar e reaplicar a seed em seguida:
+
+```powershell
+npm.cmd run db:reset:safe:seed
 ```
 
 ## 8. Rodar a seed
@@ -123,9 +129,10 @@ A seed cria:
 - usuario `ADM` inicial;
 - disciplina inicial;
 - turma inicial;
+- tema inicial;
 - tag inicial;
 - questao exemplo;
-- prova demo com codigo publico.
+- prova demo com codigo publico e tema vinculado.
 
 ### Linux / macOS
 ```bash
@@ -169,7 +176,7 @@ Hoje o sistema possui dois perfis internos:
 
 ### ADM
 - acesso total;
-- pode gerenciar provas, questoes, turmas, disciplinas, monitoramento, relatorios, sugestoes e usuarios.
+- pode gerenciar provas, questoes, temas, turmas, disciplinas, monitoramento, relatorios, sugestoes, usuarios e configuracoes.
 
 ### VISUALIZADOR
 - acesso somente a relatorios;
@@ -183,17 +190,23 @@ Depois de subir o projeto:
 1. abra `http://localhost:3000`
 2. informe `DEMO2026`
 3. avance para identificacao do aluno
-4. preencha nome, turma e disciplina
+4. preencha apenas o nome
 5. inicie a prova
 6. finalize a prova e valide o botao `Exportar PDF` na tela final
-7. abra `http://localhost:3000/admin/login`
-8. entre com o usuario seed
-9. teste:
+7. copie o `ID da tentativa` exibido no resultado final
+8. volte para `/` e teste a consulta da tentativa pelo ID copiado
+9. abra `http://localhost:3000/admin/login`
+10. entre com o usuario seed
+11. teste:
 - `/admin/dashboard`
 - `/admin/exams`
+- `/admin/themes`
 - `/admin/reports`
+- `/admin/settings`
 - `/admin/users`
+- importacao em lote em `/admin/disciplines`, `/admin/themes` e `/admin/class-groups`
 - exportacao PDF do relatorio na pagina de relatorios
+- backup manual e reset protegido na pagina de configuracoes
 
 ## 13. Uploads no ambiente local
 
@@ -216,6 +229,9 @@ npm run start
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
+npm run db:backup
+npm run db:reset:safe
+npm run db:reset:safe:seed
 ```
 
 ## 15. Problemas comuns
@@ -246,8 +262,7 @@ Pare o `next dev`, rode de novo `prisma generate` e depois suba a aplicacao nova
 Se estiver em ambiente de desenvolvimento e puder apagar dados:
 
 ```powershell
-npx.cmd prisma migrate reset
-npm.cmd run prisma:seed
+npm.cmd run db:reset:safe:seed
 ```
 
 ## 16. Ordem recomendada
@@ -262,4 +277,4 @@ Siga esta ordem:
 6. rodar `npx prisma migrate dev`
 7. rodar `npm run prisma:seed`
 8. rodar `npm run dev`
-9. validar login, prova demo, exportacao individual do aluno e relatorios
+9. validar login, prova demo, consulta por ID da tentativa, importacoes em lote e relatorios
