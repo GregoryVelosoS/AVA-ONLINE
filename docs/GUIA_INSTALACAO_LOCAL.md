@@ -70,6 +70,9 @@ Importante:
 - no ambiente local, `BLOB_READ_WRITE_TOKEN` pode ficar vazio;
 - sem essa variavel, o projeto usa `UPLOAD_DIR`;
 - com essa variavel, o projeto usa Vercel Blob.
+- `.env.local` sobrescreve `.env` no `next dev`.
+- Se houver `DATABASE_URL` em `.env` e `.env.local`, a aplicacao local usara o valor de `.env.local`.
+- Se voce quiser usar o banco remoto localmente, deixe `DATABASE_URL` somente em `.env`.
 
 ## 5. Criar o banco MySQL
 

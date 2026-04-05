@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   Bar,
@@ -200,7 +201,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
         <div className="surface-panel overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Ranking de alunos</h3>
@@ -208,13 +209,14 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
+              <thead className="bg-black text-left text-white">
                 <tr>
                   <th className="px-4 py-3">Aluno</th>
                   <th className="px-4 py-3">Nota %</th>
                   <th className="px-4 py-3">Acertos</th>
                   <th className="px-4 py-3">Erros</th>
                   <th className="px-4 py-3">Tempo</th>
+                  <th className="px-4 py-3 text-right">Acao</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,6 +227,16 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
                     <td className="px-4 py-3">{student.correctCount}</td>
                     <td className="px-4 py-3">{student.incorrectCount}</td>
                     <td className="px-4 py-3">{student.durationMinutes} min</td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                        href={`/submitted/${student.attemptId}`}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Consultar tentativa
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

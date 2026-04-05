@@ -80,6 +80,8 @@ Notas:
 - `UPLOAD_DIR` e usado no ambiente local.
 - `BLOB_READ_WRITE_TOKEN` ativa uploads persistentes no Vercel Blob.
 - Em producao no Vercel, o recomendado e usar `BLOB_READ_WRITE_TOKEN`.
+- `.env.local` sobrescreve `.env` no `next dev`. Se existir `DATABASE_URL` nos dois arquivos, o valor de `.env.local` vence.
+- Se voce quiser rodar localmente usando o mesmo banco do deploy, mantenha `DATABASE_URL` apenas em `.env`.
 
 ## Scripts uteis
 ```bash
