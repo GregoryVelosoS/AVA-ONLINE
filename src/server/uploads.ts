@@ -18,7 +18,7 @@ function getExtension(fileName: string) {
 }
 
 function isBlobStorageEnabled() {
-  return Boolean(blobToken);
+  return Boolean(blobToken && process.env.VERCEL === "1");
 }
 
 export function isExternalAssetPath(value?: string | null) {

@@ -94,7 +94,7 @@ export const questionSchema = questionBaseSchema.superRefine((data, ctx) => {
 });
 
 export const questionImportSchema = z.object({
-  questions: z.array(questionBaseSchema).min(1)
+  questions: z.array(questionSchema).min(1)
 });
 
 export const examSchema = z.object({

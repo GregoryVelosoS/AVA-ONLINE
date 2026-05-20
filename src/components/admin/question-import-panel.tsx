@@ -40,6 +40,11 @@ type NormalizedQuestion = {
   options: Array<{ label: string; content: string; isCorrect: boolean; position: number }>;
 };
 
+type ImportResponsePayload = {
+  error?: unknown;
+  count?: number;
+};
+
 function readValue(source: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     const value = source[key];
@@ -180,6 +185,28 @@ function normalizeQuestions(
     .filter((question) => question.code && question.statement && question.subject && question.disciplineId);
 }
 
+async function readImportResponse(response: Response): Promise<ImportResponsePayload> {
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text) as ImportResponsePayload;
+  } catch {
+    return { error: text };
+  }
+}
+
+function getImportErrorMessage(payload: ImportResponsePayload) {
+  if (typeof payload.error === "string" && payload.error.trim()) {
+    return payload.error;
+  }
+
+  return "NÃ£o foi possÃ­vel importar as questÃµes.";
+}
+
 export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -204,12 +231,14 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
 
     try {
       const parsed = JSON.parse(content) as unknown;
-      if (!Array.isArray(parsed)) {
-        setError("O JSON precisa ser um array de questões.");
+      const rows = Array.isArray(parsed) ? parsed : [parsed];
+
+      if (!rows.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
+        setError("O JSON precisa conter uma questão ou um array de questões.");
         return;
       }
 
-      const normalized = normalizeQuestions(parsed as Record<string, unknown>[], disciplines, fallbackDisciplineId);
+      const normalized = normalizeQuestions(rows as Record<string, unknown>[], disciplines, fallbackDisciplineId);
       if (normalized.length === 0) {
         setError("Nenhuma questão válida foi encontrada no JSON.");
         return;
@@ -262,10 +291,10 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
       })
     });
 
-    const payload = (await response.json()) as { error?: string; count?: number };
+    const payload = await readImportResponse(response);
 
     if (!response.ok) {
-      setError(payload.error || "Não foi possível importar as questões.");
+      setError(getImportErrorMessage(payload));
       return;
     }
 

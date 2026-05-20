@@ -165,16 +165,16 @@ model Question {
   subject           String
   topic             String?
   difficulty        Difficulty
-  context           String?
-  statement         String
+  context           String?        @db.Text
+  statement         String         @db.Text
   visualSupportType VisualSupportType @default(NONE)
-  supportCode       String?
-  expectedFeedback  String?
-  answerExplanation String?
-  studyTopics       String?
-  studyLinks        String?
-  referencePlaylist String?
-  complementaryNotes String?
+  supportCode       String?        @db.Text
+  expectedFeedback  String?        @db.Text
+  answerExplanation String?        @db.Text
+  studyTopics       String?        @db.Text
+  studyLinks        String?        @db.Text
+  referencePlaylist String?        @db.Text
+  complementaryNotes String?       @db.Text
   supportImagePath  String?
   supportImageName  String?
   supportImageMime  String?
@@ -201,7 +201,7 @@ model QuestionOption {
   id         String  @id @default(uuid())
   questionId String
   label      String
-  content    String
+  content    String  @db.Text
   isCorrect  Boolean
   position   Int
 

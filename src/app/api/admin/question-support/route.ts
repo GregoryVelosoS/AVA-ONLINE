@@ -13,37 +13,46 @@ const fileMimeTypes = new Set([
 ]);
 
 export async function POST(request: NextRequest) {
-  await requireAdminSession();
+  try {
+    await requireAdminSession();
 
-  const formData = await request.formData();
-  const file = formData.get("file");
-  const kind = formData.get("kind");
+    const formData = await request.formData();
+    const file = formData.get("file");
+    const kind = formData.get("kind");
 
-  if (!(file instanceof File) || (kind !== "image" && kind !== "file")) {
-    return NextResponse.json({ error: "Upload inválido." }, { status: 400 });
+    if (!(file instanceof File) || (kind !== "image" && kind !== "file")) {
+      return NextResponse.json({ error: "Upload inválido." }, { status: 400 });
+    }
+
+    const maxSize = kind === "image" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return NextResponse.json({ error: "Arquivo excede o tamanho permitido." }, { status: 400 });
+    }
+
+    const validMimeTypes = kind === "image" ? imageMimeTypes : fileMimeTypes;
+    if (!validMimeTypes.has(file.type)) {
+      return NextResponse.json({ error: "Tipo de arquivo não permitido." }, { status: 400 });
+    }
+
+    const data = new Uint8Array(await file.arrayBuffer());
+    const storedPath = await saveQuestionSupportAsset({
+      data,
+      mimeType: file.type,
+      originalName: file.name,
+      kind
+    });
+
+    return NextResponse.json({
+      path: storedPath,
+      name: file.name,
+      mime: file.type
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Sessão administrativa expirada." }, { status: 401 });
+    }
+
+    console.error("Question support upload failed", error);
+    return NextResponse.json({ error: "Falha ao salvar o arquivo de apoio." }, { status: 500 });
   }
-
-  const maxSize = kind === "image" ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-  if (file.size > maxSize) {
-    return NextResponse.json({ error: "Arquivo excede o tamanho permitido." }, { status: 400 });
-  }
-
-  const validMimeTypes = kind === "image" ? imageMimeTypes : fileMimeTypes;
-  if (!validMimeTypes.has(file.type)) {
-    return NextResponse.json({ error: "Tipo de arquivo não permitido." }, { status: 400 });
-  }
-
-  const data = new Uint8Array(await file.arrayBuffer());
-  const storedPath = await saveQuestionSupportAsset({
-    data,
-    mimeType: file.type,
-    originalName: file.name,
-    kind
-  });
-
-  return NextResponse.json({
-    path: storedPath,
-    name: file.name,
-    mime: file.type
-  });
 }
