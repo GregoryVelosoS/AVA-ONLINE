@@ -22,6 +22,14 @@ function isBlobStorageEnabled() {
   return Boolean(blobToken);
 }
 
+export function getUploadStorageDiagnostics() {
+  return {
+    hasBlobToken: isBlobStorageEnabled(),
+    isVercelRuntime,
+    mode: isBlobStorageEnabled() ? "blob" : "local"
+  };
+}
+
 function assertWritableStorage() {
   if (isVercelRuntime && !isBlobStorageEnabled()) {
     throw new Error("MISSING_BLOB_STORAGE");
@@ -66,14 +74,28 @@ async function uploadToBlob(input: {
 }) {
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
   const blobPath = `${input.folder}/${input.prefix}-${randomUUID()}${extension}`;
-  const blob = await put(blobPath, Buffer.from(input.data), {
-    access: "public",
-    addRandomSuffix: false,
-    contentType: input.mimeType,
-    token: blobToken
-  });
 
-  return blob.url;
+  try {
+    const blob = await put(blobPath, Buffer.from(input.data), {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: input.mimeType,
+      token: blobToken
+    });
+
+    return blob.url;
+  } catch (error) {
+    console.error("Vercel Blob upload failed", {
+      folder: input.folder,
+      prefix: input.prefix,
+      mimeType: input.mimeType,
+      hasBlobToken: Boolean(blobToken),
+      isVercelRuntime,
+      error: error instanceof Error ? error.message : String(error)
+    });
+
+    throw new Error("BLOB_UPLOAD_FAILED");
+  }
 }
 
 export async function saveQuestionSupportAsset(input: {

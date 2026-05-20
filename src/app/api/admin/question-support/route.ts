@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
-import { saveQuestionSupportAsset } from "@/server/uploads";
+import { getUploadStorageDiagnostics, saveQuestionSupportAsset } from "@/server/uploads";
 
 const imageMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 const fileMimeTypes = new Set([
@@ -11,6 +11,12 @@ const fileMimeTypes = new Set([
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "text/plain"
 ]);
+
+export async function GET() {
+  await requireAdminSession();
+
+  return NextResponse.json(getUploadStorageDiagnostics());
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +61,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === "MISSING_BLOB_STORAGE") {
       return NextResponse.json(
         { error: "Configure BLOB_READ_WRITE_TOKEN no Vercel para salvar imagens e arquivos em producao." },
-        { status: 500 }
+        { status: 503 }
+      );
+    }
+
+    if (error instanceof Error && error.message === "BLOB_UPLOAD_FAILED") {
+      return NextResponse.json(
+        { error: "Falha ao enviar o arquivo para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto." },
+        { status: 502 }
       );
     }
 

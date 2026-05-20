@@ -91,7 +91,14 @@ export async function POST(request: NextRequest) {
       if (error instanceof Error && error.message === "MISSING_BLOB_STORAGE") {
         return NextResponse.json(
           { error: "Configure BLOB_READ_WRITE_TOKEN no Vercel para salvar imagens em producao." },
-          { status: 500 }
+          { status: 503 }
+        );
+      }
+
+      if (error instanceof Error && error.message === "BLOB_UPLOAD_FAILED") {
+        return NextResponse.json(
+          { error: "Falha ao enviar a imagem para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto." },
+          { status: 502 }
         );
       }
 
