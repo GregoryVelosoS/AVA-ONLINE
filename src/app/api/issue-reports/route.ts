@@ -95,9 +95,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (error instanceof Error && error.message === "BLOB_UPLOAD_FAILED") {
+      if (error instanceof Error && error.message.startsWith("BLOB_UPLOAD_FAILED")) {
+        const errorCode = error.message.split(":")[1] || "blob_unknown_error";
+
         return NextResponse.json(
-          { error: "Falha ao enviar a imagem para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto." },
+          {
+            error: "Falha ao enviar a imagem para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto.",
+            errorCode
+          },
           { status: 502 }
         );
       }

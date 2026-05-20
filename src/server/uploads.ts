@@ -1,4 +1,16 @@
-import { del, put } from "@vercel/blob";
+import {
+  BlobAccessError,
+  BlobClientTokenExpiredError,
+  BlobContentTypeNotAllowedError,
+  BlobFileTooLargeError,
+  BlobPathnameMismatchError,
+  BlobServiceNotAvailable,
+  BlobServiceRateLimited,
+  BlobStoreNotFoundError,
+  BlobStoreSuspendedError,
+  del,
+  put
+} from "@vercel/blob";
 import { randomUUID } from "crypto";
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
@@ -6,8 +18,18 @@ import path from "path";
 const uploadRoot = path.resolve(process.cwd(), process.env.UPLOAD_DIR || "./uploads");
 const questionSupportDir = path.join(uploadRoot, "question-support");
 const issueReportsDir = path.join(uploadRoot, "issue-reports");
-const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+const blobToken = normalizeEnvToken(process.env.BLOB_READ_WRITE_TOKEN);
 const isVercelRuntime = process.env.VERCEL === "1";
+
+function normalizeEnvToken(value?: string) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed.replace(/^["'](.+)["']$/, "$1");
+}
 
 function sanitizeFileNamePart(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]/g, "");
@@ -34,6 +56,46 @@ function assertWritableStorage() {
   if (isVercelRuntime && !isBlobStorageEnabled()) {
     throw new Error("MISSING_BLOB_STORAGE");
   }
+}
+
+function getBlobUploadErrorCode(error: unknown) {
+  if (error instanceof BlobAccessError) {
+    return "blob_access_denied";
+  }
+
+  if (error instanceof BlobStoreNotFoundError) {
+    return "blob_store_not_found";
+  }
+
+  if (error instanceof BlobStoreSuspendedError) {
+    return "blob_store_suspended";
+  }
+
+  if (error instanceof BlobFileTooLargeError) {
+    return "blob_file_too_large";
+  }
+
+  if (error instanceof BlobContentTypeNotAllowedError) {
+    return "blob_content_type_not_allowed";
+  }
+
+  if (error instanceof BlobPathnameMismatchError) {
+    return "blob_pathname_mismatch";
+  }
+
+  if (error instanceof BlobClientTokenExpiredError) {
+    return "blob_client_token_expired";
+  }
+
+  if (error instanceof BlobServiceNotAvailable) {
+    return "blob_service_not_available";
+  }
+
+  if (error instanceof BlobServiceRateLimited) {
+    return "blob_rate_limited";
+  }
+
+  return "blob_unknown_error";
 }
 
 export function isExternalAssetPath(value?: string | null) {
@@ -85,16 +147,19 @@ async function uploadToBlob(input: {
 
     return blob.url;
   } catch (error) {
+    const errorCode = getBlobUploadErrorCode(error);
+
     console.error("Vercel Blob upload failed", {
       folder: input.folder,
       prefix: input.prefix,
       mimeType: input.mimeType,
       hasBlobToken: Boolean(blobToken),
       isVercelRuntime,
+      errorCode,
       error: error instanceof Error ? error.message : String(error)
     });
 
-    throw new Error("BLOB_UPLOAD_FAILED");
+    throw new Error(`BLOB_UPLOAD_FAILED:${errorCode}`);
   }
 }
 
