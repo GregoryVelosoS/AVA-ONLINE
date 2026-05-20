@@ -38,6 +38,7 @@ O projeto possui:
 ## Documentacao
 - Guia completo de instalacao local: [docs/GUIA_INSTALACAO_LOCAL.md](docs/GUIA_INSTALACAO_LOCAL.md)
 - Guia de deploy online com Vercel + Railway + Vercel Blob: [docs/DEPLOY_VERCEL_RAILWAY_BLOB.md](docs/DEPLOY_VERCEL_RAILWAY_BLOB.md)
+- Guia de implementacao do banco com Aiven: [docs/IMPLEMENTACAO_BANCO_AIVEN.md](docs/IMPLEMENTACAO_BANCO_AIVEN.md)
 - Documento de apresentacao do sistema: [docs/APRESENTACAO_DO_SISTEMA.md](docs/APRESENTACAO_DO_SISTEMA.md)
 - Arquitetura tecnica atual: [ARQUITETURA_AVALIACOES_ONLINE.md](ARQUITETURA_AVALIACOES_ONLINE.md)
 
