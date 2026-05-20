@@ -79,11 +79,24 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = new Uint8Array(await screenshot.arrayBuffer());
-    const fileName = await saveIssueReportScreenshot({
-      data: buffer,
-      originalName: screenshot.name,
-      mimeType: screenshot.type
-    });
+    let fileName: string;
+
+    try {
+      fileName = await saveIssueReportScreenshot({
+        data: buffer,
+        originalName: screenshot.name,
+        mimeType: screenshot.type
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "MISSING_BLOB_STORAGE") {
+        return NextResponse.json(
+          { error: "Configure BLOB_READ_WRITE_TOKEN no Vercel para salvar imagens em producao." },
+          { status: 500 }
+        );
+      }
+
+      throw error;
+    }
 
     screenshotPayload = {
       screenshotPath: fileName,

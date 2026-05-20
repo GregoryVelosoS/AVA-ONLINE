@@ -52,6 +52,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Sessão administrativa expirada." }, { status: 401 });
     }
 
+    if (error instanceof Error && error.message === "MISSING_BLOB_STORAGE") {
+      return NextResponse.json(
+        { error: "Configure BLOB_READ_WRITE_TOKEN no Vercel para salvar imagens e arquivos em producao." },
+        { status: 500 }
+      );
+    }
+
     console.error("Question support upload failed", error);
     return NextResponse.json({ error: "Falha ao salvar o arquivo de apoio." }, { status: 500 });
   }

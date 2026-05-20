@@ -7,6 +7,7 @@ const uploadRoot = path.resolve(process.cwd(), process.env.UPLOAD_DIR || "./uplo
 const questionSupportDir = path.join(uploadRoot, "question-support");
 const issueReportsDir = path.join(uploadRoot, "issue-reports");
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+const isVercelRuntime = process.env.VERCEL === "1";
 
 function sanitizeFileNamePart(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]/g, "");
@@ -18,7 +19,13 @@ function getExtension(fileName: string) {
 }
 
 function isBlobStorageEnabled() {
-  return Boolean(blobToken && process.env.VERCEL === "1");
+  return Boolean(blobToken);
+}
+
+function assertWritableStorage() {
+  if (isVercelRuntime && !isBlobStorageEnabled()) {
+    throw new Error("MISSING_BLOB_STORAGE");
+  }
 }
 
 export function isExternalAssetPath(value?: string | null) {
@@ -85,6 +92,7 @@ export async function saveQuestionSupportAsset(input: {
     });
   }
 
+  assertWritableStorage();
   await ensureUploadDirectories();
 
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
@@ -145,6 +153,7 @@ export async function saveIssueReportScreenshot(input: {
     });
   }
 
+  assertWritableStorage();
   await ensureUploadDirectories();
 
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
