@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
-import { getUploadStorageDiagnostics, saveQuestionSupportAsset } from "@/server/uploads";
+import { BlobUploadFailure, getUploadStorageDiagnostics, saveQuestionSupportAsset } from "@/server/uploads";
 
 const imageMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 const fileMimeTypes = new Set([
@@ -65,13 +65,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error instanceof Error && error.message.startsWith("BLOB_UPLOAD_FAILED")) {
-      const errorCode = error.message.split(":")[1] || "blob_unknown_error";
-
+    if (error instanceof BlobUploadFailure) {
       return NextResponse.json(
         {
           error: "Falha ao enviar o arquivo para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto.",
-          errorCode
+          errorCode: error.code,
+          errorDetail: error.detail
         },
         { status: 502 }
       );

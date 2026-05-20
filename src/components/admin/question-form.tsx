@@ -202,9 +202,17 @@ export function QuestionForm({
       body
     });
 
-    const payload = (await response.json()) as { error?: string; path?: string; name?: string; mime?: string };
+    const payload = (await response.json()) as {
+      error?: string;
+      errorCode?: string;
+      errorDetail?: string;
+      path?: string;
+      name?: string;
+      mime?: string;
+    };
     if (!response.ok || !payload.path || !payload.name || !payload.mime) {
-      throw new Error(payload.error || "Falha no upload do apoio visual.");
+      const diagnostic = [payload.errorCode, payload.errorDetail].filter(Boolean).join(" - ");
+      throw new Error([payload.error || "Falha no upload do apoio visual.", diagnostic].filter(Boolean).join(" "));
     }
 
     return payload as Required<SupportAssetState>;

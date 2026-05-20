@@ -21,6 +21,15 @@ const issueReportsDir = path.join(uploadRoot, "issue-reports");
 const blobToken = normalizeEnvToken(process.env.BLOB_READ_WRITE_TOKEN);
 const isVercelRuntime = process.env.VERCEL === "1";
 
+export class BlobUploadFailure extends Error {
+  constructor(
+    public readonly code: string,
+    public readonly detail: string
+  ) {
+    super("BLOB_UPLOAD_FAILED");
+  }
+}
+
 function normalizeEnvToken(value?: string) {
   const trimmed = value?.trim();
 
@@ -98,6 +107,16 @@ function getBlobUploadErrorCode(error: unknown) {
   return "blob_unknown_error";
 }
 
+function getSafeErrorDetail(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error);
+
+  if (!blobToken) {
+    return detail;
+  }
+
+  return detail.replaceAll(blobToken, "[redacted]");
+}
+
 export function isExternalAssetPath(value?: string | null) {
   return Boolean(value && /^(https?:)?\/\//i.test(value));
 }
@@ -148,6 +167,7 @@ async function uploadToBlob(input: {
     return blob.url;
   } catch (error) {
     const errorCode = getBlobUploadErrorCode(error);
+    const errorDetail = getSafeErrorDetail(error);
 
     console.error("Vercel Blob upload failed", {
       folder: input.folder,
@@ -156,10 +176,10 @@ async function uploadToBlob(input: {
       hasBlobToken: Boolean(blobToken),
       isVercelRuntime,
       errorCode,
-      error: error instanceof Error ? error.message : String(error)
+      error: errorDetail
     });
 
-    throw new Error(`BLOB_UPLOAD_FAILED:${errorCode}`);
+    throw new BlobUploadFailure(errorCode, errorDetail);
   }
 }
 

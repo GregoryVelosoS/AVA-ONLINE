@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOptionalAdminSession, requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
 import { issueReportSchema } from "@/server/validators/schemas";
-import { saveIssueReportScreenshot } from "@/server/uploads";
+import { BlobUploadFailure, saveIssueReportScreenshot } from "@/server/uploads";
 
 const allowedImageTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const maxFileSize = 5 * 1024 * 1024;
@@ -95,13 +95,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (error instanceof Error && error.message.startsWith("BLOB_UPLOAD_FAILED")) {
-        const errorCode = error.message.split(":")[1] || "blob_unknown_error";
-
+      if (error instanceof BlobUploadFailure) {
         return NextResponse.json(
           {
             error: "Falha ao enviar a imagem para o Vercel Blob. Verifique se o Blob Store esta conectado ao projeto e se BLOB_READ_WRITE_TOKEN esta correto.",
-            errorCode
+            errorCode: error.code,
+            errorDetail: error.detail
           },
           { status: 502 }
         );
