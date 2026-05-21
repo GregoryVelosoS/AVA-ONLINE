@@ -201,7 +201,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+      <section className="grid gap-4 lg:grid-cols-[1]">
         <div className="surface-panel overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Ranking de alunos</h3>
