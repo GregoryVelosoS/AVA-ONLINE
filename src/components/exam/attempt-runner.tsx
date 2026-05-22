@@ -195,7 +195,7 @@ export function AttemptRunner({
       <div className="surface-dark p-5 md:p-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-red-300">Progresso da prova</p>
+            <p className="text-lg font-semibold uppercase tracking-[0.18em] text-red-300">Progresso da prova</p>
             <div className="mt-3 flex flex-wrap gap-3">
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.14em] text-white/60">Questão atual</p>
@@ -223,7 +223,7 @@ export function AttemptRunner({
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.14em] text-white/60">Status</p>
-              <p className="mt-1 text-sm font-semibold text-white/90">{saving ? "Salvando..." : saveMessage || "Prova em andamento"}</p>
+              <p className="mt-1 text-lg font-semibold text-white/90">{saving ? "Salvando..." : saveMessage || "Prova em andamento"}</p>
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function AttemptRunner({
               <button
                 key={item.id}
                 className={[
-                  "rounded-xl border px-3 py-2 text-sm font-semibold transition",
+                  "rounded-xl border px-3 py-2 text-lg font-semibold transition",
                   active
                     ? "border-red-400 bg-[linear-gradient(135deg,#c1121f_0%,#8b0c16_100%)] text-white shadow-[0_12px_24px_rgba(193,18,31,0.34)]"
                     : answered
@@ -328,9 +328,9 @@ export function AttemptRunner({
           </section>
         ) : (
           <section className="rounded-2xl border border-dashed border-red-200 bg-red-50/70 p-4">
-            <p className="text-sm text-slate-700">Selecione o arquivo da resposta. A interface já está pronta para a etapa de upload real.</p>
-            <input className="mt-3 block w-full text-sm" onChange={(event) => handleFileChange(event.target.files?.[0])} type="file" />
-            {answer.fileName ? <p className="mt-3 text-sm font-semibold text-slate-900">Arquivo selecionado: {answer.fileName}</p> : null}
+            <p className="text-lg text-slate-700">Selecione o arquivo da resposta. A interface já está pronta para a etapa de upload real.</p>
+            <input className="mt-3 block w-full text-lg" onChange={(event) => handleFileChange(event.target.files?.[0])} type="file" />
+            {answer.fileName ? <p className="mt-3 text-lg font-semibold text-slate-900">Arquivo selecionado: {answer.fileName}</p> : null}
           </section>
         )}
 
@@ -352,8 +352,8 @@ export function AttemptRunner({
                   type="button"
                   onClick={() => selectConfidence(confidence.value)}
                 >
-                  <p className={`text-sm font-black ${selected ? "text-red-300" : "text-red-700"}`}>{confidence.value}</p>
-                  <p className="mt-1 text-sm font-semibold">{confidence.label}</p>
+                  <p className={`text-lg font-black ${selected ? "text-red-300" : "text-red-700"}`}>{confidence.value}</p>
+                  <p className="mt-1 text-lg font-semibold">{confidence.label}</p>
                 </button>
               );
             })}

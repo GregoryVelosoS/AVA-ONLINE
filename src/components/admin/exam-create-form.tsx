@@ -156,11 +156,11 @@ export function ExamCreateForm({
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="mb-3">
           <p className="field-label">Temas da prova</p>
-          <p className="text-sm text-slate-500">Esses temas alimentarão o feedback final e poderão ser usados em análises posteriores.</p>
+          <p className="text-lg text-slate-500">Esses temas alimentarão o feedback final e poderão ser usados em análises posteriores.</p>
         </div>
 
         {themes.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhum tema cadastrado ainda. A prova pode ser criada e os temas podem ser vinculados depois.</p>
+          <p className="text-lg text-slate-500">Nenhum tema cadastrado ainda. A prova pode ser criada e os temas podem ser vinculados depois.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {themes.map((theme) => {
@@ -170,7 +170,7 @@ export function ExamCreateForm({
                 <button
                   key={theme.id}
                   className={[
-                    "rounded-full border px-3 py-2 text-sm font-semibold transition",
+                    "rounded-full border px-3 py-2 text-lg font-semibold transition",
                     selected ? "border-red-500 bg-red-50 text-red-700" : "border-slate-200 bg-white text-slate-700 hover:border-red-200"
                   ].join(" ")}
                   onClick={() => toggleTheme(theme.id)}

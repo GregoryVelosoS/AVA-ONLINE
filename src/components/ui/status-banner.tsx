@@ -12,5 +12,5 @@ export function StatusBanner({
         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
         : "border-red-200 bg-red-100 text-red-800";
 
-  return <p className={`rounded-xl border px-3 py-2.5 text-sm font-medium ${toneClass}`}>{message}</p>;
+  return <p className={`rounded-xl border px-3 py-2.5 text-lg font-medium ${toneClass}`}>{message}</p>;
 }

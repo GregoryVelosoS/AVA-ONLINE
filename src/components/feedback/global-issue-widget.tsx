@@ -97,7 +97,7 @@ export function GlobalIssueWidget() {
   return (
     <>
       <button
-        className="fixed bottom-4 right-4 z-40 rounded-full border border-red-500 bg-[linear-gradient(135deg,#c1121f_0%,#7f1019_100%)] px-5 py-3 text-sm font-bold text-white shadow-[0_20px_40px_rgba(193,18,31,0.28)] transition hover:translate-y-[-1px]"
+        className="fixed bottom-4 right-4 z-40 rounded-full border border-red-500 bg-[linear-gradient(135deg,#c1121f_0%,#7f1019_100%)] px-5 py-3 text-lg font-bold text-white shadow-[0_20px_40px_rgba(193,18,31,0.28)] transition hover:translate-y-[-1px]"
         onClick={() => setOpen(true)}
         type="button"
       >
@@ -111,7 +111,7 @@ export function GlobalIssueWidget() {
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Canal rápido</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Sugestões e reporte de problemas</h2>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-lg text-slate-600">
                   Conte o que aconteceu, anexe uma imagem se ajudar e o sistema registrará automaticamente a página atual.
                 </p>
               </div>
@@ -152,7 +152,7 @@ export function GlobalIssueWidget() {
 
               {file ? (
                 <div className="mt-4 space-y-3">
-                  <p className="text-sm font-semibold text-slate-900">{file.name}</p>
+                  <p className="text-lg font-semibold text-slate-900">{file.name}</p>
                   {previewUrl ? (
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                       <Image alt="Preview do anexo" className="h-auto w-full object-cover" height={300} src={previewUrl} unoptimized width={600} />
@@ -163,12 +163,12 @@ export function GlobalIssueWidget() {
                   </button>
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-slate-500">PNG, JPG, WEBP ou GIF com até 5 MB.</p>
+                <p className="mt-2 text-lg text-slate-500">PNG, JPG, WEBP ou GIF com até 5 MB.</p>
               )}
             </div>
 
             {message ? (
-              <p className={`mt-4 rounded-xl px-3 py-2.5 text-sm font-medium ${message.includes("sucesso") ? "border border-emerald-200 bg-emerald-50 text-emerald-700" : "border border-red-200 bg-red-50 text-red-700"}`}>
+              <p className={`mt-4 rounded-xl px-3 py-2.5 text-lg font-medium ${message.includes("sucesso") ? "border border-emerald-200 bg-emerald-50 text-emerald-700" : "border border-red-200 bg-red-50 text-red-700"}`}>
                 {message}
               </p>
             ) : null}

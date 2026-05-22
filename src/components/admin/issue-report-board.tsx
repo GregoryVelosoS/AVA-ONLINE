@@ -73,7 +73,7 @@ function IssueReportCard({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">{report.type}</p>
           <h3 className="mt-2 text-xl font-black tracking-tight text-slate-950">{report.title}</h3>
-          <p className="mt-2 text-sm text-slate-600">{report.description}</p>
+          <p className="mt-2 text-lg text-slate-600">{report.description}</p>
           <p className="mt-3 text-xs text-slate-500">
             {report.contextLabel || "Contexto geral"} · {report.sourcePath} · {new Date(report.createdAt).toLocaleString("pt-BR")}
           </p>

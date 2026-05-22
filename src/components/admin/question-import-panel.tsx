@@ -333,7 +333,7 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
         </select>
       </div>
 
-      <div className="rounded-2xl border border-red-100 bg-red-50/80 p-4 text-sm text-slate-700">
+      <div className="rounded-2xl border border-red-100 bg-red-50/80 p-4 text-lg text-slate-700">
         <p className="font-semibold text-slate-900">Modelo esperado</p>
         <p className="mt-1">
           O arquivo agora prevê contexto, tipo de suporte visual, código de apoio, comando da questão, feedback esperado,
@@ -358,7 +358,7 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
           <label className="surface-panel block cursor-pointer p-5 text-center">
             <span className="btn-secondary">Selecionar arquivo Excel</span>
             <input className="hidden" accept=".xlsx,.xls,.csv" onChange={(event) => previewExcel(event.target.files?.[0])} type="file" />
-            <p className="mt-3 text-sm text-slate-500">{fileName || "Nenhum arquivo selecionado."}</p>
+            <p className="mt-3 text-lg text-slate-500">{fileName || "Nenhum arquivo selecionado."}</p>
           </label>
         </div>
       )}
@@ -371,7 +371,7 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-slate-950">Pré-visualização</h3>
-              <p className="text-sm text-slate-500">{previewCount} questão(ões) preparadas para importação.</p>
+              <p className="text-lg text-slate-500">{previewCount} questão(ões) preparadas para importação.</p>
             </div>
             <button className="btn-primary" disabled={isPending} type="submit">
               {isPending ? "Importando..." : "Confirmar importação"}
@@ -387,15 +387,15 @@ export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[]
                   <p className="font-semibold text-slate-900">
                     {question.code} · {question.type}
                   </p>
-                  {question.context ? <p className="mt-2 text-sm text-slate-500">Contexto: {question.context}</p> : null}
-                  <p className="mt-2 text-sm text-slate-700">Comando: {question.statement}</p>
+                  {question.context ? <p className="mt-2 text-lg text-slate-500">Contexto: {question.context}</p> : null}
+                  <p className="mt-2 text-lg text-slate-700">Comando: {question.statement}</p>
                   <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
                     {disciplineName} · {question.subject} · {question.difficulty} · suporte {question.visualSupportType.toLowerCase()}
                   </p>
                 </div>
               );
             })}
-            {previewQuestions.length > 5 ? <p className="text-sm text-slate-500">Mostrando 5 itens de {previewQuestions.length}.</p> : null}
+            {previewQuestions.length > 5 ? <p className="text-lg text-slate-500">Mostrando 5 itens de {previewQuestions.length}.</p> : null}
           </div>
         </div>
       ) : null}

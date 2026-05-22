@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getAdminOrRedirect } from "@/lib/admin-session";
 import { prisma } from "@/server/db/prisma";
 import { Card } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { QuestionForm } from "@/components/admin/question-form";
 import { QuestionImportPanel } from "@/components/admin/question-import-panel";
 import { EmptyState } from "@/components/ui/empty-state";
-import { QuestionDeleteButton } from "@/components/admin/question-delete-button";
+import { QuestionManagementList } from "@/components/admin/question-management-list";
 
 export default async function AdminQuestionsPage() {
   await getAdminOrRedirect();
@@ -21,6 +20,34 @@ export default async function AdminQuestionsPage() {
       orderBy: { createdAt: "desc" }
     })
   ]);
+
+  const questionList = questions.map((question) => ({
+    id: question.id,
+    code: question.code,
+    type: question.type,
+    title: question.title,
+    disciplineName: question.discipline.name,
+    subject: question.subject,
+    topic: question.topic,
+    difficulty: question.difficulty,
+    context: question.context,
+    statement: question.statement,
+    visualSupportType: question.visualSupportType,
+    supportCode: question.supportCode,
+    supportImagePath: question.supportImagePath,
+    supportImageName: question.supportImageName,
+    supportFilePath: question.supportFilePath,
+    supportFileName: question.supportFileName,
+    status: question.status,
+    createdAt: question.createdAt.toISOString(),
+    options: question.options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      content: option.content,
+      isCorrect: option.isCorrect,
+      position: option.position
+    }))
+  }));
 
   return (
     <main className="container-page space-y-6">
@@ -38,7 +65,7 @@ export default async function AdminQuestionsPage() {
           description="As questões precisam estar vinculadas a uma disciplina antes de serem criadas."
         />
       ) : (
-      <section className="grid gap-6">
+        <section className="grid gap-6">
           <Card title="Nova questão">
             <QuestionForm disciplines={disciplines} mode="create" />
           </Card>
@@ -49,45 +76,7 @@ export default async function AdminQuestionsPage() {
         </section>
       )}
 
-      <Card title="Questões cadastradas">
-        {questions.length === 0 ? (
-          <EmptyState title="Nenhuma questão cadastrada" description="Use o formulário acima ou importe um lote inicial de questões." />
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-slate-200">
-            <table className="w-full text-sm">
-              <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
-                <tr>
-                  <th className="px-4 py-3">Código</th>
-                  <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Disciplina</th>
-                  <th className="px-4 py-3">Nível</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.map((question) => (
-                  <tr key={question.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 font-medium">{question.code}</td>
-                    <td className="px-4 py-3">{question.type}</td>
-                    <td className="px-4 py-3">{question.discipline.name}</td>
-                    <td className="px-4 py-3">{question.difficulty}</td>
-                    <td className="px-4 py-3">{question.status}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Link className="btn-secondary" href={`/admin/questions/${question.id}`}>
-                          Editar
-                        </Link>
-                        <QuestionDeleteButton questionId={question.id} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      <QuestionManagementList questions={questionList} disciplines={disciplines.map((discipline) => discipline.name)} />
     </main>
   );
 }

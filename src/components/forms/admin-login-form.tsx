@@ -49,7 +49,7 @@ export function AdminLoginForm() {
         <input className="input-base" value={password} placeholder="Digite sua senha" onChange={(e) => setPassword(e.target.value)} type="password" required />
       </div>
 
-      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
       <LoadingButton className="w-full" loading={loading} loadingText="Entrando..." type="submit">
         Entrar

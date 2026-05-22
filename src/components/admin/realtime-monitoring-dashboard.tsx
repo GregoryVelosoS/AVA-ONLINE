@@ -78,26 +78,26 @@ export function RealtimeMonitoringDashboard({
 
       <section className="grid gap-4 md:grid-cols-4">
         <div className="surface-panel p-5">
-          <p className="text-sm text-slate-500">Provas com execução ativa</p>
+          <p className="text-lg text-slate-500">Provas com execução ativa</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{data.summary.activeExams}</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm text-slate-500">Alunos em andamento</p>
+          <p className="text-lg text-slate-500">Alunos em andamento</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{data.summary.totalInProgress}</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm text-slate-500">Alunos concluídos</p>
+          <p className="text-lg text-slate-500">Alunos concluídos</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{data.summary.totalFinished}</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm text-slate-500">Tempo médio decorrido</p>
+          <p className="text-lg text-slate-500">Tempo médio decorrido</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{data.summary.averageElapsedMinutes} min</p>
         </div>
       </section>
 
       <section className="surface-panel p-5">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Atualização automática</p>
-        <p className="mt-2 text-sm text-slate-600">Última atualização em {new Date(data.updatedAt).toLocaleString("pt-BR")}.</p>
+        <p className="mt-2 text-lg text-slate-600">Última atualização em {new Date(data.updatedAt).toLocaleString("pt-BR")}.</p>
       </section>
 
       <div className="space-y-4">
@@ -109,25 +109,25 @@ export function RealtimeMonitoringDashboard({
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-red-700">Código {exam.publicCode}</p>
                 <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{exam.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-lg text-slate-600">
                   {exam.disciplineName} · {exam.classGroupName} · {exam.statusLabel}
                 </p>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-slate-700">
                   Em andamento: {exam.inProgressCount}
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-slate-700">
                   Finalizados: {exam.finishedCount}
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-slate-700">
                   Tempo médio: {exam.averageElapsedMinutes} min
                 </div>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-lg">
                 <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
                   <tr>
                     <th className="px-4 py-3">Aluno</th>

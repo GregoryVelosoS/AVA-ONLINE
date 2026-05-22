@@ -144,9 +144,9 @@ export function FeedbackForm({
     <form className="space-y-5" onSubmit={submit}>
       <section className="surface-panel space-y-4 p-5 md:p-6">
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-red-700">Fechamento pedagógico</p>
+          <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Fechamento pedagógico</p>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{examTitle}</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-lg text-slate-600">
             Suas respostas ajudam a analisar a prova, entender a percepção da turma e orientar retomadas de conteúdo.
           </p>
         </div>
@@ -161,7 +161,7 @@ export function FeedbackForm({
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Pergunta {index + 1}</p>
               <h3 className="mt-2 text-xl font-black tracking-tight text-slate-950">{question.title}</h3>
-              {question.description ? <p className="mt-2 text-sm text-slate-600">{question.description}</p> : null}
+              {question.description ? <p className="mt-2 text-lg text-slate-600">{question.description}</p> : null}
             </div>
 
             {question.type === "LINEAR_SCALE" ? (
@@ -182,7 +182,7 @@ export function FeedbackForm({
                       type="button"
                     >
                       <p className={`text-lg font-black ${selected ? "text-red-300" : "text-red-700"}`}>{option.value}</p>
-                      <p className="mt-1 text-sm font-semibold">{option.label}</p>
+                      <p className="mt-1 text-lg font-semibold">{option.label}</p>
                     </button>
                   );
                 })}
@@ -206,7 +206,7 @@ export function FeedbackForm({
                       onClick={() => setField(field, option as FormState[typeof field])}
                       type="button"
                     >
-                      <p className="text-sm font-semibold">{option}</p>
+                      <p className="text-lg font-semibold">{option}</p>
                     </button>
                   );
                 })}
@@ -236,13 +236,13 @@ export function FeedbackForm({
                         }
                         type="button"
                       >
-                        <p className="text-sm font-semibold">{option}</p>
+                        <p className="text-lg font-semibold">{option}</p>
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg text-slate-600">
                   {question.emptyStateMessage || "Nenhuma opção disponível."}
                 </p>
               )
@@ -260,7 +260,7 @@ export function FeedbackForm({
         );
       })}
 
-      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
       <button className="btn-primary w-full" disabled={loading} type="submit">
         {loading ? "Enviando..." : "Enviar feedback pedagógico e ver análise final"}

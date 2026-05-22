@@ -46,7 +46,7 @@ export function AdminNav({
   return (
     <div className="surface-dark p-3 md:p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <nav className="flex flex-wrap gap-2 text-sm">
+        <nav className="flex flex-wrap gap-2 text-lg">
           {links.map((link) => {
             const active = current === link.href;
 

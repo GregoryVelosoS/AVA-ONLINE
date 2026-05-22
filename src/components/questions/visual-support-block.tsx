@@ -35,7 +35,7 @@ export function VisualSupportBlock({
       </div>
 
       {shouldRenderCode ? (
-        <pre className="overflow-x-auto rounded-2xl border border-black/10 bg-[#0f0f11] p-4 font-mono text-sm leading-6 text-red-50 shadow-inner">
+        <pre className="overflow-x-auto rounded-2xl border border-black/10 bg-[#0f0f11] p-4 font-mono text-lg leading-6 text-red-50 shadow-inner">
           <code>{supportCode}</code>
         </pre>
       ) : null}

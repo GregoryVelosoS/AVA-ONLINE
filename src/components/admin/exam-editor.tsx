@@ -288,11 +288,11 @@ export function ExamEditor({
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="mb-3">
             <p className="field-label">Temas vinculados à prova</p>
-            <p className="text-sm text-slate-500">Somente esses temas aparecerão na pergunta final sobre conteúdos com maior dificuldade.</p>
+            <p className="text-lg text-slate-500">Somente esses temas aparecerão na pergunta final sobre conteúdos com maior dificuldade.</p>
           </div>
 
           {themes.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum tema cadastrado. Cadastre primeiro em Temas.</p>
+            <p className="text-lg text-slate-500">Nenhum tema cadastrado. Cadastre primeiro em Temas.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {themes.map((theme) => {
@@ -302,7 +302,7 @@ export function ExamEditor({
                   <button
                     key={theme.id}
                     className={[
-                      "rounded-full border px-3 py-2 text-sm font-semibold transition",
+                      "rounded-full border px-3 py-2 text-lg font-semibold transition",
                       selected ? "border-red-500 bg-red-50 text-red-700" : "border-slate-200 bg-white text-slate-700 hover:border-red-200"
                     ].join(" ")}
                     onClick={() => toggleTheme(theme.id)}
@@ -329,7 +329,7 @@ export function ExamEditor({
         <div className="surface-panel space-y-4 p-5 md:p-6">
           <div>
             <h2 className="text-lg font-bold text-slate-950">Banco disponível</h2>
-            <p className="text-sm text-slate-500">Selecione questões existentes para incluir na prova.</p>
+            <p className="text-lg text-slate-500">Selecione questões existentes para incluir na prova.</p>
           </div>
 
           {availableQuestions.length === 0 ? (
@@ -343,7 +343,7 @@ export function ExamEditor({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-bold text-slate-950">{question.code}</p>
-                      <p className="text-sm text-slate-600">{question.statement}</p>
+                      <p className="text-lg text-slate-600">{question.statement}</p>
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
                         {question.type} · {question.discipline.name} · {question.difficulty}
                       </p>
@@ -367,7 +367,7 @@ export function ExamEditor({
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-950">Questões da prova</h2>
-              <p className="text-sm text-slate-500">Reordene, remova ou edite as questões já vinculadas.</p>
+              <p className="text-lg text-slate-500">Reordene, remova ou edite as questões já vinculadas.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link className="btn-secondary" href="/admin/questions">
@@ -392,7 +392,7 @@ export function ExamEditor({
                       <p className="font-bold text-slate-950">
                         {index + 1}. {question.code}
                       </p>
-                      <p className="text-sm text-slate-600">{question.statement}</p>
+                      <p className="text-lg text-slate-600">{question.statement}</p>
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
                         {question.type} · {question.discipline.name} · {question.difficulty}
                       </p>

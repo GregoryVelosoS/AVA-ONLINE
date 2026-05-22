@@ -51,11 +51,11 @@ export function QuestionThemePanel({
       <div>
         <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Temas da questão</p>
         <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Vincular conteúdos analíticos</h2>
-        <p className="mt-2 text-sm text-slate-600">Esses temas complementam os campos livres de revisão e ajudam a cruzar desempenho por conteúdo.</p>
+        <p className="mt-2 text-lg text-slate-600">Esses temas complementam os campos livres de revisão e ajudam a cruzar desempenho por conteúdo.</p>
       </div>
 
       {themes.length === 0 ? (
-        <p className="text-sm text-slate-500">Nenhum tema cadastrado. Cadastre primeiro em Temas.</p>
+        <p className="text-lg text-slate-500">Nenhum tema cadastrado. Cadastre primeiro em Temas.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {themes.map((theme) => {
@@ -65,7 +65,7 @@ export function QuestionThemePanel({
               <button
                 key={theme.id}
                 className={[
-                  "rounded-full border px-3 py-2 text-sm font-semibold transition",
+                  "rounded-full border px-3 py-2 text-lg font-semibold transition",
                   selected ? "border-red-500 bg-red-50 text-red-700" : "border-slate-200 bg-white text-slate-700 hover:border-red-200"
                 ].join(" ")}
                 onClick={() => toggleTheme(theme.id)}

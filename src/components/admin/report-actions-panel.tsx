@@ -205,7 +205,7 @@ export function ReportActionsPanel({
 
       <div className="space-y-3">
         {shareLinks.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhum link de visualizacao criado para esta prova.</p>
+          <p className="text-lg text-slate-500">Nenhum link de visualizacao criado para esta prova.</p>
         ) : (
           shareLinks.map((shareLink) => {
             const viewerUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/viewer/reports/${shareLink.token}`;
@@ -215,7 +215,7 @@ export function ReportActionsPanel({
               <div key={shareLink.id} className="relative rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <LoadingOverlay active={rowBusy} label="Atualizando link..." />
 
-                <p className="break-all text-sm font-semibold text-slate-900">{viewerUrl}</p>
+                <p className="break-all text-lg font-semibold text-slate-900">{viewerUrl}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <LoadingButton onClick={() => navigator.clipboard.writeText(viewerUrl)} type="button" variant="secondary">
                     Copiar link

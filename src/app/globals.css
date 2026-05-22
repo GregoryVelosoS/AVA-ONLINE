@@ -35,7 +35,7 @@ body {
   }
 
   .field-label {
-    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+    @apply mb-1.5 block text-lg font-semibold text-slate-700;
   }
 
   .input-base {
@@ -63,7 +63,7 @@ body {
   }
 
   .section-subtitle {
-    @apply text-sm text-slate-600 md:text-base;
+    @apply text-lg text-slate-600 md:text-base;
   }
 }
 

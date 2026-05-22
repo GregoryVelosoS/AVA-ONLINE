@@ -218,7 +218,7 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-black tracking-tight text-slate-950">Usuários cadastrados</h2>
-            <p className="mt-1 text-sm text-slate-500">Pesquise, filtre, edite, ative, desative ou exclua usuários internos.</p>
+            <p className="mt-1 text-lg text-slate-500">Pesquise, filtre, edite, ative, desative ou exclua usuários internos.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-[minmax(0,240px)_180px]">
             <input
@@ -242,7 +242,7 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
           />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200">
-            <table className="w-full text-sm">
+            <table className="w-full text-lg">
               <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
                 <tr>
                   <th className="px-4 py-3">Nome</th>
@@ -292,7 +292,7 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         {editing ? (
-                          <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                          <label className="flex items-center gap-2 text-lg font-medium text-slate-700">
                             <input checked={editIsActive} onChange={(event) => setEditIsActive(event.target.checked)} type="checkbox" />
                             Ativo
                           </label>

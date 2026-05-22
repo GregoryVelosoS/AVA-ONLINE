@@ -32,7 +32,7 @@ function ChartCard({
     <section className="surface-panel p-5 md:p-6">
       <div>
         <h3 className="text-lg font-black tracking-tight text-slate-950">{title}</h3>
-        {subtitle ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 text-lg text-slate-500">{subtitle}</p> : null}
       </div>
       <div className="mt-4 h-72">{children}</div>
     </section>
@@ -43,7 +43,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
   if (!analytics.selectedExam || !analytics.summary) {
     return (
       <section className="surface-panel p-8 text-center">
-        <p className="text-sm font-black uppercase tracking-[0.18em] text-red-700">Sem dados</p>
+        <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Sem dados</p>
         <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Nenhuma prova disponível para análise</h2>
         <p className="mt-2 text-slate-600">Cadastre ou publique uma prova para visualizar o dashboard analítico.</p>
       </section>
@@ -73,19 +73,19 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="surface-panel p-5">
-          <p className="text-sm font-bold text-slate-500">Maior nota</p>
+          <p className="text-lg font-bold text-slate-500">Maior nota</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.highestScore}</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm font-bold text-slate-500">Menor nota</p>
+          <p className="text-lg font-bold text-slate-500">Menor nota</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.lowestScore}</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm font-bold text-slate-500">Taxa de conclusão</p>
+          <p className="text-lg font-bold text-slate-500">Taxa de conclusão</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.completionRate}%</p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm font-bold text-slate-500">Feedbacks recebidos</p>
+          <p className="text-lg font-bold text-slate-500">Feedbacks recebidos</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.feedbackAnalytics.responseCount}</p>
         </div>
       </section>
@@ -172,30 +172,30 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
 
       <section className="grid gap-4 xl:grid-cols-3">
         <div className="surface-panel p-5">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-red-700">Questão mais crítica</p>
+          <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Questão mais crítica</p>
           {analytics.questionHighlights?.criticalQuestion ? (
             <>
               <p className="mt-2 text-lg font-black text-slate-950">{analytics.questionHighlights.criticalQuestion.code}</p>
-              <p className="mt-2 text-sm text-slate-600">{analytics.questionHighlights.criticalQuestion.statement}</p>
-              <p className="mt-3 text-sm font-semibold text-red-700">
+              <p className="mt-2 text-lg text-slate-600">{analytics.questionHighlights.criticalQuestion.statement}</p>
+              <p className="mt-3 text-lg font-semibold text-red-700">
                 {analytics.questionHighlights.criticalQuestion.errorRate}% de erro
               </p>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-600">Sem dados suficientes.</p>
+            <p className="mt-2 text-lg text-slate-600">Sem dados suficientes.</p>
           )}
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-red-700">Correlação percepção x desempenho</p>
+          <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Correlação percepção x desempenho</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.feedbackAnalytics.perceptionCorrelation}</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-lg text-slate-600">
             Quanto mais próximo de 1, maior a coerência entre autopercepção do aluno e resultado real.
           </p>
         </div>
         <div className="surface-panel p-5">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-red-700">Alunos abaixo da média</p>
+          <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Alunos abaixo da média</p>
           <p className="mt-2 text-3xl font-black text-slate-950">{analytics.pedagogicalInsights.belowAverageCount}</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-lg text-slate-600">
             {analytics.pedagogicalInsights.lowPerformanceCount} com baixo desempenho crítico (abaixo de 50%).
           </p>
         </div>
@@ -205,10 +205,10 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         <div className="surface-panel overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Ranking de alunos</h3>
-            <p className="mt-1 text-sm text-slate-500">Pesquisa por aluno e filtro aplicados refletem nesta tabela.</p>
+            <p className="mt-1 text-lg text-slate-500">Pesquisa por aluno e filtro aplicados refletem nesta tabela.</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-lg">
               <thead className="bg-black text-left text-white">
                 <tr>
                   <th className="px-4 py-3">Aluno</th>
@@ -247,10 +247,10 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         <div className="surface-panel overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Desempenho por questão</h3>
-            <p className="mt-1 text-sm text-slate-500">Ranking das questões mais erradas e mais acertadas.</p>
+            <p className="mt-1 text-lg text-slate-500">Ranking das questões mais erradas e mais acertadas.</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-lg">
               <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
                 <tr>
                   <th className="px-4 py-3">Questão</th>
@@ -284,7 +284,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
             {analytics.topStudents.map((student) => (
               <div key={student.attemptId} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <p className="font-semibold text-slate-950">{student.studentName}</p>
-                <p className="mt-1 text-sm text-slate-600">{student.scorePercent}% · {student.correctCount} acertos</p>
+                <p className="mt-1 text-lg text-slate-600">{student.scorePercent}% · {student.correctCount} acertos</p>
               </div>
             ))}
           </div>
@@ -296,7 +296,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
             {analytics.strugglingStudents.map((student) => (
               <div key={student.attemptId} className="rounded-2xl border border-red-100 bg-red-50/70 p-3">
                 <p className="font-semibold text-slate-950">{student.studentName}</p>
-                <p className="mt-1 text-sm text-slate-600">{student.scorePercent}% · {student.incorrectCount} erros</p>
+                <p className="mt-1 text-lg text-slate-600">{student.scorePercent}% · {student.incorrectCount} erros</p>
               </div>
             ))}
           </div>
@@ -306,7 +306,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           <h3 className="text-lg font-black tracking-tight text-slate-950">Pontos de retomada</h3>
           <div className="mt-4 space-y-3">
             {analytics.pedagogicalInsights.retomadaPoints.map((point) => (
-              <div key={point} className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+              <div key={point} className="rounded-2xl border border-slate-200 bg-white p-3 text-lg text-slate-700">
                 {point}
               </div>
             ))}
@@ -320,23 +320,23 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {analytics.feedbackAnalytics.needReviewCounts.map((item) => (
               <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+                <p className="text-lg font-semibold text-slate-950">{item.label}</p>
                 <p className="mt-1 text-2xl font-black text-red-700">{item.count}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-5 space-y-3">
-            <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Comentários abertos</h4>
+            <h4 className="text-lg font-black uppercase tracking-[0.18em] text-slate-500">Comentários abertos</h4>
             {analytics.feedbackAnalytics.openComments.length > 0 ? (
               analytics.feedbackAnalytics.openComments.map((comment) => (
                 <div key={`${comment.studentName}-${comment.comment}`} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <p className="font-semibold text-slate-950">{comment.studentName}</p>
-                  <p className="mt-2 text-sm text-slate-700">{comment.comment}</p>
+                  <p className="mt-2 text-lg text-slate-700">{comment.comment}</p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">Nenhum comentário aberto registrado até o momento.</p>
+              <p className="text-lg text-slate-500">Nenhum comentário aberto registrado até o momento.</p>
             )}
           </div>
         </div>
@@ -344,23 +344,23 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         {analytics.studentDetail ? (
           <div className="surface-panel p-5">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Visão detalhada do aluno</h3>
-            <p className="mt-2 text-sm text-slate-500">{analytics.studentDetail.studentName}</p>
+            <p className="mt-2 text-lg text-slate-500">{analytics.studentDetail.studentName}</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Nota</p>
+                <p className="text-lg text-slate-500">Nota</p>
                 <p className="mt-1 text-2xl font-black text-slate-950">{analytics.studentDetail.scorePercent}%</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-500">Tempo gasto</p>
+                <p className="text-lg text-slate-500">Tempo gasto</p>
                 <p className="mt-1 text-2xl font-black text-slate-950">{analytics.studentDetail.durationMinutes} min</p>
               </div>
             </div>
 
             <div className="mt-5">
-              <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Temas com mais dificuldade</h4>
+              <h4 className="text-lg font-black uppercase tracking-[0.18em] text-slate-500">Temas com mais dificuldade</h4>
               <div className="mt-3 flex flex-wrap gap-2">
                 {analytics.studentDetail.weakTopics.map((topic) => (
-                  <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700">
+                  <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-lg font-semibold text-red-700">
                     {topic}
                   </span>
                 ))}
@@ -368,10 +368,10 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
             </div>
 
             <div className="mt-5">
-              <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Materiais sugeridos</h4>
+              <h4 className="text-lg font-black uppercase tracking-[0.18em] text-slate-500">Materiais sugeridos</h4>
               <div className="mt-3 space-y-2">
                 {analytics.studentDetail.suggestedMaterials.map((material) => (
-                  <a key={material} className="block rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-red-700" href={material} rel="noreferrer" target="_blank">
+                  <a key={material} className="block rounded-2xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold text-red-700" href={material} rel="noreferrer" target="_blank">
                     {material}
                   </a>
                 ))}
@@ -381,7 +381,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         ) : (
           <div className="surface-panel p-5">
             <h3 className="text-lg font-black tracking-tight text-slate-950">Visão detalhada do aluno</h3>
-            <p className="mt-3 text-sm text-slate-600">Use o filtro de aluno para abrir a análise individual com nota, erros, temas frágeis e feedback final.</p>
+            <p className="mt-3 text-lg text-slate-600">Use o filtro de aluno para abrir a análise individual com nota, erros, temas frágeis e feedback final.</p>
           </div>
         )}
       </section>

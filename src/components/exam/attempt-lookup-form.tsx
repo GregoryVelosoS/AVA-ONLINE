@@ -41,9 +41,9 @@ export function AttemptLookupForm() {
         <input className="input-base" placeholder="Ex.: TENT-AB12CD34EF" required value={resultLookupCode} onChange={(event) => setResultLookupCode(event.target.value.toUpperCase())} />
       </div>
 
-      <p className="text-sm text-slate-500">Use o identificador exibido no fim da prova para consultar novamente seu desempenho sem login.</p>
+      <p className="text-lg text-slate-500">Use o identificador exibido no fim da prova para consultar novamente seu desempenho sem login.</p>
 
-      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
       <LoadingButton className="w-full" loading={loading} loadingText="Consultando..." type="submit">
         Consultar desempenho

@@ -38,8 +38,8 @@ export function AdminDashboardHome({
           {latestExam ? (
             <>
               <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{latestExam.title}</h2>
-              <p className="mt-2 text-sm text-slate-600">Código {latestExam.publicCode} · média {latestExam.averageScorePercent}%</p>
-              <p className="mt-3 rounded-2xl border border-red-100 bg-red-50/70 p-4 text-sm text-slate-700">
+              <p className="mt-2 text-lg text-slate-600">Código {latestExam.publicCode} · média {latestExam.averageScorePercent}%</p>
+              <p className="mt-3 rounded-2xl border border-red-100 bg-red-50/70 p-4 text-lg text-slate-700">
                 Questão mais crítica: <strong>{latestExam.criticalQuestion}</strong>
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ export function AdminDashboardHome({
               </div>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-600">Ainda não há prova concluída com dados suficientes para destaque.</p>
+            <p className="mt-2 text-lg text-slate-600">Ainda não há prova concluída com dados suficientes para destaque.</p>
           )}
         </div>
 
@@ -103,7 +103,7 @@ export function AdminDashboardHome({
 function QuickCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="surface-panel p-5">
-      <p className="text-sm text-slate-500">{label}</p>
+      <p className="text-lg text-slate-500">{label}</p>
       <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
     </div>
   );

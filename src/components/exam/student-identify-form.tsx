@@ -100,7 +100,7 @@ export function StudentIdentifyForm({
             <input className="input-base" placeholder="Ex.: LOGICA2026" required value={publicCode} onChange={(event) => setPublicCode(event.target.value.toUpperCase())} />
           </div>
 
-          {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+          {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
           <LoadingButton className="w-full" loading={loadingLookup} loadingText="Validando..." type="submit">
             Continuar
@@ -113,11 +113,11 @@ export function StudentIdentifyForm({
           <div className="rounded-[28px] border border-red-100 bg-red-50/80 p-5">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Prova validada</p>
             <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{resolvedExam.title}</h3>
-            <p className="mt-2 text-sm text-slate-600">{resolvedExam.description || "Siga para a identificação e início da prova."}</p>
+            <p className="mt-2 text-lg text-slate-600">{resolvedExam.description || "Siga para a identificação e início da prova."}</p>
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
               Código {resolvedExam.publicCode} · {resolvedExam.timeLimitMinutes ? `${resolvedExam.timeLimitMinutes} min` : "sem limite"}
             </p>
-            {resolvedExam.instructions ? <p className="mt-3 text-sm text-slate-700">{resolvedExam.instructions}</p> : null}
+            {resolvedExam.instructions ? <p className="mt-3 text-lg text-slate-700">{resolvedExam.instructions}</p> : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -137,9 +137,9 @@ export function StudentIdentifyForm({
             <input className="input-base" placeholder="Informe seu nome" required value={studentName} onChange={(event) => setStudentName(event.target.value)} />
           </div>
 
-          <p className="text-sm text-slate-500">A turma e a disciplina já estão vinculadas à prova e serão registradas automaticamente na sua tentativa.</p>
+          <p className="text-lg text-slate-500">A turma e a disciplina já estão vinculadas à prova e serão registradas automaticamente na sua tentativa.</p>
 
-          {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p> : null}
+          {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
           <div className="flex flex-wrap gap-3">
             <LoadingButton onClick={() => setResolvedExam(null)} type="button" variant="secondary">

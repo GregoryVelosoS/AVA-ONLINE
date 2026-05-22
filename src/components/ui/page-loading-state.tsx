@@ -16,7 +16,7 @@ export function PageLoadingState({
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Aguarde</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{title}</h1>
-            <p className="mt-2 text-sm text-slate-600">{description}</p>
+            <p className="mt-2 text-lg text-slate-600">{description}</p>
           </div>
         </div>
       </section>

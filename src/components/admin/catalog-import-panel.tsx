@@ -205,7 +205,7 @@ export function CatalogImportPanel<TItem extends CatalogImportEntity>({
         </a>
       </div>
 
-      <div className="rounded-2xl border border-red-100 bg-red-50/80 p-4 text-sm text-slate-700">
+      <div className="rounded-2xl border border-red-100 bg-red-50/80 p-4 text-lg text-slate-700">
         <p className="font-semibold text-slate-900">Instruções de preenchimento</p>
         <div className="mt-2 space-y-1.5">
           {catalogImportInstructions[entity].map((instruction) => (
@@ -233,7 +233,7 @@ export function CatalogImportPanel<TItem extends CatalogImportEntity>({
           <label className="surface-panel block cursor-pointer p-5 text-center">
             <span className="btn-secondary">Selecionar arquivo Excel</span>
             <input className="hidden" accept=".xlsx,.xls,.csv" onChange={(event) => previewExcel(event.target.files?.[0])} type="file" />
-            <p className="mt-3 text-sm text-slate-500">{fileName || "Nenhum arquivo selecionado."}</p>
+            <p className="mt-3 text-lg text-slate-500">{fileName || "Nenhum arquivo selecionado."}</p>
           </label>
           {isPreviewing ? <StatusBanner message="Validando arquivo e preparando pré-visualização..." tone="info" /> : null}
         </div>
@@ -244,8 +244,8 @@ export function CatalogImportPanel<TItem extends CatalogImportEntity>({
 
       {previewErrors.length > 0 ? (
         <div className="rounded-2xl border border-red-200 bg-red-50/80 p-4">
-          <p className="text-sm font-semibold text-red-800">Erros encontrados por linha/item</p>
-          <div className="mt-3 space-y-2 text-sm text-red-700">
+          <p className="text-lg font-semibold text-red-800">Erros encontrados por linha/item</p>
+          <div className="mt-3 space-y-2 text-lg text-red-700">
             {previewErrors.slice(0, 12).map((previewError) => (
               <p key={`${previewError.index}-${previewError.message}`}>
                 Linha {previewError.index + 2}: {previewError.message}
@@ -261,7 +261,7 @@ export function CatalogImportPanel<TItem extends CatalogImportEntity>({
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h3 className="text-base font-bold text-slate-950">Pré-visualização</h3>
-              <p className="text-sm text-slate-500">{previewSummary}</p>
+              <p className="text-lg text-slate-500">{previewSummary}</p>
             </div>
             <LoadingButton loading={isSubmitting} loadingText="Importando..." type="submit">
               Confirmar importação
@@ -276,7 +276,7 @@ export function CatalogImportPanel<TItem extends CatalogImportEntity>({
                 </p>
               </div>
             ))}
-            {previewItems.length > 6 ? <p className="text-sm text-slate-500">Mostrando 6 itens de {previewItems.length}.</p> : null}
+            {previewItems.length > 6 ? <p className="text-lg text-slate-500">Mostrando 6 itens de {previewItems.length}.</p> : null}
           </div>
         </div>
       ) : null}

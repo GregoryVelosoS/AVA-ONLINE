@@ -86,7 +86,7 @@ export function SystemMaintenancePanel({ backups }: { backups: BackupItem[] }) {
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Operações críticas</p>
           <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Backup e reset seguro da base</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-lg text-slate-600">
             Todo reset administrativo gera automaticamente um snapshot JSON completo antes da limpeza. Os arquivos ficam organizados em
             `backups/db/ano/mês`, e os usuários administrativos são preservados para manter o acesso operacional.
           </p>
@@ -99,8 +99,8 @@ export function SystemMaintenancePanel({ backups }: { backups: BackupItem[] }) {
         </div>
 
         <div className="rounded-2xl border border-red-200 bg-red-50/80 p-4">
-          <p className="text-sm font-semibold text-red-800">Reset administrativo com proteção obrigatória</p>
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="text-lg font-semibold text-red-800">Reset administrativo com proteção obrigatória</p>
+          <p className="mt-2 text-lg text-slate-700">
             Antes do reset, o sistema cria um backup com data/hora, depois remove os dados operacionais da base atual e preserva os
             usuários administrativos. Para confirmar, digite exatamente <strong>{confirmationPhrase}</strong>.
           </p>
@@ -132,17 +132,17 @@ export function SystemMaintenancePanel({ backups }: { backups: BackupItem[] }) {
       <section className="surface-panel p-5 md:p-6">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-slate-950">Backups recentes</h2>
-          <p className="text-sm text-slate-500">Histórico local disponível para futura restauração manual ou automatizada.</p>
+          <p className="text-lg text-slate-500">Histórico local disponível para futura restauração manual ou automatizada.</p>
         </div>
 
         {backups.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhum backup encontrado ainda.</p>
+          <p className="text-lg text-slate-500">Nenhum backup encontrado ainda.</p>
         ) : (
           <div className="space-y-3">
             {backups.map((backup) => (
               <div key={`${backup.relativePath}-${backup.createdAt}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="font-semibold text-slate-900">{backup.relativePath}</p>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-lg text-slate-600">
                   {new Date(backup.createdAt).toLocaleString("pt-BR")} · motivo {backup.reason}
                 </p>
                 <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">

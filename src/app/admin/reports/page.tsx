@@ -173,7 +173,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
             {analytics.selectedExam ? analytics.selectedExam.title : "Relatorio consolidado"}
           </h2>
           {analytics.selectedExam ? (
-            <p className="text-sm text-slate-600">
+            <p className="text-lg text-slate-600">
               Codigo {analytics.selectedExam.publicCode} · Disciplina {analytics.selectedExam.disciplineName}
             </p>
           ) : null}

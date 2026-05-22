@@ -414,7 +414,7 @@ export function QuestionForm({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Estrutura da questão</p>
           <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Ordem de exibição para admin e aluno</h2>
-          <p className="mt-2 text-sm text-slate-600">Contexto, suporte visual, comando da questão, alternativas e nível de confiança.</p>
+          <p className="mt-2 text-lg text-slate-600">Contexto, suporte visual, comando da questão, alternativas e nível de confiança.</p>
         </div>
 
         <div>
@@ -430,7 +430,7 @@ export function QuestionForm({
         <section className="space-y-4 rounded-[28px] border border-red-100 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(255,245,245,0.98)_100%)] p-5">
           <div>
             <label className="field-label">2. Suporte visual</label>
-            <p className="mt-1 text-sm text-slate-600">Escolha se a questão terá material visual por imagem/arquivo ou um bloco de código formatado.</p>
+            <p className="mt-1 text-lg text-slate-600">Escolha se a questão terá material visual por imagem/arquivo ou um bloco de código formatado.</p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-3">
@@ -453,8 +453,8 @@ export function QuestionForm({
                   onClick={() => handleVisualSupportTypeChange(option.value as VisualSupportType)}
                   type="button"
                 >
-                  <p className="text-sm font-black text-red-700">{option.label}</p>
-                  <p className="mt-2 text-sm text-slate-600">{option.description}</p>
+                  <p className="text-lg font-black text-red-700">{option.label}</p>
+                  <p className="mt-2 text-lg text-slate-600">{option.description}</p>
                 </button>
               );
             })}
@@ -464,7 +464,7 @@ export function QuestionForm({
             <div>
               <label className="field-label">Código de apoio</label>
               <textarea
-                className="input-base min-h-64 font-mono text-sm leading-6"
+                className="input-base min-h-64 font-mono text-lg leading-6"
                 placeholder={"Exemplo:\nfor (let i = 0; i < lista.length; i++) {\n  console.log(lista[i]);\n}"}
                 spellCheck={false}
                 value={form.supportCode}
@@ -479,7 +479,7 @@ export function QuestionForm({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-base font-bold text-slate-950">Imagem de apoio</h3>
-                    <p className="text-sm text-slate-500">PNG, JPG, WEBP ou GIF com até 5 MB.</p>
+                    <p className="text-lg text-slate-500">PNG, JPG, WEBP ou GIF com até 5 MB.</p>
                   </div>
                   {form.supportImagePath ? (
                     <button className="btn-secondary" onClick={() => clearAsset("image")} type="button">
@@ -503,17 +503,17 @@ export function QuestionForm({
                     <Image alt={form.supportImageName || "Imagem de apoio"} className="h-auto w-full object-cover" height={360} src={imagePreview} unoptimized width={720} />
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-slate-500">Nenhuma imagem associada.</p>
+                  <p className="mt-4 text-lg text-slate-500">Nenhuma imagem associada.</p>
                 )}
 
-                {form.supportImageName ? <p className="mt-3 text-sm font-medium text-slate-700">{form.supportImageName}</p> : null}
+                {form.supportImageName ? <p className="mt-3 text-lg font-medium text-slate-700">{form.supportImageName}</p> : null}
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-base font-bold text-slate-950">Arquivo complementar</h3>
-                    <p className="text-sm text-slate-500">PDF, DOC, DOCX, PPT, PPTX ou TXT com até 10 MB.</p>
+                    <p className="text-lg text-slate-500">PDF, DOC, DOCX, PPT, PPTX ou TXT com até 10 MB.</p>
                   </div>
                   {form.supportFilePath ? (
                     <button className="btn-secondary" onClick={() => clearAsset("file")} type="button">
@@ -537,7 +537,7 @@ export function QuestionForm({
                     <p className="font-semibold text-slate-900">{form.supportFileName}</p>
                     {form.supportFilePath ? (
                       <a
-                        className="mt-2 inline-flex text-sm font-semibold text-red-700 hover:text-red-800"
+                        className="mt-2 inline-flex text-lg font-semibold text-red-700 hover:text-red-800"
                         href={getQuestionSupportAssetUrl(form.supportFilePath) || "#"}
                         rel="noreferrer"
                         target="_blank"
@@ -547,7 +547,7 @@ export function QuestionForm({
                     ) : null}
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-slate-500">Nenhum arquivo associado.</p>
+                  <p className="mt-4 text-lg text-slate-500">Nenhum arquivo associado.</p>
                 )}
               </div>
             </div>
@@ -569,7 +569,7 @@ export function QuestionForm({
           <div className="flex items-center justify-between gap-3">
             <div>
               <label className="field-label">4. Alternativas</label>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-lg text-slate-600">
                 {form.type === "MULTIPLE_CHOICE"
                   ? "Defina ao menos duas alternativas e marque a correta."
                   : "Questões discursivas e por arquivo não exibem alternativas, mas mantêm o nível de confiança ao final."}
@@ -593,7 +593,7 @@ export function QuestionForm({
                     value={option.content}
                     onChange={(event) => updateOption(index, { content: event.target.value })}
                   />
-                  <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                  <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-lg font-semibold text-slate-700">
                     <input checked={option.isCorrect} onChange={(event) => updateOption(index, { isCorrect: event.target.checked })} type="checkbox" />
                     Correta
                   </label>
@@ -620,7 +620,7 @@ export function QuestionForm({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Feedback pós-prova</p>
           <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Material de revisão para o aluno</h2>
-          <p className="mt-2 text-sm text-slate-600">Esses campos alimentam a tela final com explicação, temas de estudo, links e observações.</p>
+          <p className="mt-2 text-lg text-slate-600">Esses campos alimentam a tela final com explicação, temas de estudo, links e observações.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

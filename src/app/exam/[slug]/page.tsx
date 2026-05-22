@@ -38,7 +38,7 @@ export default async function PublicExamPage({ params }: { params: Promise<{ slu
     <main className="container-page">
       <Card title={link.exam.title}>
         <p className="mb-4 text-slate-600">{link.exam.description || "Sem descrição"}</p>
-        <p className="mb-3 text-sm text-slate-700">
+        <p className="mb-3 text-lg text-slate-700">
           <strong>Instruções:</strong> {link.exam.instructions}
         </p>
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-red-700">

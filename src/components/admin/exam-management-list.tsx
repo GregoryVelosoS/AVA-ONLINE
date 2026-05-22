@@ -139,10 +139,10 @@ export function ExamManagementList({ exams }: { exams: ExamItem[] }) {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="space-y-2">
                   <p className="text-xl font-black tracking-tight text-slate-950">{exam.title}</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-lg text-slate-600">
                     Código {exam.publicCode} · {exam.disciplineName} · {exam.classGroupName}
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-lg text-slate-500">
                     {exam.timeLimitMinutes ? `${exam.timeLimitMinutes} min` : "Sem limite"} · {exam.themeCount} tema(s) vinculado(s)
                   </p>
                   <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-red-700">

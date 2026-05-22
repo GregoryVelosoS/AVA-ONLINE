@@ -27,7 +27,7 @@ export default async function SubmittedPage({
     <main className="container-page space-y-6 py-8">
       <section className="surface-panel space-y-6 p-6 md:p-8">
         <div className="space-y-3 text-center md:text-left">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-red-700">Prova finalizada</p>
+          <p className="text-lg font-black uppercase tracking-[0.22em] text-red-700">Prova finalizada</p>
           <h1 className="text-3xl font-black tracking-tight text-slate-950">
             {timeout ? "Tempo encerrado e prova enviada automaticamente." : "Prova enviada com sucesso."}
           </h1>
@@ -35,7 +35,7 @@ export default async function SubmittedPage({
             {result.profile ? `Resultado de ${result.profile.studentName}. ` : ""}
             Seu envio foi registrado e o reenvio indevido continua bloqueado pelo fluxo atual.
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-lg text-slate-500">
             {result.exam.publicCode} · {result.exam.disciplineName} · {result.exam.classGroupName}
           </p>
         </div>
@@ -88,22 +88,22 @@ export default async function SubmittedPage({
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-[24px] border border-slate-200 bg-white p-5">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Temas para revisar</p>
+              <p className="text-lg font-black uppercase tracking-[0.18em] text-slate-500">Temas para revisar</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {result.consolidatedTopics.map((topic) => (
-                  <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700">
+                  <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-lg font-semibold text-red-700">
                     {topic}
                   </span>
                 ))}
               </div>
             </div>
             <div className="rounded-[24px] border border-slate-200 bg-white p-5">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Materiais sugeridos</p>
+              <p className="text-lg font-black uppercase tracking-[0.18em] text-slate-500">Materiais sugeridos</p>
               <div className="mt-4 space-y-2">
                 {result.consolidatedLinks.map((link) => (
                   <a
                     key={link}
-                    className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-red-700 hover:border-red-200 hover:bg-red-50"
+                    className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-red-700 hover:border-red-200 hover:bg-red-50"
                     href={link}
                     rel="noreferrer"
                     target="_blank"
@@ -152,7 +152,7 @@ export default async function SubmittedPage({
                     </p>
                     <h3 className="mt-2 text-xl font-black tracking-tight text-slate-950">{question.statement}</h3>
                   </div>
-                  <span className={`rounded-full border px-3 py-1.5 text-sm font-bold ${badgeClass}`}>{badgeLabel}</span>
+                  <span className={`rounded-full border px-3 py-1.5 text-lg font-bold ${badgeClass}`}>{badgeLabel}</span>
                 </div>
 
                 {question.context ? (
@@ -188,7 +188,7 @@ export default async function SubmittedPage({
                       <p className="mt-2 text-slate-700">Questao nao respondida ou aguardando upload.</p>
                     )}
                     {question.confidenceLevel ? (
-                      <p className="mt-3 text-sm font-semibold text-slate-500">
+                      <p className="mt-3 text-lg font-semibold text-slate-500">
                         Nivel de confianca marcado: {question.confidenceLevel}
                       </p>
                     ) : null}
@@ -223,7 +223,7 @@ export default async function SubmittedPage({
                     {question.studyTopics.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {question.studyTopics.map((topic) => (
-                          <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700">
+                          <span key={topic} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-lg font-semibold text-red-700">
                             {topic}
                           </span>
                         ))}
@@ -232,7 +232,7 @@ export default async function SubmittedPage({
                       <p className="mt-2 text-slate-700">Nenhum tema especifico foi cadastrado.</p>
                     )}
                     {question.complementaryNotes ? (
-                      <p className="mt-3 whitespace-pre-line text-sm text-slate-600">{question.complementaryNotes}</p>
+                      <p className="mt-3 whitespace-pre-line text-lg text-slate-600">{question.complementaryNotes}</p>
                     ) : null}
                   </div>
 
@@ -243,7 +243,7 @@ export default async function SubmittedPage({
                         {question.referenceLinks.map((link) => (
                           <a
                             key={link}
-                            className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-red-700 hover:border-red-200 hover:bg-red-50"
+                            className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-semibold text-red-700 hover:border-red-200 hover:bg-red-50"
                             href={link}
                             rel="noreferrer"
                             target="_blank"

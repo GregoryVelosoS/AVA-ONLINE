@@ -197,7 +197,7 @@ export function CatalogManager({
       <div className="surface-panel p-5">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-slate-950">Importação em massa</h2>
-          <p className="text-sm text-slate-500">Use JSON ou Excel, valide os dados e confirme o lote antes de gravar.</p>
+          <p className="text-lg text-slate-500">Use JSON ou Excel, valide os dados e confirme o lote antes de gravar.</p>
         </div>
 
         <CatalogImportPanel
@@ -260,7 +260,7 @@ export function CatalogManager({
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-950">Listagem de {itemLabel.toLowerCase()}s</h2>
-            <p className="text-sm text-slate-500">Pesquise, edite e exclua registros já cadastrados.</p>
+            <p className="text-lg text-slate-500">Pesquise, edite e exclua registros já cadastrados.</p>
           </div>
 
           <input
@@ -278,7 +278,7 @@ export function CatalogManager({
           />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200">
-            <table className="w-full text-sm">
+            <table className="w-full text-lg">
               <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-left text-white">
                 <tr>
                   <th className="px-4 py-3">Código</th>
