@@ -90,7 +90,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid w-full gap-2">
         <ChartCard title="Distribuição das notas" subtitle="Faixas de desempenho da prova">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.scoreDistribution}>
@@ -103,6 +103,103 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </ResponsiveContainer>
         </ChartCard>
 
+
+        <ChartCard title="Disciplinas frágeis" subtitle="Percentual de acerto e erro por disciplina">
+          <div className="flex h-full w-full items-center justify-around gap-2 overflow-x-auto pb-2">
+            {analytics.pedagogicalInsights.difficultyByDiscipline.map((item) => (
+              <div key={item.discipline} className="flex shrink-1 flex-col items-center">
+                <div className="relative h-32 w-32">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Acerto", value: item.acerto },
+                          { name: "Erro", value: item.erro }
+                        ]}
+                        dataKey="value"
+                        innerRadius={32}
+                        outerRadius={46}
+                        stroke="none"
+                      >
+                        <Cell fill="#111111" />
+                        <Cell fill="#c1121f" />
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `${value}%`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-sm font-black text-red-700">{item.acerto}%</span>
+                  </div>
+                </div>
+                <p className="max-w-[120px] text-center text-xs font-semibold leading-tight text-slate-700">
+                  {item.discipline}
+                </p>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Disciplinas frágeis" subtitle="Percentual de acerto e erro por disciplina">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.pedagogicalInsights.difficultyByDiscipline}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="discipline" stroke="#475569" interval={0} angle={-12} textAnchor="end" height={70} />
+              <YAxis stroke="#475569" />
+              <Tooltip />
+              <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="flex h-full w-full items-center justify-around gap-2 overflow-x-auto pb-2">
+            {analytics.pedagogicalInsights.difficultyByDiscipline.map((item) => (
+              <div key={item.discipline} className="flex shrink-0 flex-col items-center">
+                <div className="relative h-32 w-32">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Acerto", value: item.acerto },
+                          { name: "Erro", value: item.erro }
+                        ]}
+                        dataKey="value"
+                        innerRadius={32}
+                        outerRadius={46}
+                        stroke="none"
+                      >
+                        <Cell fill="#111111" />
+                        <Cell fill="#c1121f" />
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `${value}%`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-sm font-black text-red-700">{item.erro}%</span>
+                  </div>
+                </div>
+                <p className="max-w-[120px] text-center text-xs font-semibold leading-tight text-slate-700">
+                  {item.discipline}
+                </p>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+
+         <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={topQuestionChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="code" stroke="#475569" />
+              <YAxis stroke="#475569" />
+              <Tooltip />
+              <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Status de conclusão" subtitle="Concluíram x em andamento">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -115,21 +212,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topQuestionChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="code" stroke="#475569" />
-              <YAxis stroke="#475569" />
-              <Tooltip />
-              <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+       
 
         <ChartCard title="Ranking dos alunos" subtitle="Melhores percentuais de nota">
           <ResponsiveContainer width="100%" height="100%">
@@ -168,6 +251,8 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">

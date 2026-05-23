@@ -132,6 +132,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
         belowAverageCount: 0,
         fragileContents: [],
         difficultyByTheme: [],
+        difficultyByDiscipline: [],
         retomadaPoints: []
       },
       feedbackAnalytics: {
@@ -229,6 +230,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
         belowAverageCount: 0,
         fragileContents: [],
         difficultyByTheme: [],
+        difficultyByDiscipline: [],
         retomadaPoints: []
       },
       feedbackAnalytics: {
@@ -410,6 +412,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
   const levelPerformanceMap = new Map<string, { correct: number; total: number }>();
   const tagPerformanceMap = new Map<string, { correct: number; total: number }>();
   const themeWeaknessMap = new Map<string, number>();
+  const disciplinePerformanceMap = new Map<string, { correct: number; total: number }>();
 
   filteredQuestions.forEach((examQuestion) => {
     const question = examQuestion.question;
@@ -441,6 +444,14 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
     studyTopics.forEach((topic) => {
       themeWeaknessMap.set(topic, (themeWeaknessMap.get(topic) || 0) + incorrectCount);
     });
+
+    if (question.discipline?.name) {
+      const disciplineName = question.discipline.name;
+      const currentStats = disciplinePerformanceMap.get(disciplineName) || { correct: 0, total: 0 };
+      currentStats.correct += correctCount;
+      currentStats.total += total;
+      disciplinePerformanceMap.set(disciplineName, currentStats);
+    }
   });
 
   const feedbackResponses = attempts.map((attempt) => ({
@@ -660,6 +671,16 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
         .map(([topic, count]) => ({ topic, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 8),
+      difficultyByDiscipline: Array.from(disciplinePerformanceMap.entries())
+        .map(([discipline, stats]) => {
+          const incorrectCount = stats.total - stats.correct;
+          return {
+            discipline,
+            acerto: round(percentage(stats.correct, stats.total), 1),
+            erro: round(percentage(incorrectCount, stats.total), 1)
+          };
+        })
+        .sort((a, b) => a.acerto - b.acerto),
       retomadaPoints: [
         topFragileTopics.length > 0 ? `Retomar com prioridade os temas: ${topFragileTopics.join(", ")}.` : null,
         avgClarity < 3 ? "Reforçar explicações e exemplos guiados antes da próxima avaliação." : null,
