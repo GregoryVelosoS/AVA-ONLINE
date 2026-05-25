@@ -150,38 +150,6 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
               <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div className="flex h-full w-full items-center justify-around gap-2 overflow-x-auto pb-2">
-            {analytics.pedagogicalInsights.difficultyByDiscipline.map((item) => (
-              <div key={item.discipline} className="flex shrink-0 flex-col items-center">
-                <div className="relative h-32 w-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Acerto", value: item.acerto },
-                          { name: "Erro", value: item.erro }
-                        ]}
-                        dataKey="value"
-                        innerRadius={32}
-                        outerRadius={46}
-                        stroke="none"
-                      >
-                        <Cell fill="#111111" />
-                        <Cell fill="#c1121f" />
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `${value}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-sm font-black text-red-700">{item.erro}%</span>
-                  </div>
-                </div>
-                <p className="max-w-[120px] text-center text-xs font-semibold leading-tight text-slate-700">
-                  {item.discipline}
-                </p>
-              </div>
-            ))}
-          </div>
         </ChartCard>
 
          <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão">
