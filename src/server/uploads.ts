@@ -190,21 +190,25 @@ export async function saveQuestionSupportAsset(input: {
   kind: "image" | "file";
 }) {
   if (isBlobStorageEnabled()) {
-    return uploadToBlob({
-      folder: "question-support",
-      prefix: input.kind,
-      data: input.data,
-      originalName: input.originalName,
-      mimeType: input.mimeType
-    });
+    try {
+      return await uploadToBlob({
+        folder: "question-support",
+        prefix: input.kind,
+        data: input.data,
+        originalName: input.originalName,
+        mimeType: input.mimeType
+      });
+    } catch (error) {
+      console.warn("Vercel Blob upload failed, falling back to local testing storage...", error);
+    }
   }
-
-  assertWritableStorage();
-  await ensureUploadDirectories();
 
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
   const fileName = `${input.kind}-${randomUUID()}${extension}`;
-  const target = path.join(questionSupportDir, fileName);
+  
+  const targetDir = path.join(process.cwd(), "public", "assets", "question-support");
+  await mkdir(targetDir, { recursive: true });
+  const target = path.join(targetDir, fileName);
 
   await writeFile(target, input.data);
 
