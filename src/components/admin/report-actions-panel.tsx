@@ -2,7 +2,7 @@
 
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
@@ -111,6 +111,11 @@ export function ReportActionsPanel({
   const [isRefreshing, startRefreshTransition] = useTransition();
   const [isCreatingLink, setIsCreatingLink] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   async function createShareLink() {
     setMessage(null);
@@ -208,7 +213,7 @@ export function ReportActionsPanel({
           <p className="text-lg text-slate-500">Nenhum link de visualizacao criado para esta prova.</p>
         ) : (
           shareLinks.map((shareLink) => {
-            const viewerUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/viewer/reports/${shareLink.token}`;
+            const viewerUrl = `${origin}/viewer/reports/${shareLink.token}`;
             const rowBusy = activeShareActionId === shareLink.id;
 
             return (

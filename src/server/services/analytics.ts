@@ -60,6 +60,7 @@ export async function getDashboardOverview() {
   const [totalExams, attempts, submitted] = await Promise.all([
     prisma.exam.count(),
     prisma.studentAttempt.findMany({
+      where: { status: { not: "CANCELED" } },
       include: {
         answers: true
       }
@@ -123,6 +124,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       questionHighlights: null,
       levelPerformance: [],
       tagPerformance: [],
+      canceledRanking: [],
       studentRanking: [],
       topStudents: [],
       strugglingStudents: [],
@@ -221,6 +223,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       questionHighlights: null,
       levelPerformance: [],
       tagPerformance: [],
+      canceledRanking: [],
       studentRanking: [],
       topStudents: [],
       strugglingStudents: [],
@@ -250,6 +253,10 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
   const maxScore = exam.questions.reduce((sum, item) => sum + asNumber(item.customWeight ?? item.question.defaultWeight), 0);
 
   let baseAttempts = exam.attempts.filter((attempt) => {
+    if (attempt.status === "CANCELED") {
+      return false;
+    }
+
     if (filters.disciplineId && exam.disciplineId !== filters.disciplineId) {
       return false;
     }
@@ -383,6 +390,8 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
     scoreDistributionMap.set(label, (scoreDistributionMap.get(label) || 0) + 1);
   });
 
+  const attemptMap = new Map(attempts.map((a) => [a.id, a]));
+
   const questionPerformance = filteredQuestions
     .map((examQuestion) => {
       const question = examQuestion.question;
@@ -395,6 +404,7 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       return {
         id: question.id,
         code: question.code,
+        type: question.type,
         statement: question.statement,
         difficulty: question.difficulty,
         tags: question.tags.map((tag) => tag.tag.label),
@@ -404,7 +414,15 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
         errorRate: round(percentage(incorrectCount, correctCount + incorrectCount), 1),
         correctCount,
         incorrectCount,
-        pendingCount
+        pendingCount,
+        studentAnswers: answers.map((answer) => ({
+          studentName: attemptMap.get(answer.attemptId)?.profile?.studentName || "Aluno sem identificação",
+          isCorrect: answer.isCorrect,
+          selectedOptionLabel: answer.selectedOption?.label || null,
+          selectedOptionContent: answer.selectedOption?.content || null,
+          shortTextAnswer: answer.shortTextAnswer || null,
+          longTextAnswer: answer.longTextAnswer || null
+        }))
       };
     })
     .sort((a, b) => a.accuracy - b.accuracy);
@@ -653,6 +671,28 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       tag,
       accuracy: round(percentage(stats.correct, stats.total), 1)
     })),
+    canceledRanking: exam.attempts
+      .filter((attempt) => attempt.status === "CANCELED")
+      .map((attempt) => {
+        const correctCount = attempt.answers.filter((answer) => answer.isCorrect === true).length;
+        const incorrectCount = attempt.answers.filter((answer) => answer.isCorrect === false).length;
+        const score = asNumber(attempt.finalScore);
+        const scorePercent = maxScore > 0 ? (score / maxScore) * 100 : 0;
+        return {
+          attemptId: attempt.id,
+          studentName: attempt.profile?.studentName || "Aluno sem identificação",
+          classGroupName: attempt.profile?.classGroupName || "Sem turma",
+          disciplineInformed: attempt.profile?.disciplineInformed || exam.discipline.name,
+          status: attempt.status,
+          score: round(score, 2),
+          scorePercent: round(scorePercent, 1),
+          durationMinutes: round((attempt.durationSeconds || 0) / 60, 1),
+          correctCount,
+          incorrectCount,
+          accuracy: round(percentage(correctCount, correctCount + incorrectCount), 1),
+          answeredCount: attempt.answers.length
+        };
+      }),
     studentRanking: [...studentRows].sort((a, b) => b.scorePercent - a.scorePercent).map(toPublicStudentRow),
     topStudents: [...studentRows]
       .sort((a, b) => b.scorePercent - a.scorePercent)

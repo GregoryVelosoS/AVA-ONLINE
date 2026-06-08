@@ -94,15 +94,21 @@ function selectedAnswerText(question: {
   selectedOptionContent: string | null;
   shortTextAnswer: string | null;
   longTextAnswer: string | null;
+  attachments?: { originalName: string }[];
+  resultStatus: string;
 }) {
   if (question.type === "MULTIPLE_CHOICE") {
     return question.selectedOptionLabel
       ? `${question.selectedOptionLabel}) ${question.selectedOptionContent || ""}`.trim()
-      : "Nao respondida";
+      : question.resultStatus === "unanswered" ? "Nao respondida" : "Questao respondida (opcao exata indisponivel - questao editada)";
   }
 
   if (question.shortTextAnswer || question.longTextAnswer) {
     return question.shortTextAnswer || question.longTextAnswer || "";
+  }
+
+  if (question.attachments && question.attachments.length > 0) {
+    return `Arquivos enviados: ${question.attachments.map(a => a.originalName).join(", ")}`;
   }
 
   if (question.type === "FILE_UPLOAD") {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode, Fragment } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bar,
   BarChart,
@@ -40,6 +41,45 @@ function ChartCard({
 }
 
 export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalyticsResult }) {
+  const router = useRouter();
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
+
+  async function handleCancelAttempt(attemptId: string) {
+    if (!confirm("Tem certeza que deseja desativar esta tentativa? Ela não fará mais parte das estatísticas nem do ranking.")) {
+      return;
+    }
+
+    setCancelingId(attemptId);
+    try {
+      const res = await fetch(`/api/admin/attempts/${attemptId}/cancel`, { method: "POST" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert("Falha ao desativar a tentativa.");
+      }
+    } finally {
+      setCancelingId(null);
+    }
+  }
+
+  async function handleReactivateAttempt(attemptId: string) {
+    if (!confirm("Tem certeza que deseja reativar esta tentativa? Ela voltará a fazer parte de todas as estatísticas.")) {
+      return;
+    }
+
+    setCancelingId(attemptId);
+    try {
+      const res = await fetch(`/api/admin/attempts/${attemptId}/reactivate`, { method: "POST" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert("Falha ao reativar a tentativa.");
+      }
+    } finally {
+      setCancelingId(null);
+    }
+  }
+
   if (!analytics.selectedExam || !analytics.summary) {
     return (
       <section className="surface-panel p-8 text-center">
@@ -281,20 +321,73 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
                     <td className="px-4 py-3">{student.incorrectCount}</td>
                     <td className="px-4 py-3">{student.durationMinutes} min</td>
                     <td className="px-4 py-3 text-right">
-                      <Link
-                        className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-red-700 transition hover:border-red-300 hover:bg-red-100"
-                        href={`/submitted/${student.attemptId}`}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        Consultar tentativa
-                      </Link>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={cancelingId === student.attemptId}
+                          onClick={() => handleCancelAttempt(student.attemptId)}
+                          className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50"
+                        >
+                          {cancelingId === student.attemptId ? "Desativando..." : "Desativar"}
+                        </button>
+                        <Link
+                          className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                          href={`/submitted/${student.attemptId}`}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Consultar
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {analytics.canceledRanking.length > 0 && (
+            <div className="border-t-4 border-slate-200">
+              <div className="bg-slate-50 px-5 py-4">
+                <h3 className="text-lg font-black tracking-tight text-slate-500">Tentativas desativadas</h3>
+                <p className="mt-1 text-sm text-slate-400">Estas tentativas não constam mais nas estatísticas.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-lg">
+                  <tbody>
+                    {analytics.canceledRanking.map((student) => (
+                      <tr key={student.attemptId} className="border-t border-slate-100 bg-slate-50 text-slate-400 opacity-75 grayscale transition hover:opacity-100 hover:grayscale-0">
+                        <td className="px-4 py-3 font-semibold text-slate-700">{student.studentName}</td>
+                        <td className="px-4 py-3">{student.scorePercent}%</td>
+                        <td className="px-4 py-3">{student.correctCount}</td>
+                        <td className="px-4 py-3">{student.incorrectCount}</td>
+                        <td className="px-4 py-3">{student.durationMinutes} min</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              disabled={cancelingId === student.attemptId}
+                              onClick={() => handleReactivateAttempt(student.attemptId)}
+                              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-600 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+                            >
+                              {cancelingId === student.attemptId ? "Reativando..." : "Reativar"}
+                            </button>
+                            <Link
+                              className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-500 transition hover:border-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                              href={`/submitted/${student.attemptId}`}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Consultar
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="surface-panel overflow-hidden p-0">
@@ -314,15 +407,71 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
               </thead>
               <tbody>
                 {analytics.questionPerformance.map((question) => (
-                  <tr key={question.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-slate-950">{question.code}</p>
-                      <p className="text-xs text-slate-500">{question.statement}</p>
-                    </td>
-                    <td className="px-4 py-3">{question.difficulty}</td>
-                    <td className="px-4 py-3">{question.accuracy}%</td>
-                    <td className="px-4 py-3">{question.errorRate}%</td>
-                  </tr>
+                  <Fragment key={question.id}>
+                    <tr className="border-t border-slate-100">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-slate-950">{question.code}</p>
+                        <p className="text-xs text-slate-500">{question.statement}</p>
+                      </td>
+                      <td className="px-4 py-3">{question.difficulty}</td>
+                      <td className="px-4 py-3">{question.accuracy}%</td>
+                      <td className="px-4 py-3">{question.errorRate}%</td>
+                    </tr>
+                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                      <td colSpan={4} className="px-4 pb-4 pt-1">
+                        <details className="group">
+                          <summary className="cursor-pointer text-sm font-bold text-slate-500 hover:text-slate-700">
+                            Ver detalhamento de alunos
+                          </summary>
+                          <div className="mt-3 grid gap-6 sm:grid-cols-2">
+                            <div>
+                              <p className="text-sm font-black text-green-700 uppercase tracking-wide">Acertaram ({question.correctCount})</p>
+                              <ul className="mt-2 space-y-1 text-sm text-slate-600">
+                                {question.studentAnswers.filter(a => a.isCorrect === true).map((a, i) => (
+                                  <li key={i} className="flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                                    {a.studentName}
+                                  </li>
+                                ))}
+                                {question.studentAnswers.filter(a => a.isCorrect === true).length === 0 && (
+                                  <li className="text-slate-400 italic">Nenhum aluno acertou.</li>
+                                )}
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-red-700 uppercase tracking-wide">Erraram ({question.incorrectCount})</p>
+                              <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                                {question.studentAnswers.filter(a => a.isCorrect === false).map((a, i) => (
+                                  <li key={i}>
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                      <span className="font-semibold">{a.studentName}</span>
+                                    </div>
+                                    <div className="ml-3.5 mt-0.5 text-xs text-slate-500">
+                                      {question.type === "MULTIPLE_CHOICE" ? (
+                                        a.selectedOptionLabel ? `Marcou a Opção ${a.selectedOptionLabel}` : "Opção indisponível (apagada ou em branco)"
+                                      ) : question.type === "SHORT_TEXT" ? (
+                                        a.shortTextAnswer ? `Resposta: "${a.shortTextAnswer}"` : "Deixou em branco"
+                                      ) : question.type === "LONG_TEXT" ? (
+                                        a.longTextAnswer ? "Respondeu de forma dissertativa" : "Deixou em branco"
+                                      ) : question.type === "FILE_UPLOAD" ? (
+                                        "Arquivo anexo enviado"
+                                      ) : (
+                                        "Sem resposta registrada"
+                                      )}
+                                    </div>
+                                  </li>
+                                ))}
+                                {question.studentAnswers.filter(a => a.isCorrect === false).length === 0 && (
+                                  <li className="text-slate-400 italic">Nenhum aluno errou.</li>
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        </details>
+                      </td>
+                    </tr>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

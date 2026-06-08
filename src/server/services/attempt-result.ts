@@ -67,6 +67,13 @@ export type AttemptResultQuestion = {
     content: string;
     isCorrect: boolean;
   }>;
+  attachments: Array<{
+    id: string;
+    originalName: string;
+    mimeType: string;
+    filePath: string;
+    storageProvider: string;
+  }>;
 };
 
 export type AttemptResultSummary = {
@@ -114,6 +121,7 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
       answers: {
         include: {
           selectedOption: true,
+          attachments: true,
           question: {
             include: {
               options: {
@@ -173,15 +181,17 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
     const isAnswered =
       Boolean(answer?.selectedOptionId) ||
       Boolean(answer?.shortTextAnswer) ||
-      Boolean(answer?.longTextAnswer);
+      Boolean(answer?.longTextAnswer) ||
+      Boolean(answer?.attachments && answer.attachments.length > 0) ||
+      answer?.isCorrect !== null;
 
     let resultStatus: "correct" | "incorrect" | "pending" | "unanswered";
     if (!answer || !isAnswered) {
       resultStatus = "unanswered";
     } else if (isObjective) {
-      resultStatus = answer.isCorrect ? "correct" : "incorrect";
+      resultStatus = answer.selectedOptionId === correctOption?.id ? "correct" : "incorrect";
     } else {
-      resultStatus = "pending";
+      resultStatus = answer.isCorrect === true ? "correct" : answer.isCorrect === false ? "incorrect" : "pending";
     }
 
     const studyTopics = uniqueValues([
@@ -233,7 +243,14 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
         label: option.label,
         content: option.content,
         isCorrect: option.isCorrect
-      }))
+      })),
+      attachments: answer?.attachments ? answer.attachments.map(att => ({
+        id: att.id,
+        originalName: att.originalName,
+        mimeType: att.mimeType,
+        filePath: att.filePath,
+        storageProvider: att.storageProvider
+      })) : []
     };
   });
 

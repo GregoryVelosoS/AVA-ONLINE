@@ -178,12 +178,20 @@ export default async function SubmittedPage({
                       <p className="mt-2 text-slate-700">
                         {question.selectedOptionLabel
                           ? `${question.selectedOptionLabel}) ${question.selectedOptionContent}`
-                          : "Questao nao respondida."}
+                          : question.resultStatus === "unanswered" ? "Questão não respondida." : "Questão respondida (a opção exata não está disponível pois a questão foi editada pelo professor)."}
                       </p>
                     ) : question.shortTextAnswer || question.longTextAnswer ? (
                       <p className="mt-2 whitespace-pre-line text-slate-700">
                         {question.shortTextAnswer || question.longTextAnswer}
                       </p>
+                    ) : question.attachments && question.attachments.length > 0 ? (
+                      <div className="mt-2 space-y-2">
+                        {question.attachments.map((file) => (
+                          <p key={file.id} className="text-slate-700">
+                            📎 <span className="font-semibold text-slate-900">{file.originalName}</span>
+                          </p>
+                        ))}
+                      </div>
                     ) : (
                       <p className="mt-2 text-slate-700">Questao nao respondida ou aguardando upload.</p>
                     )}
