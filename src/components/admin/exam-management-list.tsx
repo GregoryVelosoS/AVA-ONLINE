@@ -160,6 +160,14 @@ export function ExamManagementList({ exams }: { exams: ExamItem[] }) {
                   <Link className="btn-secondary" href={`/admin/reports?examId=${exam.id}`}>
                     Relatórios
                   </Link>
+                  <a
+                    className="btn-secondary border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50"
+                    href={`/api/admin/exams/${exam.id}/export/pdf`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Gerar PDF (Caderno)
+                  </a>
                   {exam.isPublicActive ? (
                     <LoadingButton
                       disabled={rowBusy && actionType !== "deactivate"}

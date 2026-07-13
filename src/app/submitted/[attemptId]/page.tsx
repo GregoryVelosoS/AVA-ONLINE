@@ -66,7 +66,10 @@ export default async function SubmittedPage({
 
         <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:justify-start">
           <a className="btn-primary w-full sm:w-auto text-center" href={`/api/public/attempts/${attemptId}/export/pdf`}>
-            Exportar PDF
+            PDF Completo
+          </a>
+          <a className="btn-secondary w-full sm:w-auto text-center border-red-200 text-red-700 hover:border-red-300 hover:bg-red-50" href={`/api/public/attempts/${attemptId}/export/pdf-compact`}>
+            PDF Resumido
           </a>
           <Link className="btn-secondary w-full sm:w-auto text-center" href="/">
             Voltar a tela inicial
