@@ -210,7 +210,7 @@ export function AttemptRunner({
             </div>
           </div>
 
-          <div className="flex flex-row">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.14em] text-red-200">Tempo decorrido</p>
               <p className="mt-1 text-2xl font-black">{formatSeconds(elapsedSeconds)}</p>
@@ -361,16 +361,16 @@ export function AttemptRunner({
         </section>
       </div>
 
-      <div className="flex justify-between">
-        <button className="btn-secondary" disabled={current === 0} onClick={() => setCurrent((value) => value - 1)} type="button">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <button className="btn-secondary w-full sm:w-auto" disabled={current === 0} onClick={() => setCurrent((value) => value - 1)} type="button">
           Anterior
         </button>
         {current < questions.length - 1 ? (
-          <button className="btn-primary" onClick={() => setCurrent((value) => value + 1)} type="button">
+          <button className="btn-primary w-full sm:w-auto" onClick={() => setCurrent((value) => value + 1)} type="button">
             Próxima
           </button>
         ) : (
-          <button className="btn-primary" onClick={() => router.push(`/attempt/${attemptId}/feedback`)} type="button">
+          <button className="btn-primary w-full sm:w-auto" onClick={() => router.push(`/attempt/${attemptId}/feedback`)} type="button">
             Finalizar prova
           </button>
         )}

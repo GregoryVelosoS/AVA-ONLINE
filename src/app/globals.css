@@ -21,7 +21,7 @@ body {
 }
 
 .container-page {
-  @apply mx-auto max-w-[90%] px-4 py-6;
+  @apply mx-auto w-full md:max-w-[90%] px-4 py-6;
 }
 
 @layer components {

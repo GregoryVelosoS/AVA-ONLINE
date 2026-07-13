@@ -97,7 +97,7 @@ export function GlobalIssueWidget() {
   return (
     <>
       <button
-        className="fixed bottom-4 right-4 z-40 rounded-full border border-red-500 bg-[linear-gradient(135deg,#c1121f_0%,#7f1019_100%)] px-5 py-3 text-lg font-bold text-white shadow-[0_20px_40px_rgba(193,18,31,0.28)] transition hover:translate-y-[-1px]"
+        className="fixed top-4 right-4 z-40 rounded-full border border-red-500 bg-[linear-gradient(135deg,#c1121f_0%,#7f1019_100%)] px-2 py-1 text-sm font-bold text-white shadow-[0_20px_40px_rgba(193,18,31,0.28)] transition hover:translate-y-[-1px]"
         onClick={() => setOpen(true)}
         type="button"
       >

@@ -3,14 +3,13 @@ import { getAdminOrRedirect } from "@/lib/admin-session";
 import { prisma } from "@/server/db/prisma";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ExamEditor } from "@/components/admin/exam-editor";
-
+import { getCachedDisciplines, getCachedThemes, getCachedClassGroups } from "@/server/services/lookups";
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
 export default async function AdminExamDetailPage({ params }: PageProps) {
   await getAdminOrRedirect();
-
   const { id } = await params;
 
   const [exam, disciplines, classGroups, themes, questions] = await Promise.all([
@@ -40,9 +39,9 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
         }
       }
     }),
-    prisma.discipline.findMany({ orderBy: { name: "asc" } }),
-    prisma.classGroup.findMany({ orderBy: { name: "asc" } }),
-    prisma.theme.findMany({ orderBy: { name: "asc" } }),
+    getCachedDisciplines(),
+    getCachedClassGroups(),
+    getCachedThemes(),
     prisma.question.findMany({
       select: {
         id: true,

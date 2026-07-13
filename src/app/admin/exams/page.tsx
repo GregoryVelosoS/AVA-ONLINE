@@ -6,14 +6,12 @@ import { ExamCreateForm } from "@/components/admin/exam-create-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ExamManagementList } from "@/components/admin/exam-management-list";
 
-export default async function AdminExamsPage() {
-  await getAdminOrRedirect();
+import { getCachedDisciplines, getCachedThemes, getCachedClassGroups } from "@/server/services/lookups";
+import { unstable_cache } from "next/cache";
 
-  const [disciplines, classGroups, themes, exams] = await Promise.all([
-    prisma.discipline.findMany({ orderBy: { name: "asc" } }),
-    prisma.classGroup.findMany({ orderBy: { name: "asc" } }),
-    prisma.theme.findMany({ orderBy: { name: "asc" } }),
-    prisma.exam.findMany({
+const getCachedExamsList = unstable_cache(
+  async () => {
+    return prisma.exam.findMany({
       include: {
         discipline: true,
         classGroup: true,
@@ -21,7 +19,20 @@ export default async function AdminExamsPage() {
         themes: true
       },
       orderBy: { createdAt: "desc" }
-    })
+    });
+  },
+  ["admin-exams-list"],
+  { revalidate: 15, tags: ["exams"] }
+);
+
+export default async function AdminExamsPage() {
+  await getAdminOrRedirect();
+
+  const [disciplines, classGroups, themes, exams] = await Promise.all([
+    getCachedDisciplines(),
+    getCachedClassGroups(),
+    getCachedThemes(),
+    getCachedExamsList()
   ]);
 
   return (

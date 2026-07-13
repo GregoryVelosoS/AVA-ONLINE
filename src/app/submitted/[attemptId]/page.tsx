@@ -42,7 +42,7 @@ export default async function SubmittedPage({
 
         <AttemptResultIdCard resultLookupCode={result.resultLookupCode} />
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-red-700">Pontuacao</p>
             <p className="mt-2 text-3xl font-black text-slate-950">
@@ -64,11 +64,11 @@ export default async function SubmittedPage({
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 md:justify-start">
-          <a className="btn-primary" href={`/api/public/attempts/${attemptId}/export/pdf`}>
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:justify-start">
+          <a className="btn-primary w-full sm:w-auto text-center" href={`/api/public/attempts/${attemptId}/export/pdf`}>
             Exportar PDF
           </a>
-          <Link className="btn-secondary" href="/">
+          <Link className="btn-secondary w-full sm:w-auto text-center" href="/">
             Voltar a tela inicial
           </Link>
         </div>

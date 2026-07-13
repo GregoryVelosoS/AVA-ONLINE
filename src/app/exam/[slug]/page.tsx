@@ -4,20 +4,30 @@ import { Card } from "@/components/ui/card";
 import { StudentIdentifyForm } from "@/components/exam/student-identify-form";
 import { getExamAvailabilityMessage } from "@/lib/exam-status";
 
+import { unstable_cache } from "next/cache";
+
+const getCachedPublicExamLink = unstable_cache(
+  async (slug: string) => {
+    return prisma.publicExamLink.findUnique({
+      where: { slug },
+      include: {
+        exam: {
+          include: {
+            discipline: true,
+            classGroup: true
+          }
+        }
+      }
+    });
+  },
+  ["public-exam-link"],
+  { revalidate: 300, tags: ["public-exam"] }
+);
+
 export default async function PublicExamPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const link = await prisma.publicExamLink.findUnique({
-    where: { slug },
-    include: {
-      exam: {
-        include: {
-          discipline: true,
-          classGroup: true
-        }
-      }
-    }
-  });
+  const link = await getCachedPublicExamLink(slug);
 
   if (!link) {
     notFound();

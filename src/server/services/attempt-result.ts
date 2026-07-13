@@ -113,7 +113,10 @@ export type AttemptResultSummary = {
   questionResults: AttemptResultQuestion[];
 };
 
-export async function getAttemptResultSummary(attemptId: string): Promise<AttemptResultSummary | null> {
+import { unstable_cache } from "next/cache";
+
+export const getAttemptResultSummary = unstable_cache(
+  async (attemptId: string): Promise<AttemptResultSummary | null> => {
   const attempt = await prisma.studentAttempt.findUnique({
     where: { id: attemptId },
     include: {
@@ -301,4 +304,7 @@ export async function getAttemptResultSummary(attemptId: string): Promise<Attemp
     consolidatedLinks: uniqueValues(studyCandidates.flatMap((question) => question.referenceLinks)),
     questionResults
   };
-}
+},
+["attempt-result"],
+{ revalidate: 120, tags: ["attempt"] }
+);

@@ -141,11 +141,11 @@ export function StudentIdentifyForm({
 
           {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-lg font-medium text-red-700">{error}</p> : null}
 
-          <div className="flex flex-wrap gap-3">
-            <LoadingButton onClick={() => setResolvedExam(null)} type="button" variant="secondary">
+          <div className="flex flex-col md:flex-row flex-wrap gap-3">
+            <LoadingButton className="w-full md:w-auto" onClick={() => setResolvedExam(null)} type="button" variant="secondary">
               Informar outro código
             </LoadingButton>
-            <LoadingButton className="flex-1" loading={loadingStart} loadingText="Iniciando..." type="submit">
+            <LoadingButton className="w-full md:flex-1" loading={loadingStart} loadingText="Iniciando..." type="submit">
               Iniciar prova
             </LoadingButton>
           </div>

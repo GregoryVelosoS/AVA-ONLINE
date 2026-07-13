@@ -7,18 +7,29 @@ import { QuestionImportPanel } from "@/components/admin/question-import-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuestionManagementList } from "@/components/admin/question-management-list";
 
-export default async function AdminQuestionsPage() {
-  await getAdminOrRedirect();
+import { getCachedDisciplines } from "@/server/services/lookups";
+import { unstable_cache } from "next/cache";
 
-  const [disciplines, questions] = await Promise.all([
-    prisma.discipline.findMany({ orderBy: { name: "asc" } }),
-    prisma.question.findMany({
+const getCachedQuestionsList = unstable_cache(
+  async () => {
+    return prisma.question.findMany({
       include: {
         discipline: true,
         options: true
       },
       orderBy: { createdAt: "desc" }
-    })
+    });
+  },
+  ["admin-questions-list"],
+  { revalidate: 15, tags: ["questions"] }
+);
+
+export default async function AdminQuestionsPage() {
+  await getAdminOrRedirect();
+
+  const [disciplines, questions] = await Promise.all([
+    getCachedDisciplines(),
+    getCachedQuestionsList()
   ]);
 
   const questionList = questions.map((question) => ({

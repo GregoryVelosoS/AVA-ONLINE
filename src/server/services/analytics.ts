@@ -56,8 +56,11 @@ function getScoreBandLabel(scorePercent: number) {
   return "85-100%";
 }
 
-export async function getDashboardOverview() {
-  const [totalExams, attempts, submitted] = await Promise.all([
+import { unstable_cache } from "next/cache";
+
+export const getDashboardOverview = unstable_cache(
+  async () => {
+    const [totalExams, attempts, submitted] = await Promise.all([
     prisma.exam.count(),
     prisma.studentAttempt.findMany({
       where: { status: { not: "CANCELED" } },
@@ -81,7 +84,10 @@ export async function getDashboardOverview() {
     avgScore,
     avgDurationSeconds
   };
-}
+},
+["dashboard-overview"],
+{ revalidate: 60, tags: ["analytics"] }
+);
 
 export type ExamAnalyticsFilters = {
   examId?: string;
@@ -95,8 +101,9 @@ export type ExamAnalyticsFilters = {
   scoreBand?: string;
 };
 
-export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
-  const [exams, selectedClassGroup] = await Promise.all([
+export const getExamAnalytics = unstable_cache(
+  async (filters: ExamAnalyticsFilters) => {
+    const [exams, selectedClassGroup] = await Promise.all([
     prisma.exam.findMany({
       include: {
         discipline: true,
@@ -749,7 +756,10 @@ export async function getExamAnalytics(filters: ExamAnalyticsFilters) {
       perceptionCorrelation: round(perceptionCorrelation, 2)
     }
   };
-}
+},
+["exam-analytics"],
+{ revalidate: 60, tags: ["analytics"] }
+);
 
 function uniqueByValue(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));

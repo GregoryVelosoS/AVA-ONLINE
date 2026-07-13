@@ -10,6 +10,8 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+import { getCachedDisciplines, getCachedThemes } from "@/server/services/lookups";
+
 export default async function AdminQuestionDetailPage({ params }: PageProps) {
   await getAdminOrRedirect();
 
@@ -25,8 +27,8 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
         themes: true
       }
     }),
-    prisma.discipline.findMany({ orderBy: { name: "asc" } }),
-    prisma.theme.findMany({ orderBy: { name: "asc" } })
+    getCachedDisciplines(),
+    getCachedThemes()
   ]);
 
   if (!question) {
