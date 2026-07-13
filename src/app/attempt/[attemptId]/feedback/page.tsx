@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FeedbackForm } from "@/components/exam/feedback-form";
 import { unstable_cache } from "next/cache";
+import { prisma } from "@/server/db/prisma";
 
 const getCachedFeedbackAttempt = unstable_cache(
   async (attemptId: string) => {
