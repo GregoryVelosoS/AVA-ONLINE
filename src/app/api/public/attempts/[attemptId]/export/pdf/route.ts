@@ -9,15 +9,20 @@ const TOP_MARGIN = 44;
 const BOTTOM_MARGIN = 44;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
 
-function formatDateTime(value: Date | null) {
+function formatDateTime(value: Date | string | null | undefined) {
   if (!value) {
     return "Nao informado";
+  }
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return "Data invalida";
   }
 
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short"
-  }).format(value);
+  }).format(date);
 }
 
 function formatDuration(durationSeconds: number) {
@@ -118,8 +123,21 @@ function selectedAnswerText(question: {
   return "Nao respondida";
 }
 
+function sanitizeWinAnsi(text: string) {
+  if (!text) return "";
+  return text
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/[\u2026]/g, "...")
+    .replace(/[\u2192]/g, "->")
+    .replace(/[\u2190]/g, "<-")
+    .replace(/[\u2022]/g, "*")
+    .replace(/[^\x00-\xFF]/g, " ");
+}
+
 function splitLines(text: string, font: PDFFont, size: number, maxWidth: number) {
-  const normalized = text.replace(/\r/g, "");
+  const normalized = sanitizeWinAnsi(text).replace(/\r/g, "");
   const paragraphs = normalized.split("\n");
   const lines: string[] = [];
 
