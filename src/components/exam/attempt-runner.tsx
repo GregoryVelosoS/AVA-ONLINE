@@ -77,6 +77,7 @@ export function AttemptRunner({
   const [answers, setAnswers] = useState<Record<string, AnswerDraft>>(
     Object.fromEntries(initialAnswers.map((answer) => [answer.questionId, answer]))
   );
+  const [navExpanded, setNavExpanded] = useState(false);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -196,7 +197,7 @@ export function AttemptRunner({
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <p className="text-lg font-semibold uppercase tracking-[0.18em] text-red-300">Progresso da prova</p>
-            <div className="mt-3 flex flex-wrap gap-3">
+            <div className="mt-3 flex flex-wrap gap-1">
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.14em] text-white/60">Questão atual</p>
                 <p className="mt-1 text-xl font-black">
@@ -228,29 +229,41 @@ export function AttemptRunner({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {questions.map((item, index) => {
-            const active = item.id === question.id;
-            const answered = isAnswered(answers[item.id], item.type);
+        <div className="mt-5">
+          <button
+            className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+            onClick={() => setNavExpanded((prev) => !prev)}
+            type="button"
+          >
+            {navExpanded ? "Ocultar mapa da prova" : "Mostrar mapa da prova"}
+          </button>
 
-            return (
-              <button
-                key={item.id}
-                className={[
-                  "rounded-xl border px-3 py-2 text-lg font-semibold transition",
-                  active
-                    ? "border-red-400 bg-[linear-gradient(135deg,#c1121f_0%,#8b0c16_100%)] text-white shadow-[0_12px_24px_rgba(193,18,31,0.34)]"
-                    : answered
-                      ? "border-emerald-300 bg-emerald-100 text-emerald-900"
-                      : "border-white/10 bg-white/5 text-white/80"
-                ].join(" ")}
-                onClick={() => setCurrent(index)}
-                type="button"
-              >
-                {index + 1} {answered ? "· respondida" : "· pendente"}
-              </button>
-            );
-          })}
+          {navExpanded && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {questions.map((item, index) => {
+                const active = item.id === question.id;
+                const answered = isAnswered(answers[item.id], item.type);
+
+                return (
+                  <button
+                    key={item.id}
+                    className={[
+                      "rounded-xl border px-3 py-2 text-lg font-semibold transition",
+                      active
+                        ? "border-red-400 bg-[linear-gradient(135deg,#c1121f_0%,#8b0c16_100%)] text-white shadow-[0_12px_24px_rgba(193,18,31,0.34)]"
+                        : answered
+                          ? "border-emerald-300 bg-emerald-100 text-emerald-900"
+                          : "border-white/10 bg-white/5 text-white/80"
+                    ].join(" ")}
+                    onClick={() => setCurrent(index)}
+                    type="button"
+                  >
+                    {index + 1} {answered ? "·✅" : "·❌"}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
