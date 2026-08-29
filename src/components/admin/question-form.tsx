@@ -25,6 +25,10 @@ type OptionState = {
   label: string;
   content: string;
   isCorrect: boolean;
+  visualSupportType?: VisualSupportType;
+  supportCode?: string;
+  supportImagePath?: string;
+  supportImageName?: string;
 };
 
 type SupportAssetState = {
@@ -141,7 +145,11 @@ export function QuestionForm({
         {
           label: String.fromCharCode(65 + current.options.length),
           content: "",
-          isCorrect: false
+          isCorrect: false,
+          visualSupportType: "NONE",
+          supportCode: "",
+          supportImagePath: "",
+          supportImageName: ""
         }
       ]
     }));
@@ -585,21 +593,76 @@ export function QuestionForm({
           {form.type === "MULTIPLE_CHOICE" ? (
             <div className="mt-4 space-y-3">
               {form.options.map((option, index) => (
-                <div key={`${option.label}-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[80px_1fr_auto_auto]">
-                  <input className="input-base" value={option.label} onChange={(event) => updateOption(index, { label: event.target.value })} />
-                  <input
-                    className="input-base"
-                    placeholder="Texto da alternativa"
-                    value={option.content}
-                    onChange={(event) => updateOption(index, { content: event.target.value })}
-                  />
-                  <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-lg font-semibold text-slate-700">
-                    <input checked={option.isCorrect} onChange={(event) => updateOption(index, { isCorrect: event.target.checked })} type="checkbox" />
-                    Correta
-                  </label>
-                  <button className="btn-secondary" onClick={() => removeOption(index)} type="button">
-                    Remover
-                  </button>
+                <div key={`${option.label}-${index}`} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="grid gap-3 md:grid-cols-[80px_1fr_auto_auto]">
+                    <input className="input-base" value={option.label} onChange={(event) => updateOption(index, { label: event.target.value })} />
+                    <input
+                      className="input-base"
+                      placeholder="Texto da alternativa"
+                      value={option.content}
+                      onChange={(event) => updateOption(index, { content: event.target.value })}
+                    />
+                    <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-lg font-semibold text-slate-700">
+                      <input checked={option.isCorrect} onChange={(event) => updateOption(index, { isCorrect: event.target.checked })} type="checkbox" />
+                      Correta
+                    </label>
+                    <button className="btn-secondary" onClick={() => removeOption(index)} type="button">
+                      Remover
+                    </button>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 border-t border-slate-200 pt-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <span className="text-sm font-semibold text-slate-600 uppercase tracking-widest">Suporte Visual:</span>
+                      <select 
+                        className="input-base !py-2 !text-base w-full sm:w-48"
+                        value={option.visualSupportType || "NONE"}
+                        onChange={(e) => updateOption(index, { visualSupportType: e.target.value as VisualSupportType, supportCode: "", supportImagePath: "", supportImageName: "" })}
+                      >
+                        <option value="NONE">Sem suporte extra</option>
+                        <option value="CODE">Bloco de Código</option>
+                        <option value="ASSET">Imagem</option>
+                      </select>
+                    </div>
+
+                    {option.visualSupportType === "CODE" && (
+                      <textarea
+                        className="input-base min-h-24 font-mono text-sm"
+                        placeholder="Cole o código de apoio para essa alternativa..."
+                        value={option.supportCode || ""}
+                        onChange={(e) => updateOption(index, { supportCode: e.target.value })}
+                      />
+                    )}
+
+                    {option.visualSupportType === "ASSET" && (
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 flex flex-col gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            if (e.target.files?.[0]) {
+                              try {
+                                const res = await uploadAsset(e.target.files[0], "image");
+                                if (res) {
+                                  updateOption(index, {
+                                    supportImagePath: res.path,
+                                    supportImageName: res.name
+                                  });
+                                }
+                              } catch (err: any) {
+                                alert(err.message);
+                              }
+                            }
+                          }}
+                        />
+                        {option.supportImagePath && (
+                          <div className="mt-2 text-sm text-green-700 font-semibold bg-green-50 p-2 rounded-lg border border-green-200">
+                            ✓ Imagem enviada: {option.supportImageName}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

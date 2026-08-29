@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { CONFIDENCE_LEVELS } from "@/lib/constants";
 import { VisualSupportBlock } from "@/components/questions/visual-support-block";
 
-type Option = { id: string; label: string; content: string };
+type Option = { 
+  id: string; 
+  label: string; 
+  content: string; 
+  visualSupportType?: "NONE" | "ASSET" | "CODE" | null;
+  supportCode?: string | null;
+  supportImagePath?: string | null;
+  supportImageName?: string | null;
+};
 type Question = {
   id: string;
   code: string;
@@ -312,7 +320,27 @@ export function AttemptRunner({
                   onClick={() => selectOption(option.id)}
                   type="button"
                 >
-                  <span className="font-black text-red-700">{option.label})</span> {option.content}
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <span className="font-black text-red-700">{option.label})</span> {option.content}
+                    </div>
+                    {option.visualSupportType && option.visualSupportType !== "NONE" && (
+                      <div className="w-full text-left bg-white/60 p-2 rounded-xl" onClick={(e) => {
+                        // Impedir que cliques nos botões A+ e A- disparem a seleção da alternativa,
+                        // mas se o usuário clicar na imagem ou no fundo, permitir a seleção.
+                        if ((e.target as HTMLElement).closest("button")) {
+                          e.stopPropagation();
+                        }
+                      }}>
+                        <VisualSupportBlock
+                          type={option.visualSupportType as any}
+                          code={option.supportCode || undefined}
+                          imageName={option.supportImageName || undefined}
+                          imagePath={option.supportImagePath || undefined}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </button>
               );
             })}

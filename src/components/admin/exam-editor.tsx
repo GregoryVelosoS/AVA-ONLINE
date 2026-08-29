@@ -94,6 +94,16 @@ export function ExamEditor({
   const [success, setSuccess] = useState<string | null>(null);
   const [questionMessage, setQuestionMessage] = useState<string | null>(null);
 
+  const [filterSearch, setFilterSearch] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterDiscipline, setFilterDiscipline] = useState("");
+  const [filterDifficulty, setFilterDifficulty] = useState("");
+
+  const [selectedFilterSearch, setSelectedFilterSearch] = useState("");
+  const [selectedFilterType, setSelectedFilterType] = useState("");
+  const [selectedFilterDiscipline, setSelectedFilterDiscipline] = useState("");
+  const [selectedFilterDifficulty, setSelectedFilterDifficulty] = useState("");
+
   const availableClassGroups = useMemo(
     () => classGroups.filter((classGroup) => !classGroup.disciplineId || classGroup.disciplineId === form.disciplineId),
     [classGroups, form.disciplineId]
@@ -194,12 +204,30 @@ export function ExamEditor({
     .map((questionId) => availableQuestions.find((question) => question.id === questionId))
     .filter((question): question is Question => Boolean(question));
 
+  const hasSelectedFilter = Boolean(selectedFilterSearch || selectedFilterType || selectedFilterDiscipline || selectedFilterDifficulty);
+
+  const filteredSelectedQuestions = selectedQuestions.filter((question) => {
+    if (selectedFilterSearch && !question.code.toLowerCase().includes(selectedFilterSearch.toLowerCase()) && !question.statement.toLowerCase().includes(selectedFilterSearch.toLowerCase())) return false;
+    if (selectedFilterType && question.type !== selectedFilterType) return false;
+    if (selectedFilterDiscipline && question.discipline.name !== selectedFilterDiscipline) return false;
+    if (selectedFilterDifficulty && question.difficulty !== selectedFilterDifficulty) return false;
+    return true;
+  });
+
   const availableToAdd = availableQuestions.filter((question) => !form.questionIds.includes(question.id));
+
+  const filteredAvailableToAdd = availableToAdd.filter((question) => {
+    if (filterSearch && !question.code.toLowerCase().includes(filterSearch.toLowerCase()) && !question.statement.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    if (filterType && question.type !== filterType) return false;
+    if (filterDiscipline && question.discipline.name !== filterDiscipline) return false;
+    if (filterDifficulty && question.difficulty !== filterDifficulty) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
       <form className="surface-panel space-y-5 p-5 md:p-6" onSubmit={saveExam}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <div>
             <label className="field-label">Nome da prova</label>
             <input className="input-base" required value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
@@ -274,12 +302,12 @@ export function ExamEditor({
             <input className="input-base" min={1} type="number" value={form.maxAttempts} onChange={(event) => setForm((current) => ({ ...current, maxAttempts: Number(event.target.value) }))} />
           </div>
 
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <label className="field-label">Descrição</label>
             <textarea className="input-base min-h-24" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
           </div>
 
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <label className="field-label">Instruções</label>
             <textarea className="input-base min-h-24" value={form.instructions} onChange={(event) => setForm((current) => ({ ...current, instructions: event.target.value }))} />
           </div>
@@ -326,42 +354,6 @@ export function ExamEditor({
       </form>
 
       <section className="grid gap-6">
-        <div className="surface-panel space-y-4 p-5 md:p-6">
-          <div>
-            <h2 className="text-lg font-bold text-slate-950">Banco disponível</h2>
-            <p className="text-lg text-slate-500">Selecione questões existentes para incluir na prova.</p>
-          </div>
-
-          {availableQuestions.length === 0 ? (
-            <EmptyState title="Nenhuma questão cadastrada" description="Cadastre questões no banco para começar a montar a prova." />
-          ) : availableToAdd.length === 0 ? (
-            <EmptyState title="Todas as questões já foram adicionadas" description="Você pode reorganizar a ordem ou remover alguma questão da prova." />
-          ) : (
-            <div className="space-y-3">
-              {availableToAdd.map((question) => (
-                <div key={question.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-slate-950">{question.code}</p>
-                      <p className="text-lg text-slate-600">{question.statement}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
-                        {question.type} · {question.discipline.name} · {question.difficulty}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Link className="btn-secondary" href={`/admin/questions/${question.id}`}>
-                        Editar
-                      </Link>
-                      <button className="btn-primary" onClick={() => addQuestion(question.id)} type="button">
-                        Adicionar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         <div className="surface-panel space-y-4 p-5 md:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -381,34 +373,139 @@ export function ExamEditor({
 
           {questionMessage ? <StatusBanner tone={questionMessage.includes("sucesso") ? "success" : "error"} message={questionMessage} /> : null}
 
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <input 
+              className="input-base" 
+              placeholder="Buscar por código ou texto..." 
+              value={selectedFilterSearch} 
+              onChange={(e) => setSelectedFilterSearch(e.target.value)} 
+            />
+            <select className="input-base" value={selectedFilterType} onChange={(e) => setSelectedFilterType(e.target.value)}>
+              <option value="">Todos os tipos</option>
+              <option value="MULTIPLE_CHOICE">Múltipla Escolha</option>
+              <option value="SHORT_TEXT">Texto Curto</option>
+              <option value="LONG_TEXT">Texto Longo</option>
+              <option value="FILE_UPLOAD">Envio de Arquivo</option>
+            </select>
+            <select className="input-base" value={selectedFilterDiscipline} onChange={(e) => setSelectedFilterDiscipline(e.target.value)}>
+              <option value="">Todas as disciplinas</option>
+              {disciplines.map(d => (
+                <option key={d.id} value={d.name}>{d.name}</option>
+              ))}
+            </select>
+            <select className="input-base" value={selectedFilterDifficulty} onChange={(e) => setSelectedFilterDifficulty(e.target.value)}>
+              <option value="">Todas as dificuldades</option>
+              <option value="EASY">Fácil</option>
+              <option value="MEDIUM">Médio</option>
+              <option value="HARD">Difícil</option>
+            </select>
+          </div>
+
           {selectedQuestions.length === 0 ? (
-            <EmptyState title="Nenhuma questão vinculada" description="Adicione questões na lista acima para montar a prova." />
+            <EmptyState title="Nenhuma questão vinculada" description="Adicione questões na lista abaixo para montar a prova." />
+          ) : filteredSelectedQuestions.length === 0 ? (
+            <EmptyState title="Nenhuma questão encontrada" description="Ajuste os filtros acima para ver mais questões já vinculadas." />
           ) : (
             <div className="space-y-3">
-              {selectedQuestions.map((question, index) => (
+              {filteredSelectedQuestions.map((question) => {
+                const realIndex = form.questionIds.indexOf(question.id);
+                
+                return (
+                  <div key={question.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-950">
+                          {realIndex + 1}. {question.code}
+                        </p>
+                        <p className="text-lg text-slate-600 line-clamp-2" title={question.statement}>{question.statement}</p>
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
+                          {question.type} · {question.discipline.name} · {question.difficulty}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        <Link className="btn-secondary" href={`/admin/questions/${question.id}`}>
+                          Editar
+                        </Link>
+                        {!hasSelectedFilter && (
+                          <>
+                            <button className="btn-secondary" onClick={() => moveQuestion(realIndex, -1)} type="button">
+                              Subir
+                            </button>
+                            <button className="btn-secondary" onClick={() => moveQuestion(realIndex, 1)} type="button">
+                              Descer
+                            </button>
+                          </>
+                        )}
+                        <button className="btn-danger" onClick={() => removeQuestion(question.id)} type="button">
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="surface-panel space-y-4 p-5 md:p-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-950">Banco disponível</h2>
+            <p className="text-lg text-slate-500">Selecione questões existentes para incluir na prova.</p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <input 
+              className="input-base" 
+              placeholder="Buscar por código ou texto..." 
+              value={filterSearch} 
+              onChange={(e) => setFilterSearch(e.target.value)} 
+            />
+            <select className="input-base" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="">Todos os tipos</option>
+              <option value="MULTIPLE_CHOICE">Múltipla Escolha</option>
+              <option value="SHORT_TEXT">Texto Curto</option>
+              <option value="LONG_TEXT">Texto Longo</option>
+              <option value="FILE_UPLOAD">Envio de Arquivo</option>
+            </select>
+            <select className="input-base" value={filterDiscipline} onChange={(e) => setFilterDiscipline(e.target.value)}>
+              <option value="">Todas as disciplinas</option>
+              {disciplines.map(d => (
+                <option key={d.id} value={d.name}>{d.name}</option>
+              ))}
+            </select>
+            <select className="input-base" value={filterDifficulty} onChange={(e) => setFilterDifficulty(e.target.value)}>
+              <option value="">Todas as dificuldades</option>
+              <option value="EASY">Fácil</option>
+              <option value="MEDIUM">Médio</option>
+              <option value="HARD">Difícil</option>
+            </select>
+          </div>
+
+          {availableQuestions.length === 0 ? (
+            <EmptyState title="Nenhuma questão cadastrada" description="Cadastre questões no banco para começar a montar a prova." />
+          ) : availableToAdd.length === 0 ? (
+            <EmptyState title="Todas as questões já foram adicionadas" description="Você pode reorganizar a ordem ou remover alguma questão da prova." />
+          ) : filteredAvailableToAdd.length === 0 ? (
+            <EmptyState title="Nenhuma questão encontrada" description="Ajuste os filtros acima para ver mais questões." />
+          ) : (
+            <div className="space-y-3">
+              {filteredAvailableToAdd.map((question) => (
                 <div key={question.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-slate-950">
-                        {index + 1}. {question.code}
-                      </p>
-                      <p className="text-lg text-slate-600">{question.statement}</p>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-950">{question.code}</p>
+                      <p className="text-lg text-slate-600 line-clamp-2" title={question.statement}>{question.statement}</p>
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
                         {question.type} · {question.discipline.name} · {question.difficulty}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 shrink-0">
                       <Link className="btn-secondary" href={`/admin/questions/${question.id}`}>
                         Editar
                       </Link>
-                      <button className="btn-secondary" onClick={() => moveQuestion(index, -1)} type="button">
-                        Subir
-                      </button>
-                      <button className="btn-secondary" onClick={() => moveQuestion(index, 1)} type="button">
-                        Descer
-                      </button>
-                      <button className="btn-danger" onClick={() => removeQuestion(question.id)} type="button">
-                        Remover
+                      <button className="btn-primary" onClick={() => addQuestion(question.id)} type="button">
+                        Adicionar
                       </button>
                     </div>
                   </div>
@@ -417,6 +514,7 @@ export function ExamEditor({
             </div>
           )}
         </div>
+
       </section>
     </div>
   );

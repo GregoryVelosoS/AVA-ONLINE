@@ -358,6 +358,16 @@ export async function GET(_: Request, context: { params: Promise<{ attemptId: st
       for (const option of question.options) {
         const suffix = option.isCorrect ? " (correta)" : "";
         writer.paragraph(`${option.label}) ${option.content}${suffix}`, { gapAfter: 4 });
+        
+        if (option.visualSupportType === "CODE" && option.supportCode) {
+          writer.paragraph(option.supportCode, {
+            font: fonts.mono,
+            size: 9,
+            gapAfter: 4
+          });
+        } else if (option.visualSupportType === "ASSET") {
+          writer.paragraph(`  [Suporte visual anexo na alternativa: ${option.supportImageName || "arquivo"}]`, { gapAfter: 4, color: rgb(0.4, 0.4, 0.4) });
+        }
       }
     }
 

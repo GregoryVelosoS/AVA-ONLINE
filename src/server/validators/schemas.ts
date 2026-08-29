@@ -30,7 +30,11 @@ export const questionOptionSchema = z.object({
   label: z.string().min(1),
   content: z.string().min(1),
   isCorrect: z.boolean(),
-  position: z.coerce.number().int().positive()
+  position: z.coerce.number().int().positive(),
+  visualSupportType: optionalVisualSupportType,
+  supportCode: optionalText,
+  supportImagePath: optionalText,
+  supportImageName: optionalText
 });
 
 const questionBaseSchema = z.object({

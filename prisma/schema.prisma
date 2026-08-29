@@ -204,6 +204,10 @@ model QuestionOption {
   content    String  @db.Text
   isCorrect  Boolean
   position   Int
+  visualSupportType VisualSupportType @default(NONE)
+  supportCode       String?           @db.Text
+  supportImagePath  String?
+  supportImageName  String?
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answers  Answer[]
