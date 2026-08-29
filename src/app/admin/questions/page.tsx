@@ -50,7 +50,7 @@ export default async function AdminQuestionsPage() {
     supportFilePath: question.supportFilePath,
     supportFileName: question.supportFileName,
     status: question.status,
-    createdAt: question.createdAt.toISOString(),
+    createdAt: new Date(question.createdAt).toISOString(),
     options: question.options.map((option) => ({
       id: option.id,
       label: option.label,
