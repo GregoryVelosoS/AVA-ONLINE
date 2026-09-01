@@ -333,10 +333,10 @@ export function AttemptRunner({
                         }
                       }}>
                         <VisualSupportBlock
-                          type={option.visualSupportType as any}
-                          code={option.supportCode || undefined}
-                          imageName={option.supportImageName || undefined}
-                          imagePath={option.supportImagePath || undefined}
+                          visualSupportType={option.visualSupportType as any}
+                          supportCode={option.supportCode || undefined}
+                          supportImageName={option.supportImageName || undefined}
+                          supportImagePath={option.supportImagePath || undefined}
                         />
                       </div>
                     )}
