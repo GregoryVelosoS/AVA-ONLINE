@@ -66,6 +66,10 @@ export type AttemptResultQuestion = {
     label: string;
     content: string;
     isCorrect: boolean;
+    visualSupportType: "NONE" | "ASSET" | "CODE" | null;
+    supportCode: string | null;
+    supportImagePath: string | null;
+    supportImageName: string | null;
   }>;
   attachments: Array<{
     id: string;
@@ -245,7 +249,11 @@ export const getAttemptResultSummary = unstable_cache(
         id: option.id,
         label: option.label,
         content: option.content,
-        isCorrect: option.isCorrect
+        isCorrect: option.isCorrect,
+        visualSupportType: option.visualSupportType,
+        supportCode: option.supportCode,
+        supportImagePath: option.supportImagePath,
+        supportImageName: option.supportImageName
       })),
       attachments: answer?.attachments ? answer.attachments.map(att => ({
         id: att.id,
