@@ -309,31 +309,36 @@ export function AttemptRunner({
               const selected = answer.selectedOptionId === option.id;
 
               return (
-                <button
+                <div
                   key={option.id}
                   className={[
-                    "block w-full rounded-2xl border px-4 py-4 text-left transition",
+                    "block w-full rounded-2xl border px-4 py-4 text-left transition cursor-pointer",
                     selected
                       ? "border-red-500 bg-[linear-gradient(135deg,rgba(193,18,31,0.12)_0%,rgba(255,230,232,0.96)_100%)] text-slate-950 ring-4 ring-red-100 shadow-[0_14px_32px_rgba(193,18,31,0.18)]"
                       : "border-slate-200 bg-white hover:border-red-200 hover:bg-red-50/40"
                   ].join(" ")}
                   onClick={() => selectOption(option.id)}
-                  type="button"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      selectOption(option.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="flex flex-col gap-3">
                     <div>
                       <span className="font-black text-red-700">{option.label})</span> {option.content}
                     </div>
-                    {option.visualSupportType && option.visualSupportType !== "NONE" && (
+                    {(option.supportCode || option.supportImagePath) && (
                       <div className="w-full text-left bg-white/60 p-2 rounded-xl" onClick={(e) => {
-                        // Impedir que cliques nos botões A+ e A- disparem a seleção da alternativa,
-                        // mas se o usuário clicar na imagem ou no fundo, permitir a seleção.
                         if ((e.target as HTMLElement).closest("button")) {
                           e.stopPropagation();
                         }
                       }}>
                         <VisualSupportBlock
-                          visualSupportType={option.visualSupportType as any}
+                          visualSupportType={option.visualSupportType || (option.supportCode ? "CODE" : "ASSET")}
                           supportCode={option.supportCode || undefined}
                           supportImageName={option.supportImageName || undefined}
                           supportImagePath={option.supportImagePath || undefined}
@@ -341,7 +346,7 @@ export function AttemptRunner({
                       </div>
                     )}
                   </div>
-                </button>
+                </div>
               );
             })}
           </section>

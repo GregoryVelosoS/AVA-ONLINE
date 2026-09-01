@@ -44,7 +44,11 @@ export default async function AttemptPage({ params }: { params: Promise<{ attemp
     options: eq.question.options.map((option) => ({
       id: option.id,
       label: option.label,
-      content: option.content
+      content: option.content,
+      visualSupportType: option.visualSupportType,
+      supportCode: option.supportCode,
+      supportImagePath: option.supportImagePath,
+      supportImageName: option.supportImageName
     }))
   }));
 

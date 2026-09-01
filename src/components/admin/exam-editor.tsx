@@ -98,6 +98,7 @@ export function ExamEditor({
   const [filterType, setFilterType] = useState("");
   const [filterDiscipline, setFilterDiscipline] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
+  const [filterSort, setFilterSort] = useState("name_asc");
 
   const [selectedFilterSearch, setSelectedFilterSearch] = useState("");
   const [selectedFilterType, setSelectedFilterType] = useState("");
@@ -216,12 +217,28 @@ export function ExamEditor({
 
   const availableToAdd = availableQuestions.filter((question) => !form.questionIds.includes(question.id));
 
-  const filteredAvailableToAdd = availableToAdd.filter((question) => {
+  let filteredAvailableToAdd = availableToAdd.filter((question) => {
     if (filterSearch && !question.code.toLowerCase().includes(filterSearch.toLowerCase()) && !question.statement.toLowerCase().includes(filterSearch.toLowerCase())) return false;
     if (filterType && question.type !== filterType) return false;
     if (filterDiscipline && question.discipline.name !== filterDiscipline) return false;
     if (filterDifficulty && question.difficulty !== filterDifficulty) return false;
     return true;
+  });
+
+  filteredAvailableToAdd = [...filteredAvailableToAdd].sort((a, b) => {
+    if (filterSort === "name_asc") {
+      return a.code.localeCompare(b.code);
+    }
+    if (filterSort === "name_desc") {
+      return b.code.localeCompare(a.code);
+    }
+    if (filterSort === "newest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (filterSort === "oldest") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return 0;
   });
 
   return (
@@ -479,6 +496,12 @@ export function ExamEditor({
               <option value="EASY">Fácil</option>
               <option value="MEDIUM">Médio</option>
               <option value="HARD">Difícil</option>
+            </select>
+            <select className="input-base" value={filterSort} onChange={(e) => setFilterSort(e.target.value)}>
+              <option value="name_asc">Nome (A-Z)</option>
+              <option value="name_desc">Nome (Z-A)</option>
+              <option value="newest">Mais recentes</option>
+              <option value="oldest">Mais antigas</option>
             </select>
           </div>
 
