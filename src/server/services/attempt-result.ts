@@ -183,7 +183,8 @@ export const getAttemptResultSummary = unstable_cache(
   const questionResults: AttemptResultQuestion[] = attempt.exam.questions.map((examQuestion, index) => {
     const question = examQuestion.question;
     const answer = answerMap.get(question.id);
-    const correctOption = question.options.find((option) => option.isCorrect) ?? null;
+    const correctOptions = question.options.filter((option) => option.isCorrect);
+    const correctOption = correctOptions.find((opt) => opt.id === answer?.selectedOptionId) ?? correctOptions[0] ?? null;
     const isObjective = question.type === "MULTIPLE_CHOICE";
     const isAnswered =
       Boolean(answer?.selectedOptionId) ||
@@ -196,7 +197,7 @@ export const getAttemptResultSummary = unstable_cache(
     if (!answer || !isAnswered) {
       resultStatus = "unanswered";
     } else if (isObjective) {
-      resultStatus = answer.selectedOptionId === correctOption?.id ? "correct" : "incorrect";
+      resultStatus = correctOption && answer.selectedOptionId === correctOption.id ? "correct" : "incorrect";
     } else {
       resultStatus = answer.isCorrect === true ? "correct" : answer.isCorrect === false ? "incorrect" : "pending";
     }
