@@ -27,6 +27,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
                 statement: true,
                 type: true,
                 difficulty: true,
+                createdAt: true,
                 discipline: {
                   select: {
                     name: true
@@ -49,6 +50,7 @@ export default async function AdminExamDetailPage({ params }: PageProps) {
         statement: true,
         type: true,
         difficulty: true,
+        createdAt: true,
         discipline: {
           select: {
             name: true

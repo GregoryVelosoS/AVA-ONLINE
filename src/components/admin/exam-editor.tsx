@@ -33,6 +33,7 @@ type Question = {
   discipline: {
     name: string;
   };
+  createdAt: string | Date;
 };
 
 type Exam = {
