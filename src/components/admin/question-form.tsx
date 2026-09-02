@@ -22,6 +22,7 @@ type QuestionStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 type VisualSupportType = "NONE" | "ASSET" | "CODE";
 
 type OptionState = {
+  id?: string;
   label: string;
   content: string;
   isCorrect: boolean;
@@ -304,6 +305,7 @@ export function QuestionForm({
       ...form,
       options: form.options.map((option, index) => ({
         ...option,
+        id: option.id,
         position: index + 1
       }))
     };

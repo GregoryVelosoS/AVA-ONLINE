@@ -27,6 +27,7 @@ export const userUpdateSchema = z.object({
 });
 
 export const questionOptionSchema = z.object({
+  id: z.string().uuid().optional(),
   label: z.string().min(1),
   content: z.string().min(1),
   isCorrect: z.boolean(),

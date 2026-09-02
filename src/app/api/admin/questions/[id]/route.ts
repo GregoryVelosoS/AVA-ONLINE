@@ -70,9 +70,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   const updated = await prisma.$transaction(async (tx) => {
-    await tx.questionOption.deleteMany({
-      where: { questionId: id }
-    });
+    // Removed questionOption.deleteMany to preserve IDs when updating
 
     await tx.questionTheme.deleteMany({
       where: { questionId: id }
@@ -117,18 +115,38 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         options:
           parsed.data.type === "MULTIPLE_CHOICE"
             ? {
-                create: parsed.data.options.map((option) => ({
-                  label: option.label,
-                  content: option.content,
-                  isCorrect: option.isCorrect,
-                  position: option.position,
-                  visualSupportType: option.visualSupportType,
-                  supportCode: option.supportCode || null,
-                  supportImagePath: option.supportImagePath || null,
-                  supportImageName: option.supportImageName || null
-                }))
+                deleteMany: {
+                  id: { notIn: parsed.data.options.filter((o) => o.id).map((o) => o.id as string) }
+                },
+                create: parsed.data.options
+                  .filter((o) => !o.id)
+                  .map((option) => ({
+                    label: option.label,
+                    content: option.content,
+                    isCorrect: option.isCorrect,
+                    position: option.position,
+                    visualSupportType: option.visualSupportType,
+                    supportCode: option.supportCode || null,
+                    supportImagePath: option.supportImagePath || null,
+                    supportImageName: option.supportImageName || null
+                  })),
+                update: parsed.data.options
+                  .filter((o) => o.id)
+                  .map((option) => ({
+                    where: { id: option.id as string },
+                    data: {
+                      label: option.label,
+                      content: option.content,
+                      isCorrect: option.isCorrect,
+                      position: option.position,
+                      visualSupportType: option.visualSupportType,
+                      supportCode: option.supportCode || null,
+                      supportImagePath: option.supportImagePath || null,
+                      supportImageName: option.supportImageName || null
+                    }
+                  }))
               }
-            : undefined
+            : { deleteMany: {} }
       },
       include: {
         discipline: true,

@@ -64,6 +64,7 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
     status: question.status,
     themeIds: question.themes.map((item) => item.themeId),
     options: question.options.map((option) => ({
+      id: option.id,
       label: option.label,
       content: option.content,
       isCorrect: option.isCorrect
