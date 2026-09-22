@@ -163,10 +163,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           include: {
             theme: true
           }
+        },
+        tags: {
+          include: {
+            tag: true
+          }
         }
       }
     });
-  });
+  }, { maxWait: 10000, timeout: 30000 });
 
   if (oldImagePath && oldImagePath !== parsed.data.supportImagePath) {
     await deleteManagedQuestionSupportAsset(oldImagePath);
