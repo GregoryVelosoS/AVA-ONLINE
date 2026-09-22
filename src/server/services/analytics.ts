@@ -144,6 +144,13 @@ export const getExamAnalytics = unstable_cache(
         difficultyByDiscipline: [],
         retomadaPoints: []
       },
+      saepInsights: {
+        capacities: [],
+        knowledgeObjects: [],
+        disciplines: [],
+        difficulties: [],
+        subthemes: []
+      },
       feedbackAnalytics: {
         responseCount: 0,
         scaleAverages: [],
@@ -434,10 +441,14 @@ export const getExamAnalytics = unstable_cache(
     })
     .sort((a, b) => a.accuracy - b.accuracy);
 
-  const levelPerformanceMap = new Map<string, { correct: number; total: number }>();
+  const levelPerformanceMap = new Map<string, { correct: number; total: number; questionIds: Set<string> }>();
   const tagPerformanceMap = new Map<string, { correct: number; total: number }>();
   const themeWeaknessMap = new Map<string, number>();
-  const disciplinePerformanceMap = new Map<string, { correct: number; total: number }>();
+  const disciplinePerformanceMap = new Map<string, { correct: number; total: number; questionIds: Set<string> }>();
+  
+  const saepCapacityMap = new Map<string, { desc: string; correct: number; total: number; questionIds: Set<string> }>();
+  const saepKnowledgeMap = new Map<string, { correct: number; total: number; questionIds: Set<string> }>();
+  const saepSubthemeMap = new Map<string, { correct: number; total: number; questionIds: Set<string> }>();
 
   filteredQuestions.forEach((examQuestion) => {
     const question = examQuestion.question;
@@ -445,9 +456,10 @@ export const getExamAnalytics = unstable_cache(
     const correctCount = answers.filter((answer) => answer.isCorrect === true).length;
     const total = answers.filter((answer) => answer.isCorrect !== null).length;
 
-    const levelEntry = levelPerformanceMap.get(question.difficulty) || { correct: 0, total: 0 };
+    const levelEntry = levelPerformanceMap.get(question.difficulty) || { correct: 0, total: 0, questionIds: new Set() };
     levelEntry.correct += correctCount;
     levelEntry.total += total;
+    levelEntry.questionIds.add(question.id);
     levelPerformanceMap.set(question.difficulty, levelEntry);
 
     question.tags.forEach((tagRelation) => {
@@ -472,10 +484,35 @@ export const getExamAnalytics = unstable_cache(
 
     if (question.discipline?.name) {
       const disciplineName = question.discipline.name;
-      const currentStats = disciplinePerformanceMap.get(disciplineName) || { correct: 0, total: 0 };
+      const currentStats = disciplinePerformanceMap.get(disciplineName) || { correct: 0, total: 0, questionIds: new Set() };
       currentStats.correct += correctCount;
       currentStats.total += total;
+      currentStats.questionIds.add(question.id);
       disciplinePerformanceMap.set(disciplineName, currentStats);
+    }
+
+    if (question.capacity) {
+      const entry = saepCapacityMap.get(question.capacity) || { desc: question.capacityDescription || "", correct: 0, total: 0, questionIds: new Set() };
+      entry.correct += correctCount;
+      entry.total += total;
+      entry.questionIds.add(question.id);
+      saepCapacityMap.set(question.capacity, entry);
+    }
+    
+    if (question.knowledgeObject) {
+      const entry = saepKnowledgeMap.get(question.knowledgeObject) || { correct: 0, total: 0, questionIds: new Set() };
+      entry.correct += correctCount;
+      entry.total += total;
+      entry.questionIds.add(question.id);
+      saepKnowledgeMap.set(question.knowledgeObject, entry);
+    }
+    
+    if (question.subtheme) {
+      const entry = saepSubthemeMap.get(question.subtheme) || { correct: 0, total: 0, questionIds: new Set() };
+      entry.correct += correctCount;
+      entry.total += total;
+      entry.questionIds.add(question.id);
+      saepSubthemeMap.set(question.subtheme, entry);
     }
   });
 
@@ -733,6 +770,44 @@ export const getExamAnalytics = unstable_cache(
         avgClarity < 3 ? "Reforçar explicações e exemplos guiados antes da próxima avaliação." : null,
         avgGeneralDifficulty >= 4 ? "Planejar revisão focada, pois a turma percebeu a prova como difícil." : null
       ].filter(Boolean)
+    },
+    saepInsights: {
+      capacities: Array.from(saepCapacityMap.entries())
+        .map(([label, stats]) => ({
+          label,
+          description: stats.desc,
+          totalQuestions: stats.questionIds.size,
+          accuracy: round(percentage(stats.correct, stats.total), 1)
+        }))
+        .sort((a, b) => b.accuracy - a.accuracy),
+      knowledgeObjects: Array.from(saepKnowledgeMap.entries())
+        .map(([label, stats]) => ({
+          label,
+          totalQuestions: stats.questionIds.size,
+          accuracy: round(percentage(stats.correct, stats.total), 1)
+        }))
+        .sort((a, b) => b.accuracy - a.accuracy),
+      disciplines: Array.from(disciplinePerformanceMap.entries())
+        .map(([label, stats]) => ({
+          label,
+          totalQuestions: stats.questionIds.size,
+          accuracy: round(percentage(stats.correct, stats.total), 1)
+        }))
+        .sort((a, b) => b.accuracy - a.accuracy),
+      difficulties: Array.from(levelPerformanceMap.entries())
+        .map(([label, stats]) => ({
+          label,
+          totalQuestions: stats.questionIds.size,
+          accuracy: round(percentage(stats.correct, stats.total), 1)
+        }))
+        .sort((a, b) => b.accuracy - a.accuracy),
+      subthemes: Array.from(saepSubthemeMap.entries())
+        .map(([label, stats]) => ({
+          label,
+          totalQuestions: stats.questionIds.size,
+          accuracy: round(percentage(stats.correct, stats.total), 1)
+        }))
+        .sort((a, b) => b.accuracy - a.accuracy)
     },
     feedbackAnalytics: {
       responseCount: feedbackResponses.filter((response) => Object.keys(response.answers).length > 0).length,

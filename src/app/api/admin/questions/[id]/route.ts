@@ -90,6 +90,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         statement: parsed.data.statement,
         visualSupportType: parsed.data.visualSupportType,
         supportCode: parsed.data.supportCode || null,
+
+        capacity: parsed.data.capacity || null,
+        capacityDescription: parsed.data.capacityDescription || null,
+        function: parsed.data.function || null,
+        subfunction: parsed.data.subfunction || null,
+        knowledgeObject: parsed.data.knowledgeObject || null,
+        subtheme: parsed.data.subtheme || null,
+
         expectedFeedback: parsed.data.expectedFeedback || null,
         answerExplanation: parsed.data.answerExplanation || null,
         studyTopics: parsed.data.studyTopics || null,

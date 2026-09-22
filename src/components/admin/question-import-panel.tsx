@@ -23,6 +23,14 @@ type NormalizedQuestion = {
   context: string;
   visualSupportType: "NONE" | "ASSET" | "CODE";
   supportCode: string;
+
+  capacity: string;
+  capacityDescription: string;
+  function: string;
+  subfunction: string;
+  knowledgeObject: string;
+  subtheme: string;
+
   expectedFeedback: string;
   answerExplanation: string;
   studyTopics: string;
@@ -42,6 +50,10 @@ type NormalizedQuestion = {
 
 type ImportResponsePayload = {
   error?: unknown;
+  details?: {
+    formErrors?: string[];
+    fieldErrors?: Record<string, string[]>;
+  };
   count?: number;
 };
 
@@ -70,6 +82,24 @@ function normalizeVisualSupportType(rawValue: string) {
   return "NONE" as const;
 }
 
+function normalizeDifficulty(rawValue: string) {
+  const normalized = rawValue.trim().toLowerCase();
+  
+  if (["easy", "fácil", "facil", "fcil"].includes(normalized)) {
+    return "EASY";
+  }
+  
+  if (["hard", "difícil", "dificil", "difcil"].includes(normalized)) {
+    return "HARD";
+  }
+  
+  if (["medium", "média", "media", "mdia"].includes(normalized)) {
+    return "MEDIUM";
+  }
+  
+  return "EASY"; // default
+}
+
 function resolveDisciplineId(rawValue: string, disciplines: Discipline[], fallbackDisciplineId: string) {
   const normalized = rawValue.trim().toLowerCase();
   if (!normalized) {
@@ -92,14 +122,14 @@ function normalizeQuestionPayload(
   fallbackDisciplineId: string
 ): NormalizedQuestion {
   const alternativeLetters = ["A", "B", "C", "D", "E"] as const;
-  const correctAlternative = readValue(source, ["correctAlternative", "respostaCorreta", "alternativaCorreta"]).toUpperCase();
+  const correctAlternative = readValue(source, ["correctAlternative", "respostaCorreta", "alternativaCorreta", "gabarito"]).toUpperCase();
   const visualSupportType = normalizeVisualSupportType(
     readValue(source, ["visualSupportType", "tipoSuporteVisual", "supportType"])
   );
 
   const options = alternativeLetters
     .map((letter, index) => {
-      const content = readValue(source, [`alternative${letter}`, `alternativa${letter}`]);
+      const content = readValue(source, [`alternative${letter}`, `alternativa${letter}`, letter, letter.toLowerCase()]);
       if (!content) {
         return null;
       }
@@ -114,17 +144,25 @@ function normalizeQuestionPayload(
     .filter((option): option is NonNullable<typeof option> => Boolean(option));
 
   return {
-    code: readValue(source, ["code", "codigo"]),
+    code: readValue(source, ["code", "codigo", "n", "N"]),
     title: readValue(source, ["title", "titulo"]),
     type: (readValue(source, ["type", "tipo"]).toUpperCase() as NormalizedQuestion["type"]) || "MULTIPLE_CHOICE",
-    subject: readValue(source, ["subject", "assunto"]),
-    topic: readValue(source, ["topic", "tag", "topico", "tópico"]),
-    statement: readValue(source, ["statement", "commandQuestion", "comandoQuestao", "enunciado"]),
-    difficulty: (readValue(source, ["difficulty", "nivel", "nível"]).toUpperCase() as NormalizedQuestion["difficulty"]) || "EASY",
-    disciplineId: resolveDisciplineId(readValue(source, ["discipline", "disciplina", "disciplineId"]), disciplines, fallbackDisciplineId),
+    subject: readValue(source, ["subject", "assunto", "oc", "OC"]),
+    topic: readValue(source, ["topic", "tag", "topico", "tópico", "subtema"]),
+    statement: readValue(source, ["statement", "commandQuestion", "comandoQuestao", "enunciado", "comando"]),
+    difficulty: normalizeDifficulty(readValue(source, ["difficulty", "nivel", "nível", "dificuldade"])),
+    disciplineId: resolveDisciplineId(readValue(source, ["discipline", "disciplina", "disciplineId", "curso"]), disciplines, fallbackDisciplineId),
     context: readValue(source, ["context", "contexto"]),
     visualSupportType,
     supportCode: readValue(source, ["supportCode", "supportVisualCode", "suporteVisualCodigo"]),
+
+    capacity: readValue(source, ["capacity", "capacidade"]),
+    capacityDescription: readValue(source, ["capacityDescription", "descrio", "descrição", "descricao"]),
+    function: readValue(source, ["function", "funo", "função", "funcao"]),
+    subfunction: readValue(source, ["subfunction", "subfuno", "subfunção", "subfuncao"]),
+    knowledgeObject: readValue(source, ["knowledgeObject", "oc", "OC", "objetoDeConhecimento"]),
+    subtheme: readValue(source, ["subtheme", "subtema"]),
+
     expectedFeedback: readValue(source, ["expectedFeedback", "feedbackEsperado"]),
     answerExplanation: readValue(source, ["answerExplanation", "explicacaoResposta", "explicaçãoResposta"]),
     studyTopics: readValue(source, ["studyTopics", "temasParaEstudo"]),
@@ -200,11 +238,28 @@ async function readImportResponse(response: Response): Promise<ImportResponsePay
 }
 
 function getImportErrorMessage(payload: ImportResponsePayload) {
+  let baseMsg = "Não foi possível importar as questões.";
   if (typeof payload.error === "string" && payload.error.trim()) {
-    return payload.error;
+    baseMsg = payload.error;
   }
 
-  return "NÃ£o foi possÃ­vel importar as questÃµes.";
+  if (payload.details?.fieldErrors) {
+    const keys = Object.keys(payload.details.fieldErrors);
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      const errorMessage = payload.details.fieldErrors[firstKey]?.[0] || "Erro desconhecido";
+      
+      const match = firstKey.match(/^questions\.(\d+)\.(.*)$/);
+      if (match) {
+        const questionIndex = parseInt(match[1], 10) + 1; // 1-based index
+        const fieldName = match[2];
+        return `${baseMsg} Verifique a questão ${questionIndex}, campo "${fieldName}" (${errorMessage}).`;
+      }
+      return `${baseMsg} Verifique o campo "${firstKey}" (${errorMessage}).`;
+    }
+  }
+
+  return baseMsg;
 }
 
 export function QuestionImportPanel({ disciplines }: { disciplines: Discipline[] }) {

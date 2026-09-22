@@ -5,7 +5,12 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuestionDeleteButton } from "@/components/admin/question-delete-button";
+import { QuestionStatusButton } from "@/components/admin/question-status-button";
 import { VisualSupportBlock } from "@/components/questions/visual-support-block";
+import { exportQuestionsToCSV, exportQuestionsToExcel } from "@/lib/export-utils";
+import { exportQuestionsToPDF } from "@/lib/pdf-export";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useRouter } from "next/navigation";
 
 type QuestionOption = {
   id: string;
@@ -33,6 +38,12 @@ export type QuestionListItem = {
   supportFilePath: string | null;
   supportFileName: string | null;
   status: string;
+  capacity?: string | null;
+  capacityDescription?: string | null;
+  function?: string | null;
+  subfunction?: string | null;
+  knowledgeObject?: string | null;
+  subtheme?: string | null;
   createdAt: string;
   options: QuestionOption[];
 };
@@ -83,6 +94,9 @@ export function QuestionManagementList({
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionListItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const router = useRouter();
 
   const filteredQuestions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -140,6 +154,49 @@ export function QuestionManagementList({
     return sortDirection === "asc" ? " ↑" : " ↓";
   }
 
+  function toggleSelectAll() {
+    if (selectedIds.size === filteredQuestions.length && filteredQuestions.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredQuestions.map((q) => q.id)));
+    }
+  }
+
+  function toggleSelectRow(id: string) {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  }
+
+  async function handleBulkStatusChange(newStatus: "ACTIVE" | "ARCHIVED") {
+    if (selectedIds.size === 0) return;
+
+    const actionName = newStatus === "ARCHIVED" ? "desativar" : "reativar";
+    const confirmed = window.confirm(`Deseja realmente ${actionName} as ${selectedIds.size} questões selecionadas?`);
+    if (!confirmed) return;
+
+    setIsBulkUpdating(true);
+    const response = await fetch("/api/admin/questions/bulk-status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: Array.from(selectedIds), status: newStatus })
+    });
+
+    setIsBulkUpdating(false);
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      window.alert(payload.error || `Não foi possível ${actionName} as questões.`);
+      return;
+    }
+
+    setSelectedIds(new Set());
+    router.refresh();
+  }
+
   return (
     <>
       <Card title="Filtros das questões">
@@ -183,9 +240,46 @@ export function QuestionManagementList({
             ))}
           </select>
         </div>
-        <p className="mt-3 text-lg text-slate-600">
-          Exibindo {filteredQuestions.length} de {questions.length} questão(ões).
-        </p>
+        <div className="mt-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-lg text-slate-600">
+            Exibindo {filteredQuestions.length} de {questions.length} questão(ões).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => exportQuestionsToPDF(filteredQuestions)}
+              disabled={filteredQuestions.length === 0}
+            >
+              PDF
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => exportQuestionsToExcel(filteredQuestions)}
+              disabled={filteredQuestions.length === 0}
+            >
+              Excel
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => exportQuestionsToCSV(filteredQuestions)}
+              disabled={filteredQuestions.length === 0}
+            >
+              CSV
+            </button>
+            <LoadingButton
+              type="button"
+              variant="secondary"
+              loading={isBulkUpdating}
+              disabled={selectedIds.size === 0 || isBulkUpdating}
+              onClick={() => handleBulkStatusChange("ARCHIVED")}
+            >
+              Desativar Selecionadas
+            </LoadingButton>
+          </div>
+        </div>
       </Card>
 
       <Card title="Questões cadastradas">
@@ -198,6 +292,14 @@ export function QuestionManagementList({
             <table className="w-full text-lg">
               <thead className="bg-[linear-gradient(90deg,#101010_0%,#2a0e12_100%)] text-center text-white">
                 <tr>
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                      checked={filteredQuestions.length > 0 && selectedIds.size === filteredQuestions.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <SortableHeader label="Código" sortKey="code" indicator={sortIndicator("code")} onSort={toggleSort} />
                   <SortableHeader label="Tipo" sortKey="type" indicator={sortIndicator("type")} onSort={toggleSort} />
                   <SortableHeader label="Disciplina" sortKey="disciplineName" indicator={sortIndicator("disciplineName")} onSort={toggleSort} />
@@ -209,6 +311,14 @@ export function QuestionManagementList({
               <tbody className="text-center">
                 {filteredQuestions.map((question) => (
                   <tr key={question.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                        checked={selectedIds.has(question.id)}
+                        onChange={() => toggleSelectRow(question.id)}
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium">{question.code}</td>
                     <td className="px-4 py-3">{displayLabel(questionTypeLabels, question.type)}</td>
                     <td className="px-4 py-3">{question.disciplineName}</td>
@@ -222,6 +332,7 @@ export function QuestionManagementList({
                         <Link className="btn-secondary" href={`/admin/questions/${question.id}`}>
                           Editar
                         </Link>
+                        <QuestionStatusButton questionId={question.id} currentStatus={question.status} />
                         <QuestionDeleteButton questionId={question.id} />
                       </div>
                     </td>

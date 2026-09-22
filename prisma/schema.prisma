@@ -169,6 +169,15 @@ model Question {
   statement         String         @db.Text
   visualSupportType VisualSupportType @default(NONE)
   supportCode       String?        @db.Text
+  
+  // Matriz SAEP
+  capacity            String?      @db.Text
+  capacityDescription String?      @db.Text
+  function            String?      @db.Text
+  subfunction         String?      @db.Text
+  knowledgeObject     String?      @db.Text
+  subtheme            String?      @db.Text
+
   expectedFeedback  String?        @db.Text
   answerExplanation String?        @db.Text
   studyTopics       String?        @db.Text

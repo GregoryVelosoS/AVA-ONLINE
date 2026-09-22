@@ -78,6 +78,14 @@ export async function POST(request: NextRequest) {
             statement: question.statement,
             visualSupportType: question.visualSupportType,
             supportCode: question.supportCode || null,
+
+            capacity: question.capacity || null,
+            capacityDescription: question.capacityDescription || null,
+            function: question.function || null,
+            subfunction: question.subfunction || null,
+            knowledgeObject: question.knowledgeObject || null,
+            subtheme: question.subtheme || null,
+
             expectedFeedback: question.expectedFeedback || null,
             answerExplanation: question.answerExplanation || null,
             studyTopics: question.studyTopics || null,

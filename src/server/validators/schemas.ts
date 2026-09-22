@@ -50,6 +50,15 @@ const questionBaseSchema = z.object({
   context: optionalText,
   visualSupportType: optionalVisualSupportType,
   supportCode: optionalText,
+  
+  // SAEP
+  capacity: optionalText,
+  capacityDescription: optionalText,
+  function: optionalText,
+  subfunction: optionalText,
+  knowledgeObject: optionalText,
+  subtheme: optionalText,
+
   expectedFeedback: optionalText,
   answerExplanation: optionalText,
   studyTopics: optionalText,

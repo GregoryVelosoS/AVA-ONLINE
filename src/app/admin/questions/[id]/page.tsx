@@ -62,6 +62,12 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
     supportFileMime: question.supportFileMime ?? "",
     defaultWeight: Number(question.defaultWeight),
     status: question.status,
+    capacity: question.capacity ?? "",
+    capacityDescription: question.capacityDescription ?? "",
+    function: question.function ?? "",
+    subfunction: question.subfunction ?? "",
+    knowledgeObject: question.knowledgeObject ?? "",
+    subtheme: question.subtheme ?? "",
     themeIds: question.themes.map((item) => item.themeId),
     options: question.options.map((option) => ({
       id: option.id,

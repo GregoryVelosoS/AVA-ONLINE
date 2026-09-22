@@ -50,6 +50,12 @@ export default async function AdminQuestionsPage() {
     supportFilePath: question.supportFilePath,
     supportFileName: question.supportFileName,
     status: question.status,
+    capacity: question.capacity,
+    capacityDescription: question.capacityDescription,
+    function: question.function,
+    subfunction: question.subfunction,
+    knowledgeObject: question.knowledgeObject,
+    subtheme: question.subtheme,
     createdAt: new Date(question.createdAt).toISOString(),
     options: question.options.map((option) => ({
       id: option.id,

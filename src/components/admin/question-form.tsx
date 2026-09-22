@@ -51,6 +51,14 @@ export type QuestionFormState = {
   context: string;
   visualSupportType: VisualSupportType;
   supportCode: string;
+
+  capacity: string;
+  capacityDescription: string;
+  function: string;
+  subfunction: string;
+  knowledgeObject: string;
+  subtheme: string;
+
   expectedFeedback: string;
   answerExplanation: string;
   studyTopics: string;
@@ -87,6 +95,14 @@ function createDefaultState(disciplines: Discipline[]): QuestionFormState {
     context: "",
     visualSupportType: "NONE",
     supportCode: "",
+
+    capacity: "",
+    capacityDescription: "",
+    function: "",
+    subfunction: "",
+    knowledgeObject: "",
+    subtheme: "",
+
     expectedFeedback: "",
     answerExplanation: "",
     studyTopics: "",
@@ -416,6 +432,44 @@ export function QuestionForm({
               <option value="ACTIVE">Ativa</option>
               <option value="ARCHIVED">Arquivada</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="surface-panel space-y-6 p-5 md:p-6">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Matriz SAEP</p>
+          <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Matriz de Referência (Opcional)</h2>
+          <p className="mt-2 text-lg text-slate-600">Campos adicionais específicos do modelo de avaliação SAEP.</p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <label className="field-label">Capacidade</label>
+            <input className="input-base" value={form.capacity} onChange={(event) => updateField("capacity", event.target.value)} />
+          </div>
+          <div>
+            <label className="field-label">Função</label>
+            <input className="input-base" value={form.function} onChange={(event) => updateField("function", event.target.value)} />
+          </div>
+          <div>
+            <label className="field-label">Subfunção</label>
+            <input className="input-base" value={form.subfunction} onChange={(event) => updateField("subfunction", event.target.value)} />
+          </div>
+          <div>
+            <label className="field-label">Objeto de Conhecimento (OC)</label>
+            <input className="input-base" value={form.knowledgeObject} onChange={(event) => updateField("knowledgeObject", event.target.value)} />
+          </div>
+          <div>
+            <label className="field-label">Subtema</label>
+            <input className="input-base" value={form.subtheme} onChange={(event) => updateField("subtheme", event.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="field-label">Descrição da Capacidade</label>
+            <textarea
+              className="input-base min-h-20"
+              value={form.capacityDescription}
+              onChange={(event) => updateField("capacityDescription", event.target.value)}
+            />
           </div>
         </div>
       </div>

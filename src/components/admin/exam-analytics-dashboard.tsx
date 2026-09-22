@@ -42,6 +42,7 @@ function ChartCard({
 
 export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalyticsResult }) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"geral" | "saep">("geral");
   const [cancelingId, setCancelingId] = useState<string | null>(null);
 
   async function handleCancelAttempt(attemptId: string) {
@@ -103,6 +104,27 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
 
   return (
     <div className="space-y-6">
+      <div className="flex border-b border-slate-200">
+        <button
+          className={`px-6 py-3 text-sm font-black uppercase tracking-widest transition-colors ${
+            activeTab === "geral" ? "border-b-2 border-red-700 text-red-700" : "text-slate-500 hover:text-slate-700"
+          }`}
+          onClick={() => setActiveTab("geral")}
+          type="button"
+        >
+          Geral
+        </button>
+        <button
+          className={`px-6 py-3 text-sm font-black uppercase tracking-widest transition-colors ${
+            activeTab === "saep" ? "border-b-2 border-red-700 text-red-700" : "text-slate-500 hover:text-slate-700"
+          }`}
+          onClick={() => setActiveTab("saep")}
+          type="button"
+        >
+          SAEP
+        </button>
+      </div>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Respondentes" value={String(analytics.summary.totalRespondents)} />
         <MetricCard label="Concluíram" value={String(analytics.summary.completedStudents)} />
@@ -110,6 +132,9 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         <MetricCard label="Taxa de acerto" value={`${analytics.summary.accuracyRate}%`} />
         <MetricCard label="Tempo médio" value={`${analytics.summary.averageDurationMinutes} min`} />
       </section>
+
+      {activeTab === "geral" ? (
+        <>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="surface-panel p-5">
@@ -587,6 +612,169 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </div>
         )}
       </section>
+        </>
+      ) : (
+        <SaepAnalyticsTab saepInsights={analytics.saepInsights} />
+      )}
     </div>
+  );
+}
+
+function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult["saepInsights"] }) {
+  if (!saepInsights) return null;
+
+  return (
+    <div className="space-y-6">
+      <SaepTableCard 
+        title="Desempenho por Capacidade"
+        icon="⚡"
+        items={saepInsights.capacities.map(item => ({
+          label: item.label,
+          description: item.description,
+          count: item.totalQuestions,
+          accuracy: item.accuracy
+        }))}
+        attentionThreshold={50}
+        attentionLabel="Capacidades"
+      />
+
+      <SaepTableCard 
+        title="Desempenho por Objeto de Conhecimento"
+        icon="💡"
+        items={saepInsights.knowledgeObjects.map(item => ({
+          label: item.label,
+          count: item.totalQuestions,
+          accuracy: item.accuracy
+        }))}
+        attentionThreshold={50}
+        attentionLabel="Conhecimentos"
+      />
+
+      <SaepTableCard 
+        title="Desempenho por Disciplina"
+        icon="📚"
+        items={saepInsights.disciplines.map(item => ({
+          label: item.label,
+          count: item.totalQuestions,
+          accuracy: item.accuracy
+        }))}
+        attentionThreshold={50}
+        attentionLabel="Disciplinas"
+      />
+
+      <SaepTableCard 
+        title="Desempenho por Subtema"
+        icon="🏷️"
+        items={saepInsights.subthemes.map(item => ({
+          label: item.label,
+          count: item.totalQuestions,
+          accuracy: item.accuracy
+        }))}
+        attentionThreshold={50}
+        attentionLabel="Subtemas"
+      />
+      
+      <SaepTableCard 
+        title="Desempenho por Dificuldade"
+        icon="📈"
+        items={saepInsights.difficulties.map(item => ({
+          label: item.label,
+          count: item.totalQuestions,
+          accuracy: item.accuracy
+        }))}
+        attentionThreshold={50}
+        attentionLabel="Níveis de dificuldade"
+      />
+    </div>
+  );
+}
+
+function SaepTableCard({
+  title,
+  icon,
+  items,
+  attentionThreshold,
+  attentionLabel
+}: {
+  title: string;
+  icon: string;
+  items: Array<{ label: string; description?: string; count: number; accuracy: number }>;
+  attentionThreshold: number;
+  attentionLabel: string;
+}) {
+  if (items.length === 0) return null;
+
+  const lowPerformanceItems = items.filter((item) => item.accuracy < attentionThreshold);
+
+  return (
+    <section className="surface-panel overflow-hidden">
+      <div className="flex items-center gap-2 p-5 md:p-6 border-b border-slate-100">
+        <span className="text-xl">{icon}</span>
+        <h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-xs">
+            <tr>
+              <th className="px-6 py-4 w-32">Cód.</th>
+              {items[0]?.description !== undefined && <th className="px-6 py-4">Descrição</th>}
+              <th className="px-6 py-4 text-center w-32">Qtd. Questões</th>
+              <th className="px-6 py-4 w-64">% Acerto</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {items.map((item, index) => {
+              const colorClass = item.accuracy < 50 ? "bg-red-600" : item.accuracy < 70 ? "bg-orange-500" : "bg-emerald-500";
+              const textColorClass = item.accuracy < 50 ? "text-red-700" : item.accuracy < 70 ? "text-orange-600" : "text-emerald-600";
+              
+              return (
+                <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 font-black text-slate-700 bg-sky-50/30">
+                    <span className="inline-block px-2 py-1 bg-sky-100 text-sky-800 rounded text-xs">
+                      {item.label}
+                    </span>
+                  </td>
+                  {item.description !== undefined && (
+                    <td className="px-6 py-4 text-slate-600 font-medium">
+                      {item.description}
+                    </td>
+                  )}
+                  <td className="px-6 py-4 text-center font-bold text-slate-500">
+                    {item.count}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full rounded-full ${colorClass}`} style={{ width: `${item.accuracy}%` }} />
+                      </div>
+                      <span className={`font-black w-10 text-right ${textColorClass}`}>
+                        {item.accuracy}%
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {lowPerformanceItems.length > 0 && (
+        <div className="m-5 md:m-6 rounded-xl border border-red-100 bg-red-50 p-4">
+          <p className="font-bold text-red-700 flex items-center gap-2">
+            ⚠️ {attentionLabel} abaixo de {attentionThreshold}% — requerem atenção
+          </p>
+          <ul className="mt-2 space-y-1">
+            {lowPerformanceItems.map((item, i) => (
+              <li key={i} className="text-sm text-red-600 font-medium">
+                • <span className="font-bold">{item.label}</span> — {item.accuracy}% em {item.count} questão(ões)
+                {item.description ? ` — ${item.description}` : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
