@@ -15,7 +15,7 @@ const getCachedQuestionsList = unstable_cache(
     return prisma.question.findMany({
       include: {
         discipline: true,
-        options: true
+        options: { where: { archivedAt: null } }
       },
       orderBy: { createdAt: "desc" }
     });

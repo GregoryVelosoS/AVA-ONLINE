@@ -22,6 +22,7 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
       where: { id },
       include: {
         options: {
+          where: { archivedAt: null },
           orderBy: { position: "asc" }
         },
         themes: true

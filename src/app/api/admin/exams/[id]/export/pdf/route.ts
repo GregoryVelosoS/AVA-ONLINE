@@ -144,6 +144,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
           question: {
             include: {
               options: {
+                where: { archivedAt: null },
                 orderBy: { position: "asc" }
               }
             }

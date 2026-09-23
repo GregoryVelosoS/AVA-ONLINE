@@ -63,13 +63,18 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       ) : null}
 
       <div id="report-export-root" className="space-y-6">
-        <section className="surface-panel space-y-5 p-5 md:p-6">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Filtros analiticos</p>
-            <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Refine a leitura consolidada da prova</h2>
-          </div>
-
-          <form className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" method="GET">
+        <details className="group surface-panel" open>
+          <summary className="cursor-pointer p-5 md:p-6 flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Filtros analíticos</p>
+              <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">Refine a leitura consolidada da prova</h2>
+            </div>
+            <div className="flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-slate-100 group-open:bg-red-50 text-slate-500 group-open:text-red-700 group-open:rotate-180 transition-all">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </summary>
+          <div className="px-5 pb-5 md:px-6 md:pb-6 border-t border-slate-100 pt-5">
+            <form className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" method="GET">
             <div>
               <label className="field-label">Prova</label>
               <select className="input-base" defaultValue={filters.examId || analytics.selectedExam?.id || ""} name="examId">
@@ -165,7 +170,8 @@ export default async function ReportsPage({ searchParams }: PageProps) {
               </a>
             </div>
           </form>
-        </section>
+          </div>
+        </details>
 
         <section className="surface-panel space-y-3 p-5 md:p-6">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Relatorio exportavel</p>

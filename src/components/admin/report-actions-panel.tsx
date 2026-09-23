@@ -30,10 +30,12 @@ async function buildReportPdf(examTitle: string, examCode?: string) {
     throw new Error("A área do relatório não foi encontrada para exportação.");
   }
 
+  document.documentElement.setAttribute("data-exporting", "true");
+  
   if ("fonts" in document) {
     await (document as Document & { fonts?: FontFaceSet }).fonts?.ready;
   }
-  await new Promise((resolve) => window.setTimeout(resolve, 250));
+  await new Promise((resolve) => window.setTimeout(resolve, 500));
 
   const canvas = await html2canvas(root, {
     backgroundColor: "#ffffff",
@@ -42,9 +44,28 @@ async function buildReportPdf(examTitle: string, examCode?: string) {
     scrollX: 0,
     scrollY: -window.scrollY,
     useCORS: true,
-    windowHeight: root.scrollHeight,
-    windowWidth: root.scrollWidth
+    windowWidth: 1400,
+    onclone: (clonedDoc) => {
+      const clonedRoot = clonedDoc.getElementById("report-export-root");
+      if (clonedRoot) {
+        clonedRoot.style.width = "1400px";
+        
+        // Remove overflow-x-auto to prevent clipping
+        const overflowElements = clonedRoot.querySelectorAll(".overflow-x-auto");
+        overflowElements.forEach((el) => {
+          (el as HTMLElement).style.overflow = "visible";
+        });
+        
+        // Open all details so they render correctly and don't overlap
+        const detailsElements = clonedRoot.querySelectorAll("details");
+        detailsElements.forEach((el) => {
+          el.setAttribute("open", "true");
+        });
+      }
+    }
   });
+
+  document.documentElement.removeAttribute("data-exporting");
 
   const pdf = new jsPDF({
     compress: true,
@@ -92,6 +113,75 @@ async function buildReportPdf(examTitle: string, examCode?: string) {
   }
 
   pdf.save(`relatorio-${safeFilenamePart(examCode || examTitle)}.pdf`);
+}
+
+async function buildReportHtml(examTitle: string, examCode?: string) {
+  const root = document.getElementById("report-export-root");
+  if (!root) {
+    throw new Error("A área do relatório não foi encontrada para exportação.");
+  }
+
+  document.documentElement.setAttribute("data-exporting", "true");
+  
+  // Aguarda possíveis re-renders
+  await new Promise((resolve) => window.setTimeout(resolve, 500));
+
+  const clone = root.cloneNode(true) as HTMLElement;
+  document.documentElement.removeAttribute("data-exporting");
+
+  // Force open all details in the HTML export clone
+  const cloneDetails = clone.querySelectorAll("details");
+  cloneDetails.forEach((el) => {
+    el.setAttribute("open", "true");
+  });
+
+  let cssText = "";
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      if (sheet.cssRules) {
+        for (const rule of Array.from(sheet.cssRules)) {
+          cssText += rule.cssText;
+        }
+      }
+    } catch (e) {
+      // Ignorar CORS errors
+    }
+  }
+
+  const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatório - ${examTitle}</title>
+  <style>
+    ${cssText}
+    body {
+      background-color: #f8fafc;
+      padding: 2rem;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+    #report-export-root {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body class="bg-slate-50">
+  ${clone.outerHTML}
+</body>
+</html>`;
+
+  const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `relatorio-${safeFilenamePart(examCode || examTitle)}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export function ReportActionsPanel({
@@ -186,6 +276,21 @@ export function ReportActionsPanel({
     }
   }
 
+  async function exportHtml() {
+    setMessage(null);
+    setIsExporting(true);
+
+    try {
+      await buildReportHtml(examTitle, examCode);
+      setMessage("Exportação do HTML concluída.");
+    } catch (error) {
+      const fallback = "Não foi possível exportar o HTML do relatório.";
+      setMessage(error instanceof Error ? error.message || fallback : fallback);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <section className="surface-panel relative space-y-4 p-5">
       <LoadingOverlay active={isCreatingLink || isExporting || isRefreshing} label={isExporting ? "Gerando PDF..." : isCreatingLink ? "Gerando link..." : "Atualizando relatórios..."} />
@@ -199,6 +304,9 @@ export function ReportActionsPanel({
         <div className="flex flex-wrap gap-2">
           <LoadingButton loading={isExporting} loadingText="Preparando PDF..." onClick={exportPdf} type="button" variant="secondary">
             Exportar PDF
+          </LoadingButton>
+          <LoadingButton loading={isExporting} loadingText="Preparando HTML..." onClick={exportHtml} type="button" variant="secondary">
+            Exportar HTML
           </LoadingButton>
           <LoadingButton loading={isCreatingLink} loadingText="Gerando link..." onClick={createShareLink} type="button">
             Gerar link visualizador

@@ -16,7 +16,10 @@ export async function GET(_: NextRequest, context: RouteContext) {
     where: { id },
     include: {
       discipline: true,
-      options: { orderBy: { position: "asc" } },
+      options: { 
+        where: { archivedAt: null },
+        orderBy: { position: "asc" } 
+      },
       themes: {
         include: {
           theme: true
@@ -123,8 +126,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         options:
           parsed.data.type === "MULTIPLE_CHOICE"
             ? {
-                deleteMany: {
-                  id: { notIn: parsed.data.options.filter((o) => o.id).map((o) => o.id as string) }
+                updateMany: {
+                  where: { id: { notIn: parsed.data.options.filter((o) => o.id).map((o) => o.id as string) } },
+                  data: { archivedAt: new Date() }
                 },
                 create: parsed.data.options
                   .filter((o) => !o.id)
@@ -158,7 +162,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       },
       include: {
         discipline: true,
-        options: { orderBy: { position: "asc" } },
+        options: { 
+          where: { archivedAt: null },
+          orderBy: { position: "asc" } 
+        },
         themes: {
           include: {
             theme: true

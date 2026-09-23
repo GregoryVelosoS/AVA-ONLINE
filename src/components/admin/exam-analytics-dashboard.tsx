@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode, Fragment } from "react";
 import { useRouter } from "next/navigation";
+import { Brain, Tags, BookOpen, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -23,19 +24,25 @@ const pieColors = ["#c1121f", "#101010", "#e5e7eb", "#fca5a5"];
 function ChartCard({
   title,
   subtitle,
+  minWidth = 0,
   children
 }: {
   title: string;
   subtitle?: string;
+  minWidth?: number;
   children: ReactNode;
 }) {
   return (
-    <section className="surface-panel p-5 md:p-6">
+    <section className="surface-panel p-5 md:p-6 w-full min-w-0 overflow-hidden">
       <div>
         <h3 className="text-lg font-black tracking-tight text-slate-950">{title}</h3>
-        {subtitle ? <p className="mt-1 text-lg text-slate-500">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 text-sm md:text-lg text-slate-500">{subtitle}</p> : null}
       </div>
-      <div className="mt-4 h-72">{children}</div>
+      <div className="mt-4 h-72 w-full overflow-x-auto">
+        <div className="h-full" style={{ minWidth: minWidth ? `${minWidth}px` : "100%" }}>
+          {children}
+        </div>
+      </div>
     </section>
   );
 }
@@ -103,7 +110,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 overflow-hidden">
       <div className="flex border-b border-slate-200">
         <button
           className={`px-6 py-3 text-sm font-black uppercase tracking-widest transition-colors ${
@@ -125,7 +132,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
         </button>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-3 xl:grid-cols-5">
         <MetricCard label="Respondentes" value={String(analytics.summary.totalRespondents)} />
         <MetricCard label="Concluíram" value={String(analytics.summary.completedStudents)} />
         <MetricCard label="Média da prova" value={`${analytics.summary.averageScorePercent}%`} />
@@ -136,31 +143,31 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
       {activeTab === "geral" ? (
         <>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="surface-panel p-5">
-          <p className="text-lg font-bold text-slate-500">Maior nota</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.highestScore}</p>
+      <section className="grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="surface-panel p-4 md:p-5">
+          <p className="text-sm md:text-lg font-bold text-slate-500">Maior nota</p>
+          <p className="mt-2 text-2xl md:text-3xl font-black text-slate-950">{analytics.summary.highestScore}</p>
         </div>
-        <div className="surface-panel p-5">
-          <p className="text-lg font-bold text-slate-500">Menor nota</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.lowestScore}</p>
+        <div className="surface-panel p-4 md:p-5">
+          <p className="text-sm md:text-lg font-bold text-slate-500">Menor nota</p>
+          <p className="mt-2 text-2xl md:text-3xl font-black text-slate-950">{analytics.summary.lowestScore}</p>
         </div>
-        <div className="surface-panel p-5">
-          <p className="text-lg font-bold text-slate-500">Taxa de conclusão</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{analytics.summary.completionRate}%</p>
+        <div className="surface-panel p-4 md:p-5">
+          <p className="text-sm md:text-lg font-bold text-slate-500">Taxa conclusão</p>
+          <p className="mt-2 text-2xl md:text-3xl font-black text-slate-950">{analytics.summary.completionRate}%</p>
         </div>
-        <div className="surface-panel p-5">
-          <p className="text-lg font-bold text-slate-500">Feedbacks recebidos</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{analytics.feedbackAnalytics.responseCount}</p>
+        <div className="surface-panel p-4 md:p-5">
+          <p className="text-sm md:text-lg font-bold text-slate-500">Feedbacks</p>
+          <p className="mt-2 text-2xl md:text-3xl font-black text-slate-950">{analytics.feedbackAnalytics.responseCount}</p>
         </div>
       </section>
 
-      <section className="grid w-full gap-2">
-        <ChartCard title="Distribuição das notas" subtitle="Faixas de desempenho da prova">
+      <section className="grid w-full min-w-0 gap-2">
+        <ChartCard title="Distribuição das notas" subtitle="Faixas de desempenho da prova" minWidth={500}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.scoreDistribution}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="label" stroke="#475569" />
+              <XAxis dataKey="label" stroke="#475569" interval={0} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#475569" />
               <Tooltip />
               <Bar dataKey="value" fill="#c1121f" radius={[8, 8, 0, 0]} />
@@ -204,11 +211,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </div>
         </ChartCard>
 
-        <ChartCard title="Disciplinas frágeis" subtitle="Percentual de acerto e erro por disciplina">
+        <ChartCard title="Disciplinas frágeis" subtitle="Percentual de acerto e erro por disciplina" minWidth={600}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.pedagogicalInsights.difficultyByDiscipline}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="discipline" stroke="#475569" interval={0} angle={-12} textAnchor="end" height={70} />
+              <XAxis dataKey="discipline" stroke="#475569" interval={0} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#475569" />
               <Tooltip />
               <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
@@ -217,11 +224,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </ResponsiveContainer>
         </ChartCard>
 
-         <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão">
+         <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão" minWidth={700}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={topQuestionChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="code" stroke="#475569" />
+              <XAxis dataKey="code" stroke="#475569" interval={0} angle={-45} textAnchor="end" height={100} />
               <YAxis stroke="#475569" />
               <Tooltip />
               <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
@@ -232,7 +239,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
 
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid w-full min-w-0 gap-4 xl:grid-cols-2">
         <ChartCard title="Status de conclusão" subtitle="Concluíram x em andamento">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -261,7 +268,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
       </section>
 
       <section className="grid w-full gap-2">
-        <ChartCard title="Percepção da turma" subtitle="Médias das respostas em escala">
+        <ChartCard title="Percepção da turma" subtitle="Médias das respostas em escala" minWidth={500}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.feedbackAnalytics.scaleAverages}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -273,7 +280,7 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Conteúdos frágeis" subtitle="Temas mais citados ou com maior fragilidade">
+        <ChartCard title="Conteúdos frágeis" subtitle="Temas mais citados ou com maior fragilidade" minWidth={600}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.pedagogicalInsights.difficultyByTheme}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -624,10 +631,10 @@ function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult[
   if (!saepInsights) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       <SaepTableCard 
         title="Desempenho por Capacidade"
-        icon="⚡"
+        icon={<Brain className="w-6 h-6 text-indigo-500" />}
         items={saepInsights.capacities.map(item => ({
           label: item.label,
           description: item.description,
@@ -640,7 +647,7 @@ function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult[
 
       <SaepTableCard 
         title="Desempenho por Objeto de Conhecimento"
-        icon="💡"
+        icon={<Lightbulb className="w-6 h-6 text-amber-500" />}
         items={saepInsights.knowledgeObjects.map(item => ({
           label: item.label,
           count: item.totalQuestions,
@@ -652,7 +659,7 @@ function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult[
 
       <SaepTableCard 
         title="Desempenho por Disciplina"
-        icon="📚"
+        icon={<BookOpen className="w-6 h-6 text-sky-500" />}
         items={saepInsights.disciplines.map(item => ({
           label: item.label,
           count: item.totalQuestions,
@@ -664,7 +671,7 @@ function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult[
 
       <SaepTableCard 
         title="Desempenho por Subtema"
-        icon="🏷️"
+        icon={<Tags className="w-6 h-6 text-rose-500" />}
         items={saepInsights.subthemes.map(item => ({
           label: item.label,
           count: item.totalQuestions,
@@ -676,7 +683,7 @@ function SaepAnalyticsTab({ saepInsights }: { saepInsights: ExamAnalyticsResult[
       
       <SaepTableCard 
         title="Desempenho por Dificuldade"
-        icon="📈"
+        icon={<TrendingUp className="w-6 h-6 text-emerald-500" />}
         items={saepInsights.difficulties.map(item => ({
           label: item.label,
           count: item.totalQuestions,
@@ -697,7 +704,7 @@ function SaepTableCard({
   attentionLabel
 }: {
   title: string;
-  icon: string;
+  icon: ReactNode;
   items: Array<{ label: string; description?: string; count: number; accuracy: number }>;
   attentionThreshold: number;
   attentionLabel: string;
@@ -709,7 +716,9 @@ function SaepTableCard({
   return (
     <section className="surface-panel overflow-hidden">
       <div className="flex items-center gap-2 p-5 md:p-6 border-b border-slate-100">
-        <span className="text-xl">{icon}</span>
+        <div className="flex items-center justify-center p-2 rounded-lg bg-slate-50 border border-slate-100 shadow-sm">
+          {icon}
+        </div>
         <h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3>
       </div>
       
@@ -763,7 +772,7 @@ function SaepTableCard({
       {lowPerformanceItems.length > 0 && (
         <div className="m-5 md:m-6 rounded-xl border border-red-100 bg-red-50 p-4">
           <p className="font-bold text-red-700 flex items-center gap-2">
-            ⚠️ {attentionLabel} abaixo de {attentionThreshold}% — requerem atenção
+            <AlertTriangle className="w-5 h-5" /> {attentionLabel} abaixo de {attentionThreshold}% — requerem atenção
           </p>
           <ul className="mt-2 space-y-1">
             {lowPerformanceItems.map((item, i) => (

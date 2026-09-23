@@ -14,7 +14,10 @@ export default async function AttemptPage({ params }: { params: Promise<{ attemp
             include: {
               question: {
                 include: {
-                  options: { orderBy: { position: "asc" } }
+                  options: { 
+                    where: { archivedAt: null },
+                    orderBy: { position: "asc" } 
+                  }
                 }
               }
             },

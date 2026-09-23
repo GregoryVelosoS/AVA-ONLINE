@@ -16,20 +16,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Tentativa inválida" }, { status: 400 });
   }
 
-  await finalizeAttempt(parsed.data.attemptId, {
-    generalDifficulty: parsed.data.generalDifficulty,
-    difficultContents: parsed.data.difficultContents,
-    commonDifficultyType: parsed.data.commonDifficultyType,
-    selfPerformance: parsed.data.selfPerformance,
-    explanationClarity: parsed.data.explanationClarity,
-    classPace: parsed.data.classPace,
-    exerciseUsefulness: parsed.data.exerciseUsefulness,
-    soloConfidence: parsed.data.soloConfidence,
-    helpfulClassFormats: parsed.data.helpfulClassFormats,
-    needsReview: parsed.data.needsReview,
-    toolDifficulties: parsed.data.toolDifficulties,
-    finalComment: parsed.data.finalComment
-  });
+  try {
+    await finalizeAttempt(parsed.data.attemptId, {
+      generalDifficulty: parsed.data.generalDifficulty,
+      difficultContents: parsed.data.difficultContents,
+      commonDifficultyType: parsed.data.commonDifficultyType,
+      selfPerformance: parsed.data.selfPerformance,
+      explanationClarity: parsed.data.explanationClarity,
+      classPace: parsed.data.classPace,
+      exerciseUsefulness: parsed.data.exerciseUsefulness,
+      soloConfidence: parsed.data.soloConfidence,
+      helpfulClassFormats: parsed.data.helpfulClassFormats,
+      needsReview: parsed.data.needsReview,
+      toolDifficulties: parsed.data.toolDifficulties,
+      finalComment: parsed.data.finalComment
+    });
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error: any) {
+    console.error("Erro ao enviar feedback da prova:", error);
+    const errorMessage = error?.message || "Ocorreu um erro interno ao tentar salvar as respostas no banco de dados.";
+    return NextResponse.json({ error: `Erro no servidor: ${errorMessage}` }, { status: 500 });
+  }
 }

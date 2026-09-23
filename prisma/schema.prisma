@@ -217,6 +217,7 @@ model QuestionOption {
   supportCode       String?           @db.Text
   supportImagePath  String?
   supportImageName  String?
+  archivedAt        DateTime?
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answers  Answer[]
@@ -427,7 +428,7 @@ model FeedbackFormResponse {
   contentAlignmentScore Int
   selfAssessmentScore   Int
   confusingQuestionFlag Boolean
-  openComment           String?
+  openComment           String?  @db.Text
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -440,9 +441,9 @@ model FeedbackAnswer {
   feedbackId      String
   questionKey     FeedbackQuestionKey
   answerType      FeedbackAnswerType
-  valueText       String?
+  valueText       String?            @db.Text
   valueScale      Int?
-  selectedOptions String?
+  selectedOptions String?            @db.Text
   createdAt       DateTime           @default(now())
 
   feedback FeedbackFormResponse @relation(fields: [feedbackId], references: [id], onDelete: Cascade)

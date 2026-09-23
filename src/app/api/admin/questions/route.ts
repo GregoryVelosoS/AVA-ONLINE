@@ -9,7 +9,10 @@ export async function GET() {
   const data = await prisma.question.findMany({
     include: {
       discipline: true,
-      options: { orderBy: { position: "asc" } },
+      options: { 
+        where: { archivedAt: null },
+        orderBy: { position: "asc" } 
+      },
       tags: { include: { tag: true } },
       themes: {
         include: {
