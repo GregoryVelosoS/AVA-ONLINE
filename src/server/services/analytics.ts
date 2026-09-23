@@ -760,6 +760,7 @@ export const getExamAnalytics = unstable_cache(
           const incorrectCount = stats.total - stats.correct;
           return {
             discipline,
+            totalQuestions: stats.questionIds.size,
             acerto: round(percentage(stats.correct, stats.total), 1),
             erro: round(percentage(incorrectCount, stats.total), 1)
           };

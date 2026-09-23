@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
 import { questionSchema } from "@/server/validators/schemas";
+import { revalidateTag } from "next/cache";
 
 export async function GET() {
   await requireAdminSession();
@@ -119,6 +120,9 @@ export async function POST(request: NextRequest) {
       }
     }
   });
+
+  revalidateTag("analytics");
+  revalidateTag("questions");
 
   return NextResponse.json(created, { status: 201 });
 }

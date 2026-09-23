@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode, Fragment } from "react";
+import { useState, useMemo, type ReactNode, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Brain, Tags, BookOpen, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import {
@@ -14,10 +14,13 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  LabelList,
+  Legend
 } from "recharts";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import type { ExamAnalyticsResult } from "@/server/services/analytics";
+import { useTableSort } from "@/hooks/use-table-sort";
 
 const pieColors = ["#c1121f", "#101010", "#e5e7eb", "#fca5a5"];
 
@@ -88,6 +91,34 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
     }
   }
 
+  async function handleDeleteAttempt(attemptId: string) {
+    if (!confirm("Tem certeza que deseja EXCLUIR PERMANENTEMENTE esta tentativa? Esta ação não pode ser desfeita e apagará todas as respostas do banco de dados.")) {
+      return;
+    }
+
+    setCancelingId(attemptId);
+    try {
+      const res = await fetch(`/api/admin/attempts/${attemptId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert("Falha ao excluir a tentativa.");
+      }
+    } finally {
+      setCancelingId(null);
+    }
+  }
+
+  const [filterText, setFilterText] = useState("");
+
+  const studentRankingTable = useTableSort(analytics.studentRanking, { key: "scorePercent", direction: "desc" });
+
+  const filteredStudents = useMemo(() => {
+    return studentRankingTable.sortedData.filter((student) => 
+      student.studentName.toLowerCase().includes(filterText.toLowerCase())
+    );
+  }, [studentRankingTable.sortedData, filterText]);
+
   if (!analytics.selectedExam || !analytics.summary) {
     return (
       <section className="surface-panel p-8 text-center">
@@ -101,7 +132,8 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
   const topQuestionChart = analytics.questionPerformance.slice(0, 8).map((question) => ({
     code: question.code,
     acerto: question.accuracy,
-    erro: question.errorRate
+    erro: question.errorRate,
+    correctCount: question.correctCount
   }));
 
   const topStudentsChart = analytics.topStudents.map((student) => ({
@@ -196,7 +228,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
                         <Cell fill="#111111" />
                         <Cell fill="#c1121f" />
                       </Pie>
-                      <Tooltip formatter={(value: number) => `${value}%`} />
+                      <Tooltip 
+                        formatter={(value: number) => `${value}%`} 
+                        position={{ y: -20 }}
+                        wrapperStyle={{ zIndex: 100 }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -206,6 +242,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
                 <p className="max-w-[120px] text-center text-xs font-semibold leading-tight text-slate-700">
                   {item.discipline}
                 </p>
+                {item.totalQuestions !== undefined && (
+                  <p className="mt-0.5 text-center text-[10px] font-medium text-slate-500">
+                    {item.totalQuestions} {item.totalQuestions === 1 ? "questão" : "questões"}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -218,21 +259,30 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
               <XAxis dataKey="discipline" stroke="#475569" interval={0} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#475569" />
               <Tooltip />
-              <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              <Bar dataKey="acerto" name="Acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="erro" name="Erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
          <ChartCard title="Questões mais críticas" subtitle="Percentual de acerto e erro por questão" minWidth={700}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topQuestionChart}>
+            <BarChart data={topQuestionChart} margin={{ top: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="code" stroke="#475569" interval={0} angle={-45} textAnchor="end" height={100} />
               <YAxis stroke="#475569" />
               <Tooltip />
-              <Bar dataKey="acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              <Bar dataKey="acerto" name="Acerto" stackId="a" fill="#111111" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="erro" name="Erro" stackId="a" fill="#c1121f" radius={[6, 6, 0, 0]}>
+                <LabelList 
+                  dataKey="correctCount" 
+                  position="top" 
+                  formatter={(val: number) => `${val} acertos`} 
+                  style={{ fill: '#475569', fontSize: 12, fontWeight: 700 }} 
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -328,24 +378,43 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
 
       <section className="grid gap-4 lg:grid-cols-[1]">
         <div className="surface-panel overflow-hidden p-0">
-          <div className="border-b border-slate-200 px-5 py-4">
-            <h3 className="text-lg font-black tracking-tight text-slate-950">Ranking de alunos</h3>
-            <p className="mt-1 text-lg text-slate-500">Pesquisa por aluno e filtro aplicados refletem nesta tabela.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 px-5 py-4 gap-4">
+            <div>
+              <h3 className="text-lg font-black tracking-tight text-slate-950">Ranking de alunos</h3>
+              <p className="mt-1 text-sm text-slate-500">Ordene as colunas clicando no cabeçalho ou busque por aluno.</p>
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar aluno..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm w-full sm:w-64"
+            />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-lg">
-              <thead className="bg-black text-left text-white">
+              <thead className="bg-black text-left text-white select-none">
                 <tr>
-                  <th className="px-4 py-3">Aluno</th>
-                  <th className="px-4 py-3">Nota %</th>
-                  <th className="px-4 py-3">Acertos</th>
-                  <th className="px-4 py-3">Erros</th>
-                  <th className="px-4 py-3">Tempo</th>
-                  <th className="px-4 py-3 text-right">Acao</th>
+                  <th className="px-4 py-3 cursor-pointer group hover:bg-slate-800 transition" onClick={() => studentRankingTable.requestSort('studentName')}>
+                    Aluno {studentRankingTable.getSortIcon('studentName')}
+                  </th>
+                  <th className="px-4 py-3 cursor-pointer group hover:bg-slate-800 transition" onClick={() => studentRankingTable.requestSort('scorePercent')}>
+                    Nota % {studentRankingTable.getSortIcon('scorePercent')}
+                  </th>
+                  <th className="px-4 py-3 cursor-pointer group hover:bg-slate-800 transition" onClick={() => studentRankingTable.requestSort('correctCount')}>
+                    Acertos {studentRankingTable.getSortIcon('correctCount')}
+                  </th>
+                  <th className="px-4 py-3 cursor-pointer group hover:bg-slate-800 transition" onClick={() => studentRankingTable.requestSort('incorrectCount')}>
+                    Erros {studentRankingTable.getSortIcon('incorrectCount')}
+                  </th>
+                  <th className="px-4 py-3 cursor-pointer group hover:bg-slate-800 transition" onClick={() => studentRankingTable.requestSort('durationMinutes')}>
+                    Tempo {studentRankingTable.getSortIcon('durationMinutes')}
+                  </th>
+                  <th className="px-4 py-3 text-right">Ação</th>
                 </tr>
               </thead>
               <tbody>
-                {analytics.studentRanking.map((student) => (
+                {filteredStudents.map((student) => (
                   <tr key={student.attemptId} className="border-t border-slate-100">
                     <td className="px-4 py-3 font-semibold text-slate-950">{student.studentName}</td>
                     <td className="px-4 py-3">{student.scorePercent}%</td>
@@ -402,6 +471,14 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
                               className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-600 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
                             >
                               {cancelingId === student.attemptId ? "Reativando..." : "Reativar"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={cancelingId === student.attemptId}
+                              onClick={() => handleDeleteAttempt(student.attemptId)}
+                              className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-red-700 transition hover:border-red-300 hover:bg-red-100 hover:text-red-900 disabled:opacity-50"
+                            >
+                              {cancelingId === student.attemptId ? "..." : "Excluir"}
                             </button>
                             <Link
                               className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-slate-500 transition hover:border-slate-400 hover:bg-slate-200 hover:text-slate-700"

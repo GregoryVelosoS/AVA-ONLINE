@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
 import { questionImportSchema } from "@/server/validators/schemas";
+import { revalidateTag } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -116,6 +117,9 @@ export async function POST(request: NextRequest) {
         })
       )
     );
+
+    revalidateTag("analytics");
+    revalidateTag("questions");
 
     return NextResponse.json({ count: created.length }, { status: 201 });
   } catch (error) {

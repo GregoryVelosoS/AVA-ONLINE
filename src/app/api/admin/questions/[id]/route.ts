@@ -3,6 +3,7 @@ import { requireAdminSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
 import { questionSchema } from "@/server/validators/schemas";
 import { deleteManagedQuestionSupportAsset } from "@/server/uploads";
+import { revalidateTag } from "next/cache";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -188,6 +189,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     await deleteManagedQuestionSupportAsset(oldFilePath);
   }
 
+  revalidateTag("analytics");
+  revalidateTag("questions");
+
   return NextResponse.json(updated);
 }
 
@@ -210,6 +214,9 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
 
     await deleteManagedQuestionSupportAsset(existing.supportImagePath);
     await deleteManagedQuestionSupportAsset(existing.supportFilePath);
+
+    revalidateTag("analytics");
+    revalidateTag("questions");
 
     return NextResponse.json({ ok: true });
   } catch {
