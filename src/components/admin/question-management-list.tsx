@@ -18,6 +18,10 @@ type QuestionOption = {
   content: string;
   isCorrect: boolean;
   position: number;
+  visualSupportType?: "NONE" | "ASSET" | "CODE";
+  supportCode?: string | null;
+  supportImagePath?: string | null;
+  supportImageName?: string | null;
 };
 
 export type QuestionListItem = {
@@ -434,6 +438,17 @@ function QuestionPreviewModal({ question, onClose }: { question: QuestionListIte
                           </span>
                         ) : null}
                       </div>
+
+                      {(option.supportCode || option.supportImagePath) && (
+                        <div className="mt-2 text-left">
+                          <VisualSupportBlock
+                            visualSupportType={option.visualSupportType || (option.supportCode ? "CODE" : "ASSET")}
+                            supportCode={option.supportCode}
+                            supportImagePath={option.supportImagePath}
+                            supportImageName={option.supportImageName}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
               </div>

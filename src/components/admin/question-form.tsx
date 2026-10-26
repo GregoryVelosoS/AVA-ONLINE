@@ -122,6 +122,40 @@ function createDefaultState(disciplines: Discipline[]): QuestionFormState {
   };
 }
 
+function normalizeFormState(state: QuestionFormState): QuestionFormState {
+  const visualSupportType =
+    state.visualSupportType && state.visualSupportType !== "NONE"
+      ? state.visualSupportType
+      : state.supportCode?.trim()
+      ? "CODE"
+      : state.supportImagePath?.trim() || state.supportFilePath?.trim()
+      ? "ASSET"
+      : "NONE";
+
+  return {
+    ...state,
+    visualSupportType,
+    options: (state.options || []).map((option) => {
+      const optionVisualType =
+        option.visualSupportType && option.visualSupportType !== "NONE"
+          ? option.visualSupportType
+          : option.supportCode?.trim()
+          ? "CODE"
+          : option.supportImagePath?.trim()
+          ? "ASSET"
+          : "NONE";
+
+      return {
+        ...option,
+        visualSupportType: optionVisualType,
+        supportCode: option.supportCode ?? "",
+        supportImagePath: option.supportImagePath ?? "",
+        supportImageName: option.supportImageName ?? ""
+      };
+    })
+  };
+}
+
 export function QuestionForm({
   disciplines,
   themes = [],
@@ -137,7 +171,10 @@ export function QuestionForm({
   const [isPending, startTransition] = useTransition();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
-  const [form, setForm] = useState<QuestionFormState>(initialQuestion ?? createDefaultState(disciplines));
+  const [uploadingOptionIndex, setUploadingOptionIndex] = useState<number | null>(null);
+  const [form, setForm] = useState<QuestionFormState>(() =>
+    normalizeFormState(initialQuestion ?? createDefaultState(disciplines))
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -563,8 +600,15 @@ export function QuestionForm({
                 </label>
 
                 {imagePreview ? (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                    <Image alt={form.supportImageName || "Imagem de apoio"} className="h-auto w-full object-cover" height={360} src={imagePreview} unoptimized width={720} />
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    <Image
+                      alt={form.supportImageName || "Imagem de apoio"}
+                      className="h-auto w-full max-h-80 object-contain rounded-xl bg-white"
+                      height={360}
+                      src={imagePreview}
+                      unoptimized
+                      width={720}
+                    />
                   </div>
                 ) : (
                   <p className="mt-4 text-lg text-slate-500">Nenhuma imagem associada.</p>
@@ -673,7 +717,15 @@ export function QuestionForm({
                       <select 
                         className="input-base !py-2 !text-base w-full sm:w-48"
                         value={option.visualSupportType || "NONE"}
-                        onChange={(e) => updateOption(index, { visualSupportType: e.target.value as VisualSupportType, supportCode: "", supportImagePath: "", supportImageName: "" })}
+                        onChange={(e) => {
+                          const newType = e.target.value as VisualSupportType;
+                          updateOption(index, {
+                            visualSupportType: newType,
+                            ...(newType === "NONE" ? { supportCode: "", supportImagePath: "", supportImageName: "" } : {}),
+                            ...(newType === "CODE" ? { supportImagePath: "", supportImageName: "" } : {}),
+                            ...(newType === "ASSET" ? { supportCode: "" } : {})
+                          });
+                        }}
                       >
                         <option value="NONE">Sem suporte extra</option>
                         <option value="CODE">Bloco de Código</option>
@@ -682,39 +734,87 @@ export function QuestionForm({
                     </div>
 
                     {option.visualSupportType === "CODE" && (
-                      <textarea
-                        className="input-base min-h-24 font-mono text-sm"
-                        placeholder="Cole o código de apoio para essa alternativa..."
-                        value={option.supportCode || ""}
-                        onChange={(e) => updateOption(index, { supportCode: e.target.value })}
-                      />
+                      <div className="mt-1 space-y-1">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          Código de apoio da alternativa
+                        </label>
+                        <textarea
+                          className="input-base min-h-24 font-mono text-sm"
+                          placeholder="Cole o código de apoio para essa alternativa..."
+                          spellCheck={false}
+                          value={option.supportCode || ""}
+                          onChange={(e) => updateOption(index, { supportCode: e.target.value })}
+                        />
+                      </div>
                     )}
 
                     {option.visualSupportType === "ASSET" && (
                       <div className="rounded-xl border border-slate-200 bg-white p-3 flex flex-col gap-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            if (e.target.files?.[0]) {
-                              try {
-                                const res = await uploadAsset(e.target.files[0], "image");
-                                if (res) {
-                                  updateOption(index, {
-                                    supportImagePath: res.path,
-                                    supportImageName: res.name
-                                  });
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Imagem da alternativa
+                          </label>
+                          {option.supportImagePath ? (
+                            <button
+                              type="button"
+                              className="text-xs font-bold text-red-600 hover:text-red-800 underline"
+                              onClick={() => updateOption(index, { supportImagePath: "", supportImageName: "" })}
+                            >
+                              Remover imagem
+                            </button>
+                          ) : null}
+                        </div>
+
+                        <label className="block">
+                          <span className="btn-secondary cursor-pointer text-sm py-1.5 px-3">
+                            {uploadingOptionIndex === index
+                              ? "Enviando imagem..."
+                              : option.supportImagePath
+                              ? "Alterar imagem"
+                              : "Selecionar imagem"}
+                          </span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            disabled={uploadingOptionIndex === index}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  setUploadingOptionIndex(index);
+                                  const res = await uploadAsset(file, "image");
+                                  if (res) {
+                                    updateOption(index, {
+                                      supportImagePath: res.path,
+                                      supportImageName: res.name
+                                    });
+                                  }
+                                } catch (err: unknown) {
+                                  alert(err instanceof Error ? err.message : "Falha ao enviar imagem da alternativa");
+                                } finally {
+                                  setUploadingOptionIndex(null);
                                 }
-                              } catch (err: any) {
-                                alert(err.message);
                               }
-                            }
-                          }}
-                        />
-                        {option.supportImagePath && (
-                          <div className="mt-2 text-sm text-green-700 font-semibold bg-green-50 p-2 rounded-lg border border-green-200">
-                            ✓ Imagem enviada: {option.supportImageName}
+                            }}
+                          />
+                        </label>
+
+                        {option.supportImagePath ? (
+                          <div className="mt-2 space-y-2">
+                            <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 max-w-sm">
+                              <img
+                                src={getQuestionSupportAssetUrl(option.supportImagePath) || ""}
+                                alt={option.supportImageName || "Imagem da alternativa"}
+                                className="h-auto max-h-48 w-full object-contain rounded-lg bg-white"
+                              />
+                            </div>
+                            <p className="text-xs font-medium text-slate-600">
+                              ✓ Arquivo: {option.supportImageName || option.supportImagePath}
+                            </p>
                           </div>
+                        ) : (
+                          <p className="text-xs text-slate-400">Nenhuma imagem selecionada para esta alternativa.</p>
                         )}
                       </div>
                     )}

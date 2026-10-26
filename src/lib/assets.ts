@@ -7,11 +7,16 @@ export function getQuestionSupportAssetUrl(value?: string | null) {
     return null;
   }
 
-  if (isExternalAssetPath(value)) {
+  if (isExternalAssetPath(value) || value.startsWith("data:") || value.startsWith("blob:")) {
     return value;
   }
 
-  return `/api/assets/question-support/${value}`;
+  if (value.startsWith("/api/assets/question-support/")) {
+    return value;
+  }
+
+  const clean = value.replace(/^\/+/, "");
+  return `/api/assets/question-support/${clean}`;
 }
 
 export function getIssueReportScreenshotUrl(value?: string | null) {

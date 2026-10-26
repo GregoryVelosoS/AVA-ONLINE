@@ -47,7 +47,14 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
     difficulty: question.difficulty,
     disciplineId: question.disciplineId,
     context: question.context ?? "",
-    visualSupportType: question.visualSupportType,
+    visualSupportType:
+      question.visualSupportType && question.visualSupportType !== "NONE"
+        ? question.visualSupportType
+        : question.supportCode?.trim()
+        ? "CODE"
+        : question.supportImagePath?.trim() || question.supportFilePath?.trim()
+        ? "ASSET"
+        : "NONE",
     supportCode: question.supportCode ?? "",
     expectedFeedback: question.expectedFeedback ?? "",
     answerExplanation: question.answerExplanation ?? "",
@@ -74,7 +81,18 @@ export default async function AdminQuestionDetailPage({ params }: PageProps) {
       id: option.id,
       label: option.label,
       content: option.content,
-      isCorrect: option.isCorrect
+      isCorrect: option.isCorrect,
+      visualSupportType:
+        option.visualSupportType && option.visualSupportType !== "NONE"
+          ? option.visualSupportType
+          : option.supportCode?.trim()
+          ? "CODE"
+          : option.supportImagePath?.trim()
+          ? "ASSET"
+          : "NONE",
+      supportCode: option.supportCode ?? "",
+      supportImagePath: option.supportImagePath ?? "",
+      supportImageName: option.supportImageName ?? ""
     }))
   };
 

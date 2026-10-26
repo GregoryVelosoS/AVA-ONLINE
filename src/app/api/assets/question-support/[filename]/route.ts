@@ -43,16 +43,26 @@ export async function GET(_: NextRequest, context: RouteContext) {
       }
     });
 
-    const mimeType =
+    let mimeType =
       question?.supportImagePath === filename
         ? question.supportImageMime
         : question?.supportFilePath === filename
           ? question.supportFileMime
-          : "application/octet-stream";
+          : null;
+
+    if (!mimeType) {
+      const ext = path.extname(filename).toLowerCase();
+      if (ext === ".png") mimeType = "image/png";
+      else if (ext === ".jpg" || ext === ".jpeg") mimeType = "image/jpeg";
+      else if (ext === ".webp") mimeType = "image/webp";
+      else if (ext === ".gif") mimeType = "image/gif";
+      else if (ext === ".pdf") mimeType = "application/pdf";
+      else mimeType = "application/octet-stream";
+    }
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        "Content-Type": mimeType || "application/octet-stream",
+        "Content-Type": mimeType,
         "Cache-Control": "public, max-age=3600"
       }
     });

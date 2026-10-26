@@ -62,7 +62,11 @@ export default async function AdminQuestionsPage() {
       label: option.label,
       content: option.content,
       isCorrect: option.isCorrect,
-      position: option.position
+      position: option.position,
+      visualSupportType: option.visualSupportType,
+      supportCode: option.supportCode,
+      supportImagePath: option.supportImagePath,
+      supportImageName: option.supportImageName
     }))
   }));
 
