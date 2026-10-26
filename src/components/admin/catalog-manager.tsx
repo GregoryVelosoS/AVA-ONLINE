@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type Discipline = {
   id: string;
@@ -95,9 +96,9 @@ export function CatalogManager({
         })
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: unknown };
       if (!response.ok) {
-        setError(payload.error || `Não foi possível salvar ${itemLabel.toLowerCase()}.`);
+        setError(extractApiErrorMessage(payload.error, `Não foi possível salvar ${itemLabel.toLowerCase()}.`));
         return;
       }
 
@@ -147,9 +148,9 @@ export function CatalogManager({
         })
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: unknown };
       if (!response.ok) {
-        setError(payload.error || `Não foi possível atualizar ${itemLabel.toLowerCase()}.`);
+        setError(extractApiErrorMessage(payload.error, `Não foi possível atualizar ${itemLabel.toLowerCase()}.`));
         return;
       }
 
@@ -176,9 +177,9 @@ export function CatalogManager({
         method: "DELETE"
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: unknown };
       if (!response.ok) {
-        setError(payload.error || `Não foi possível excluir ${itemLabel.toLowerCase()}.`);
+        setError(extractApiErrorMessage(payload.error, `Não foi possível excluir ${itemLabel.toLowerCase()}.`));
         return;
       }
 

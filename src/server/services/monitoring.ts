@@ -1,11 +1,14 @@
 import { prisma } from "@/server/db/prisma";
 import { getExamDisplayStatus } from "@/lib/exam-status";
+import { autoCloseExpiredAttempts } from "@/server/services/attempts";
 
 function minutesBetween(start: Date, end: Date) {
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000));
 }
 
 export async function getRealtimeMonitoring(examId?: string) {
+  await autoCloseExpiredAttempts(examId);
+
   const now = new Date();
   const exams = await prisma.exam.findMany({
     where: examId
@@ -30,12 +33,18 @@ export async function getRealtimeMonitoring(examId?: string) {
   });
 
   const activeExamRows = exams.map((exam) => {
+    const maxMinutes = exam.timeLimitMinutes ?? null;
     const inProgressAttempts = exam.attempts.filter((attempt) => attempt.status === "STARTED" || attempt.status === "IN_PROGRESS");
     const finishedAttempts = exam.attempts.filter((attempt) => attempt.status === "SUBMITTED");
+
     const averageElapsedMinutes =
       inProgressAttempts.length > 0
         ? Math.round(
-            inProgressAttempts.reduce((sum, attempt) => sum + minutesBetween(attempt.startedAt, now), 0) / inProgressAttempts.length
+            inProgressAttempts.reduce((sum, attempt) => {
+              const raw = minutesBetween(attempt.startedAt, now);
+              const capped = maxMinutes != null ? Math.min(raw, maxMinutes) : raw;
+              return sum + capped;
+            }, 0) / inProgressAttempts.length
           )
         : 0;
 
@@ -49,17 +58,22 @@ export async function getRealtimeMonitoring(examId?: string) {
       inProgressCount: inProgressAttempts.length,
       finishedCount: finishedAttempts.length,
       averageElapsedMinutes,
-      attempts: exam.attempts.map((attempt) => ({
-        id: attempt.id,
-        studentName: attempt.profile?.studentName || "Aluno sem identificação",
-        classGroupName: attempt.profile?.classGroupName || "Sem turma",
-        status: attempt.status,
-        startedAt: attempt.startedAt.toISOString(),
-        elapsedMinutes:
+      attempts: exam.attempts.map((attempt) => {
+        const rawMinutes =
           attempt.status === "SUBMITTED"
             ? Math.round((attempt.durationSeconds || 0) / 60)
-            : minutesBetween(attempt.startedAt, now)
-      }))
+            : minutesBetween(attempt.startedAt, now);
+        const elapsedMinutes = maxMinutes != null ? Math.min(rawMinutes, maxMinutes) : rawMinutes;
+
+        return {
+          id: attempt.id,
+          studentName: attempt.profile?.studentName || "Aluno sem identificação",
+          classGroupName: attempt.profile?.classGroupName || "Sem turma",
+          status: attempt.status,
+          startedAt: attempt.startedAt.toISOString(),
+          elapsedMinutes
+        };
+      })
     };
   });
 

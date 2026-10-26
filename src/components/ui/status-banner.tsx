@@ -1,9 +1,11 @@
+import { extractApiErrorMessage } from "@/lib/api-errors";
+
 export function StatusBanner({
   tone,
   message
 }: {
   tone: "error" | "success" | "info";
-  message: string;
+  message: unknown;
 }) {
   const toneClass =
     tone === "error"
@@ -12,5 +14,7 @@ export function StatusBanner({
         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
         : "border-red-200 bg-red-100 text-red-800";
 
-  return <p className={`rounded-xl border px-3 py-2.5 text-lg font-medium ${toneClass}`}>{message}</p>;
+  const text = typeof message === "string" ? message : extractApiErrorMessage(message);
+
+  return <p className={`rounded-xl border px-3 py-2.5 text-lg font-medium ${toneClass}`}>{text}</p>;
 }

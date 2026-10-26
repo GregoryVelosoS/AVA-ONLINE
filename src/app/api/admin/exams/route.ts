@@ -4,6 +4,7 @@ import { prisma } from "@/server/db/prisma";
 import { getExamBindingValidationError } from "@/server/services/exam-bindings";
 import { examSchema } from "@/server/validators/schemas";
 import { normalizePublicCode } from "@/lib/exam-status";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 function buildPublicSlug(publicCode: string) {
   return normalizePublicCode(publicCode).toLowerCase();
@@ -51,7 +52,9 @@ export async function POST(request: NextRequest) {
   const parsed = examSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const flattened = parsed.error.flatten();
+    const errorString = extractApiErrorMessage(flattened, "Dados da prova inválidos.");
+    return NextResponse.json({ error: errorString, details: flattened }, { status: 400 });
   }
 
   if (parsed.data.status === "PUBLISHED" && parsed.data.questionIds.length === 0) {

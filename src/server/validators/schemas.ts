@@ -112,24 +112,24 @@ export const questionImportSchema = z.object({
 });
 
 export const examSchema = z.object({
-  title: z.string().min(3),
+  title: z.string().trim().min(3, "O nome da prova deve ter pelo menos 3 caracteres."),
   publicCode: z
     .string()
     .trim()
-    .min(4)
-    .max(20)
-    .regex(/^[A-Za-z0-9_-]+$/, "Use apenas letras, números, hífen ou underline."),
+    .min(2, "O código público deve ter pelo menos 2 caracteres.")
+    .max(30, "O código público deve ter no máximo 30 caracteres.")
+    .regex(/^[A-Za-z0-9_-]+$/, "Use apenas letras, números, hífen ou underline no código público."),
   description: optionalText,
-  disciplineId: z.string().uuid(),
-  targetClassGroupId: z.string().uuid(),
+  disciplineId: z.string().min(1, "Selecione a disciplina."),
+  targetClassGroupId: z.string().min(1, "Selecione a turma."),
   instructions: optionalText,
   startAt: z.string().datetime().optional().or(z.literal("")),
   endAt: z.string().datetime().optional().or(z.literal("")),
   timeLimitMinutes: z.coerce.number().int().min(1).max(1440).optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"]).default("DRAFT"),
   maxAttempts: z.coerce.number().int().min(1).default(1),
-  themeIds: z.array(z.string().uuid()).default([]),
-  questionIds: z.array(z.string().uuid()).default([])
+  themeIds: z.array(z.string().min(1)).default([]),
+  questionIds: z.array(z.string().min(1)).default([])
 });
 
 export const disciplineSchema = z.object({

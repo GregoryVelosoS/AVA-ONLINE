@@ -3,6 +3,7 @@ import { readQuestionSupportAsset } from "@/server/uploads";
 import { prisma } from "@/server/db/prisma";
 import { readFile } from "fs/promises";
 import path from "path";
+import os from "os";
 
 type RouteContext = {
   params: Promise<{ filename: string }>;
@@ -15,7 +16,7 @@ async function readBundledQuestionSupportAsset(fileName: string) {
     throw new Error("INVALID_ASSET_PATH");
   }
 
-  return readFile(path.join(process.cwd(), "public", "assets", "question-support", safeName));
+  return readFile(path.join(process.env.VERCEL === "1" ? os.tmpdir() : process.cwd(), "public", "assets", "question-support", safeName));
 }
 
 export async function GET(_: NextRequest, context: RouteContext) {

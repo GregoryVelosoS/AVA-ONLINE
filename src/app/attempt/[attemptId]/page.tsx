@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/server/db/prisma";
 import { AttemptRunner } from "@/components/exam/attempt-runner";
+import { finalizeAttempt, isAttemptTimeExpired, timeoutFeedbackDefaults } from "@/server/services/attempts";
 
 export default async function AttemptPage({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = await params;
@@ -30,6 +31,19 @@ export default async function AttemptPage({ params }: { params: Promise<{ attemp
 
   if (!attempt) {
     notFound();
+  }
+
+  if (attempt.status === "SUBMITTED") {
+    redirect(`/submitted/${attemptId}`);
+  }
+
+  if (attempt.status === "CANCELED") {
+    redirect("/?canceled=1");
+  }
+
+  if (isAttemptTimeExpired(attempt)) {
+    await finalizeAttempt(attemptId, timeoutFeedbackDefaults);
+    redirect(`/submitted/${attemptId}?timeout=1`);
   }
 
   const questions = attempt.exam.questions.map((eq) => ({

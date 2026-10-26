@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VisualSupportBlock } from "@/components/questions/visual-support-block";
 import { AttemptResultIdCard } from "@/components/exam/attempt-result-id-card";
+import { AttemptCleanup } from "@/components/exam/attempt-cleanup";
 import { getAttemptResultSummary } from "@/server/services/attempt-result";
 
 function formatScore(value: number) {
@@ -25,6 +26,7 @@ export default async function SubmittedPage({
 
   return (
     <main className="container-page space-y-6 py-8">
+      <AttemptCleanup attemptId={attemptId} />
       <section className="surface-panel space-y-6 p-6 md:p-8">
         <div className="space-y-3 text-center md:text-left">
           <p className="text-lg font-black uppercase tracking-[0.22em] text-red-700">Prova finalizada</p>

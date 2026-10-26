@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { answerSchema } from "@/server/validators/schemas";
 import { scoreObjectiveAnswer, recomputeAttemptScore } from "@/server/services/scoring";
-import { isAttemptTimeExpired } from "@/server/services/attempts";
+import { isAttemptTimeExpired, finalizeAttempt, timeoutFeedbackDefaults } from "@/server/services/attempts";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isAttemptTimeExpired(attempt)) {
+    await finalizeAttempt(attempt.id, timeoutFeedbackDefaults);
     return NextResponse.json({ error: "O tempo da prova se esgotou." }, { status: 409 });
   }
 

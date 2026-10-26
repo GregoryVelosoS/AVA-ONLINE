@@ -1,7 +1,12 @@
 export type ExamStatusValue = "DRAFT" | "PUBLISHED" | "CLOSED" | "ARCHIVED";
 
 export function normalizePublicCode(value: string) {
-  return value.trim().toUpperCase().replace(/\s+/g, "");
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
 }
 
 export function getExamAvailabilityMessage(input: {

@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { getExamDisplayStatus, type ExamStatusValue } from "@/lib/exam-status";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type ExamItem = {
   id: string;
@@ -60,9 +61,9 @@ export function ExamManagementList({ exams }: { exams: ExamItem[] }) {
         body: JSON.stringify({ action })
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: unknown };
       if (!response.ok) {
-        setMessage(payload.error || "Não foi possível atualizar o status da prova.");
+        setMessage(extractApiErrorMessage(payload.error, "Não foi possível atualizar o status da prova."));
         return;
       }
 
@@ -90,9 +91,9 @@ export function ExamManagementList({ exams }: { exams: ExamItem[] }) {
         method: "DELETE"
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: unknown };
       if (!response.ok) {
-        setMessage(payload.error || "Não foi possível excluir a prova.");
+        setMessage(extractApiErrorMessage(payload.error, "Não foi possível excluir a prova."));
         return;
       }
 

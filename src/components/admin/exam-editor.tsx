@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { normalizePublicCode } from "@/lib/exam-status";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type Discipline = {
   id: string;
@@ -170,10 +171,10 @@ export function ExamEditor({
       })
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as { error?: unknown };
 
     if (!response.ok) {
-      setError(payload.error || "Não foi possível salvar a prova.");
+      setError(extractApiErrorMessage(payload.error, "Não foi possível salvar a prova."));
       return;
     }
 
@@ -192,9 +193,9 @@ export function ExamEditor({
       })
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as { error?: unknown };
     if (!response.ok) {
-      setQuestionMessage(payload.error || "Não foi possível salvar as questões.");
+      setQuestionMessage(extractApiErrorMessage(payload.error, "Não foi possível salvar as questões."));
       return;
     }
 

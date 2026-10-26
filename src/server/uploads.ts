@@ -14,12 +14,13 @@ import {
 import { randomUUID } from "crypto";
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
+import os from "os";
 
-const uploadRoot = path.resolve(process.cwd(), process.env.UPLOAD_DIR || "./uploads");
+const isVercelRuntime = process.env.VERCEL === "1";
+const uploadRoot = path.resolve(isVercelRuntime ? os.tmpdir() : process.cwd(), process.env.UPLOAD_DIR || "./uploads");
 const questionSupportDir = path.join(uploadRoot, "question-support");
 const issueReportsDir = path.join(uploadRoot, "issue-reports");
 const blobToken = normalizeEnvToken(process.env.BLOB_READ_WRITE_TOKEN);
-const isVercelRuntime = process.env.VERCEL === "1";
 
 export class BlobUploadFailure extends Error {
   constructor(
@@ -206,7 +207,7 @@ export async function saveQuestionSupportAsset(input: {
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
   const fileName = `${input.kind}-${randomUUID()}${extension}`;
   
-  const targetDir = path.join(process.cwd(), "public", "assets", "question-support");
+  const targetDir = path.join(isVercelRuntime ? os.tmpdir() : process.cwd(), "public", "assets", "question-support");
   await mkdir(targetDir, { recursive: true });
   const target = path.join(targetDir, fileName);
 

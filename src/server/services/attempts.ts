@@ -82,15 +82,25 @@ function buildFeedbackAnswers(feedback: AttemptFeedbackInput) {
   ];
 }
 
-export function getAttemptDeadline(attempt: { startedAt: Date; exam: { timeLimitMinutes: number | null } }) {
-  if (!attempt.exam.timeLimitMinutes) {
+export function getAttemptDeadline(attempt: { startedAt: Date; exam: { timeLimitMinutes: number | null; endAt?: Date } }) {
+  const candidates: number[] = [];
+
+  if (attempt.exam.timeLimitMinutes) {
+    candidates.push(attempt.startedAt.getTime() + attempt.exam.timeLimitMinutes * 60 * 1000);
+  }
+
+  if (attempt.exam.endAt) {
+    candidates.push(new Date(attempt.exam.endAt).getTime());
+  }
+
+  if (candidates.length === 0) {
     return null;
   }
 
-  return new Date(attempt.startedAt.getTime() + attempt.exam.timeLimitMinutes * 60 * 1000);
+  return new Date(Math.min(...candidates));
 }
 
-export function isAttemptTimeExpired(attempt: { startedAt: Date; exam: { timeLimitMinutes: number | null } }) {
+export function isAttemptTimeExpired(attempt: { startedAt: Date; exam: { timeLimitMinutes: number | null; endAt?: Date } }) {
   const deadline = getAttemptDeadline(attempt);
   if (!deadline) {
     return false;
@@ -99,7 +109,56 @@ export function isAttemptTimeExpired(attempt: { startedAt: Date; exam: { timeLim
   return deadline.getTime() <= Date.now();
 }
 
-export async function finalizeAttempt(attemptId: string, feedback: AttemptFeedbackInput) {
+export async function autoCloseExpiredAttempts(examId?: string) {
+  const now = new Date();
+
+  const activeAttempts = await prisma.studentAttempt.findMany({
+    where: {
+      status: { in: ["STARTED", "IN_PROGRESS"] },
+      ...(examId ? { examId } : {}),
+      exam: {
+        OR: [
+          { timeLimitMinutes: { not: null } },
+          { endAt: { lte: now } }
+        ]
+      }
+    },
+    include: {
+      exam: true
+    }
+  });
+
+  const expired = activeAttempts.filter((attempt) => isAttemptTimeExpired(attempt));
+
+  let closedCount = 0;
+  for (const attempt of expired) {
+    try {
+      const maxLimitSeconds = attempt.exam.timeLimitMinutes ? attempt.exam.timeLimitMinutes * 60 : null;
+      let effectiveDuration: number;
+
+      if (maxLimitSeconds != null) {
+        effectiveDuration = maxLimitSeconds;
+      } else if (attempt.exam.endAt) {
+        effectiveDuration = Math.max(0, Math.floor((attempt.exam.endAt.getTime() - attempt.startedAt.getTime()) / 1000));
+      } else {
+        effectiveDuration = Math.max(0, Math.floor((now.getTime() - attempt.startedAt.getTime()) / 1000));
+      }
+
+      await finalizeAttempt(attempt.id, timeoutFeedbackDefaults, effectiveDuration);
+      closedCount += 1;
+    } catch (error) {
+      console.error(`Falha ao encerrar automaticamente tentativa expirada ${attempt.id}:`, error);
+    }
+  }
+
+  return closedCount;
+}
+
+export async function finalizeAttempt(
+  attemptId: string,
+  feedback: AttemptFeedbackInput,
+  explicitDurationSeconds?: number
+) {
   const attempt = await prisma.studentAttempt.findUnique({
     where: { id: attemptId },
     include: {
@@ -147,12 +206,27 @@ export async function finalizeAttempt(attemptId: string, feedback: AttemptFeedba
     }
   });
 
+  const nowMs = Date.now();
+  const rawElapsed = Math.max(0, Math.floor((nowMs - attempt.startedAt.getTime()) / 1000));
+  const maxLimitSeconds = attempt.exam.timeLimitMinutes ? attempt.exam.timeLimitMinutes * 60 : null;
+
+  let finalDurationSeconds: number;
+  if (explicitDurationSeconds !== undefined) {
+    finalDurationSeconds = maxLimitSeconds != null ? Math.min(explicitDurationSeconds, maxLimitSeconds) : explicitDurationSeconds;
+  } else if (maxLimitSeconds != null) {
+    finalDurationSeconds = Math.min(rawElapsed, maxLimitSeconds);
+  } else {
+    finalDurationSeconds = rawElapsed;
+  }
+
+  const submittedAt = new Date(attempt.startedAt.getTime() + finalDurationSeconds * 1000);
+
   await prisma.studentAttempt.update({
     where: { id: attemptId },
     data: {
       status: "SUBMITTED",
-      submittedAt: new Date(),
-      durationSeconds: Math.max(0, Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000))
+      submittedAt,
+      durationSeconds: finalDurationSeconds
     }
   });
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type BackupItem = {
   counts: Record<string, number>;
@@ -34,9 +35,9 @@ export function SystemMaintenancePanel({ backups }: { backups: BackupItem[] }) {
         method: "POST"
       });
 
-      const payload = (await response.json()) as { error?: string; relativePath?: string };
+      const payload = (await response.json()) as { error?: unknown; relativePath?: string };
       if (!response.ok) {
-        setError(payload.error || "Não foi possível gerar o backup manual.");
+        setError(extractApiErrorMessage(payload.error, "Não foi possível gerar o backup manual."));
         return;
       }
 
@@ -61,12 +62,12 @@ export function SystemMaintenancePanel({ backups }: { backups: BackupItem[] }) {
 
       const payload = (await response.json()) as {
         backup?: { relativePath?: string };
-        error?: string;
+        error?: unknown;
         message?: string;
       };
 
       if (!response.ok) {
-        setError(payload.error || "Não foi possível resetar a base.");
+        setError(extractApiErrorMessage(payload.error, "Não foi possível resetar a base."));
         return;
       }
 

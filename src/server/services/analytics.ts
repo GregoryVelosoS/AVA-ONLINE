@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db/prisma";
 import { getQuestionStudyTopics } from "@/lib/question-feedback";
 import { parseSelections } from "@/lib/feedback-questionnaire";
+import { autoCloseExpiredAttempts } from "@/server/services/attempts";
 
 function asNumber(value: unknown) {
   if (value == null) {
@@ -28,6 +29,14 @@ function percentage(part: number, total: number) {
 
 function round(value: number, decimals = 1) {
   return Number(value.toFixed(decimals));
+}
+
+function getEffectiveDurationMinutes(durationSeconds: number | null, timeLimitMinutes: number | null) {
+  const rawMinutes = round((durationSeconds || 0) / 60, 1);
+  if (timeLimitMinutes != null) {
+    return Math.min(rawMinutes, timeLimitMinutes);
+  }
+  return rawMinutes;
 }
 
 function computeCorrelation(points: Array<{ x: number; y: number }>) {
@@ -163,6 +172,8 @@ export const getExamAnalytics = unstable_cache(
       }
     };
   }
+
+  await autoCloseExpiredAttempts(selectedExamId);
 
   const exam = await prisma.exam.findUnique({
     where: { id: selectedExamId },
@@ -304,7 +315,7 @@ export const getExamAnalytics = unstable_cache(
       status: attempt.status,
       score: round(score, 2),
       scorePercent: round(scorePercent, 1),
-      durationMinutes: round((attempt.durationSeconds || 0) / 60, 1),
+      durationMinutes: getEffectiveDurationMinutes(attempt.durationSeconds, exam.timeLimitMinutes),
       answeredCount,
       correctCount,
       incorrectCount,
@@ -376,7 +387,7 @@ export const getExamAnalytics = unstable_cache(
       status: attempt.status,
       score: round(score, 2),
       scorePercent: round(scorePercent, 1),
-      durationMinutes: round((attempt.durationSeconds || 0) / 60, 1),
+      durationMinutes: getEffectiveDurationMinutes(attempt.durationSeconds, exam.timeLimitMinutes),
       correctCount,
       incorrectCount,
       accuracy: round(percentage(correctCount, correctCount + incorrectCount), 1),
@@ -730,7 +741,7 @@ export const getExamAnalytics = unstable_cache(
           status: attempt.status,
           score: round(score, 2),
           scorePercent: round(scorePercent, 1),
-          durationMinutes: round((attempt.durationSeconds || 0) / 60, 1),
+          durationMinutes: getEffectiveDurationMinutes(attempt.durationSeconds, exam.timeLimitMinutes),
           correctCount,
           incorrectCount,
           accuracy: round(percentage(correctCount, correctCount + incorrectCount), 1),

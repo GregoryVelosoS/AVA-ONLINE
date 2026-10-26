@@ -1,8 +1,10 @@
 import { mkdir, readdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { prisma } from "@/server/db/prisma";
+import os from "os";
+import { put, list } from "@vercel/blob";
 
-const backupsRoot = path.join(process.cwd(), "backups", "db");
+const backupsRoot = path.join(process.env.VERCEL === "1" ? os.tmpdir() : process.cwd(), "backups", "db");
 
 type BackupMetadata = {
   counts: Record<string, number>;
@@ -137,18 +139,69 @@ export async function createSystemBackup({
     metadata
   };
 
-  await writeFile(filePath, JSON.stringify(payload, null, 2), "utf-8");
+  const payloadString = JSON.stringify(payload, null, 2);
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN?.replace(/^["'](.+)["']$/, "$1");
+
+  if (blobToken) {
+    const year = String(createdAtDate.getUTCFullYear());
+    const month = String(createdAtDate.getUTCMonth() + 1).padStart(2, "0");
+    const blobPath = `backups/db/${year}/${month}/${fileName}`;
+
+    const blob = await put(blobPath, Buffer.from(payloadString), {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "application/json",
+      token: blobToken
+    });
+
+    return {
+      counts: metadata.counts,
+      createdAt,
+      fileName,
+      filePath: blob.url,
+      relativePath: blobPath
+    };
+  }
+
+  await writeFile(filePath, payloadString, "utf-8");
 
   return {
     counts: metadata.counts,
     createdAt,
     fileName,
     filePath,
-    relativePath: path.relative(process.cwd(), filePath).replace(/\\/g, "/")
+    relativePath: path.relative(process.env.VERCEL === "1" ? os.tmpdir() : process.cwd(), filePath).replace(/\\/g, "/")
   };
 }
 
 export async function listRecentBackups(limit = 10) {
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN?.replace(/^["'](.+)["']$/, "$1");
+
+  if (blobToken) {
+    try {
+      const { blobs } = await list({ prefix: "backups/db/", token: blobToken });
+      const sorted = blobs.sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime()).slice(0, limit);
+
+      return Promise.all(
+        sorted.map(async (blob) => {
+          const res = await fetch(blob.url);
+          const raw = await res.text();
+          const payload = JSON.parse(raw) as BackupEnvelope;
+
+          return {
+            counts: payload.metadata.counts,
+            createdAt: payload.metadata.createdAt,
+            reason: payload.metadata.reason,
+            relativePath: blob.pathname
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Failed to list Vercel Blob backups", error);
+      return [];
+    }
+  }
+
   try {
     const yearDirs = await readdir(backupsRoot, { withFileTypes: true });
     const files: string[] = [];
@@ -178,7 +231,7 @@ export async function listRecentBackups(limit = 10) {
           counts: payload.metadata.counts,
           createdAt: payload.metadata.createdAt,
           reason: payload.metadata.reason,
-          relativePath: path.relative(process.cwd(), filePath).replace(/\\/g, "/")
+          relativePath: path.relative(process.env.VERCEL === "1" ? os.tmpdir() : process.cwd(), filePath).replace(/\\/g, "/")
         };
       })
     );

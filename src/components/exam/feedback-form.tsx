@@ -1,12 +1,25 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   buildFeedbackQuestions,
   feedbackScaleOptions,
   type FeedbackQuestionKey
 } from "@/lib/feedback-questionnaire";
+
+function formatSeconds(value: number) {
+  const safeValue = Math.max(0, value);
+  const hours = Math.floor(safeValue / 3600);
+  const minutes = Math.floor((safeValue % 3600) / 60);
+  const seconds = safeValue % 60;
+
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+function getFeedbackStorageKey(attemptId: string) {
+  return `ava_feedback_draft_${attemptId}`;
+}
 
 type FormState = {
   generalDifficulty: number | null;
@@ -56,27 +69,115 @@ const keyMap: Record<FeedbackQuestionKey, keyof FormState> = {
 export function FeedbackForm({
   attemptId,
   contentOptions,
-  examTitle
+  examTitle,
+  startedAt,
+  timeLimitMinutes
 }: {
   attemptId: string;
   contentOptions: string[];
   examTitle: string;
+  startedAt?: string;
+  timeLimitMinutes?: number | null;
 }) {
   const router = useRouter();
   const questions = useMemo(() => buildFeedbackQuestions(contentOptions), [contentOptions]);
   const [form, setForm] = useState<FormState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const timeoutTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const startedAtMs = useMemo(() => (startedAt ? new Date(startedAt).getTime() : null), [startedAt]);
+  const rawElapsedSeconds = startedAtMs ? Math.max(0, Math.floor((now - startedAtMs) / 1000)) : 0;
+  const totalSeconds = timeLimitMinutes ? timeLimitMinutes * 60 : null;
+  const remainingSeconds = totalSeconds == null ? null : Math.max(0, totalSeconds - rawElapsedSeconds);
+
+  // Restore feedback draft from LocalStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(getFeedbackStorageKey(attemptId));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          setForm((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [attemptId]);
+
+  // Handle timeout on feedback page
+  useEffect(() => {
+    async function handleTimeout() {
+      if (timeoutTriggeredRef.current || remainingSeconds == null || remainingSeconds > 0) {
+        return;
+      }
+
+      timeoutTriggeredRef.current = true;
+      setLoading(true);
+
+      const response = await fetch("/api/public/attempts/timeout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId })
+      });
+
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem(`ava_attempt_draft_${attemptId}`);
+          localStorage.removeItem(getFeedbackStorageKey(attemptId));
+        } catch {
+          // ignore
+        }
+      }
+
+      if (response.ok) {
+        router.push(`/submitted/${attemptId}?timeout=1`);
+        return;
+      }
+
+      const payload = (await response.json()) as { error?: string };
+      setError(payload.error || "Tempo esgotado.");
+      setLoading(false);
+    }
+
+    void handleTimeout();
+  }, [attemptId, remainingSeconds, router]);
+
+  function saveFeedbackDraft(nextForm: FormState) {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(getFeedbackStorageKey(attemptId), JSON.stringify(nextForm));
+    } catch {
+      // ignore
+    }
+  }
 
   function setField<K extends keyof FormState>(field: K, value: FormState[K]) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      saveFeedbackDraft(next);
+      return next;
+    });
   }
 
   function toggleMultiSelect(field: "difficultContents" | "helpfulClassFormats" | "toolDifficulties", option: string) {
     setForm((current) => {
       const selected = current[field];
       const next = selected.includes(option) ? selected.filter((item) => item !== option) : [...selected, option];
-      return { ...current, [field]: next };
+      const updated = { ...current, [field]: next };
+      saveFeedbackDraft(updated);
+      return updated;
     });
   }
 
@@ -137,18 +238,44 @@ export function FeedbackForm({
       return;
     }
 
+    // Clean up local storage drafts on success!
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(`ava_attempt_draft_${attemptId}`);
+        localStorage.removeItem(getFeedbackStorageKey(attemptId));
+      } catch {
+        // ignore
+      }
+    }
+
     router.push(`/submitted/${attemptId}`);
   }
 
   return (
     <form className="space-y-5" onSubmit={submit}>
       <section className="surface-panel space-y-4 p-5 md:p-6">
-        <div>
-          <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Fechamento pedagógico</p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{examTitle}</h2>
-          <p className="mt-2 text-lg text-slate-600">
-            Suas respostas ajudam a analisar a prova, entender a percepção da turma e orientar retomadas de conteúdo.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <p className="text-lg font-black uppercase tracking-[0.18em] text-red-700">Fechamento pedagógico</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{examTitle}</h2>
+            <p className="mt-2 text-lg text-slate-600">
+              Suas respostas ajudam a analisar a prova, entender a percepção da turma e orientar retomadas de conteúdo.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {remainingSeconds != null && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-red-600">Tempo restante</p>
+                <p className={`text-lg font-black ${remainingSeconds <= 60 ? "text-red-600 animate-pulse" : "text-slate-900"}`}>
+                  {formatSeconds(remainingSeconds)}
+                </p>
+              </div>
+            )}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
+              💾 Rascunho salvo no dispositivo
+            </div>
+          </div>
         </div>
       </section>
 

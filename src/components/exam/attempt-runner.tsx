@@ -62,6 +62,57 @@ function formatSeconds(value: number) {
   return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
 }
 
+function getDraftStorageKey(attemptId: string) {
+  return `ava_attempt_draft_${attemptId}`;
+}
+
+type StoredAttemptDraft = {
+  answers: Record<string, AnswerDraft>;
+  current: number;
+  pendingSyncQuestionIds: string[];
+  updatedAt: string;
+};
+
+export function readAttemptDraft(attemptId: string): StoredAttemptDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(getDraftStorageKey(attemptId));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function writeAttemptDraft(
+  attemptId: string,
+  answers: Record<string, AnswerDraft>,
+  current: number,
+  pendingSyncQuestionIds: string[]
+) {
+  if (typeof window === "undefined") return;
+  try {
+    const draft: StoredAttemptDraft = {
+      answers,
+      current,
+      pendingSyncQuestionIds,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(getDraftStorageKey(attemptId), JSON.stringify(draft));
+  } catch (err) {
+    console.warn("Não foi possível salvar rascunho no localStorage:", err);
+  }
+}
+
+export function clearAttemptDraft(attemptId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(getDraftStorageKey(attemptId));
+  } catch {
+    // ignore
+  }
+}
+
 export function AttemptRunner({
   attemptId,
   questions,
@@ -79,13 +130,15 @@ export function AttemptRunner({
   const [current, setCurrent] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [pendingSyncIds, setPendingSyncIds] = useState<string[]>([]);
   const [timedOut, setTimedOut] = useState(false);
   const timeoutTriggeredRef = useRef(false);
   const [now, setNow] = useState(() => Date.now());
-  const [answers, setAnswers] = useState<Record<string, AnswerDraft>>(
+  const [answers, setAnswers] = useState<Record<string, AnswerDraft>>(() =>
     Object.fromEntries(initialAnswers.map((answer) => [answer.questionId, answer]))
   );
   const [navExpanded, setNavExpanded] = useState(false);
+  const textDebounceTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -96,9 +149,117 @@ export function AttemptRunner({
   }, []);
 
   const startedAtMs = useMemo(() => new Date(startedAt).getTime(), [startedAt]);
-  const elapsedSeconds = Math.max(0, Math.floor((now - startedAtMs) / 1000));
+  const rawElapsedSeconds = Math.max(0, Math.floor((now - startedAtMs) / 1000));
   const totalSeconds = timeLimitMinutes ? timeLimitMinutes * 60 : null;
-  const remainingSeconds = totalSeconds == null ? null : Math.max(0, totalSeconds - elapsedSeconds);
+  const elapsedSeconds = totalSeconds != null ? Math.min(rawElapsedSeconds, totalSeconds) : rawElapsedSeconds;
+  const remainingSeconds = totalSeconds == null ? null : Math.max(0, totalSeconds - rawElapsedSeconds);
+
+  // Restore from LocalStorage on mount
+  useEffect(() => {
+    const draft = readAttemptDraft(attemptId);
+    if (!draft || !draft.answers) return;
+
+    let restoredCount = 0;
+    const merged: Record<string, AnswerDraft> = {
+      ...Object.fromEntries(initialAnswers.map((a) => [a.questionId, a]))
+    };
+
+    const pendingToSync: string[] = [...(draft.pendingSyncQuestionIds || [])];
+
+    for (const [qid, localDraft] of Object.entries(draft.answers)) {
+      if (localDraft && (localDraft.selectedOptionId || localDraft.shortTextAnswer || localDraft.longTextAnswer || localDraft.fileName)) {
+        merged[qid] = { ...(merged[qid] ?? {}), ...localDraft };
+        restoredCount++;
+        if (!pendingToSync.includes(qid)) {
+          pendingToSync.push(qid);
+        }
+      }
+    }
+
+    if (restoredCount > 0) {
+      setAnswers(merged);
+      if (typeof draft.current === "number" && draft.current >= 0 && draft.current < questions.length) {
+        setCurrent(draft.current);
+      }
+      setPendingSyncIds(pendingToSync);
+      setSaveMessage("💾 Respostas recuperadas do rascunho salvo no seu navegador.");
+      setTimeout(() => {
+        setSaveMessage(null);
+      }, 4000);
+
+      // Background sync all restored answers with server
+      void (async () => {
+        for (const qid of pendingToSync) {
+          const qAnswer = merged[qid];
+          if (qAnswer) {
+            await sendAnswerToServer(qid, qAnswer);
+          }
+        }
+      })();
+    }
+  }, [attemptId]);
+
+  // Online recovery listener
+  useEffect(() => {
+    async function handleOnline() {
+      setSaveMessage("Conexão restabelecida. Sincronizando respostas salvas...");
+      for (const qid of pendingSyncIds) {
+        if (answers[qid]) {
+          await sendAnswerToServer(qid, answers[qid]);
+        }
+      }
+      setSaveMessage("💾 Todas as respostas foram sincronizadas com o servidor.");
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [pendingSyncIds, answers]);
+
+  async function sendAnswerToServer(questionId: string, draft: AnswerDraft): Promise<boolean> {
+    if (timedOut || questions.find((item) => item.id === questionId)?.type === "FILE_UPLOAD") {
+      return true;
+    }
+
+    try {
+      const response = await fetch("/api/public/attempts/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attemptId,
+          questionId,
+          selectedOptionId: draft.selectedOptionId,
+          shortTextAnswer: draft.shortTextAnswer,
+          longTextAnswer: draft.longTextAnswer,
+          confidenceLevel: draft.confidenceLevel ?? 2
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setTimedOut(true);
+          router.push(`/submitted/${attemptId}?timeout=1`);
+          return false;
+        }
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error || "Falha ao salvar");
+      }
+
+      setPendingSyncIds((prev) => {
+        const next = prev.filter((id) => id !== questionId);
+        writeAttemptDraft(attemptId, answers, current, next);
+        return next;
+      });
+      return true;
+    } catch {
+      setPendingSyncIds((prev) => {
+        const next = prev.includes(questionId) ? prev : [...prev, questionId];
+        writeAttemptDraft(attemptId, answers, current, next);
+        return next;
+      });
+      return false;
+    }
+  }
 
   useEffect(() => {
     async function handleTimeout() {
@@ -108,13 +269,27 @@ export function AttemptRunner({
 
       timeoutTriggeredRef.current = true;
       setTimedOut(true);
-      setSaveMessage("Tempo encerrado. Finalizando a tentativa automaticamente...");
+      setSaveMessage("Tempo esgotado. Finalizando a tentativa automaticamente...");
+
+      // Best effort flush of draft answers
+      try {
+        const draft = readAttemptDraft(attemptId);
+        if (draft?.answers) {
+          await Promise.allSettled(
+            Object.entries(draft.answers).map(([qid, qAns]) => sendAnswerToServer(qid, qAns))
+          );
+        }
+      } catch {
+        // ignore
+      }
 
       const response = await fetch("/api/public/attempts/timeout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ attemptId })
       });
+
+      clearAttemptDraft(attemptId);
 
       if (response.ok) {
         router.push(`/submitted/${attemptId}?timeout=1`);
@@ -138,65 +313,101 @@ export function AttemptRunner({
     }
 
     setSaving(true);
-    setSaveMessage(null);
+    setSaveMessage("Salvando resposta...");
 
-    const response = await fetch("/api/public/attempts/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        attemptId,
-        questionId,
-        selectedOptionId: draft.selectedOptionId,
-        shortTextAnswer: draft.shortTextAnswer,
-        longTextAnswer: draft.longTextAnswer,
-        confidenceLevel: draft.confidenceLevel ?? 2
-      })
-    });
-
-    if (!response.ok) {
-      const payload = (await response.json()) as { error?: string };
-      setSaveMessage(payload.error || "Falha ao salvar resposta.");
-      setSaving(false);
-      return;
-    }
-
-    setSaveMessage("Resposta salva.");
+    const success = await sendAnswerToServer(questionId, draft);
     setSaving(false);
+
+    if (success) {
+      setSaveMessage("💾 Salvo localmente e no servidor.");
+      setTimeout(() => {
+        setSaveMessage((msg) => (msg?.startsWith("💾 Salvo") ? null : msg));
+      }, 3000);
+    } else {
+      setSaveMessage("💾 Salvo no seu dispositivo (aguardando conexão com servidor...)");
+    }
   }
 
-  function patchAnswer(questionId: string, patch: Partial<AnswerDraft>) {
+  function patchAnswer(questionId: string, patch: Partial<AnswerDraft>, immediateServerSync = false) {
     const nextAnswer = { ...(answers[questionId] ?? {}), ...patch };
-    setAnswers((currentAnswers) => ({
-      ...currentAnswers,
+    const nextAnswers = {
+      ...answers,
       [questionId]: nextAnswer
-    }));
+    };
+
+    setAnswers(nextAnswers);
+
+    // Save synchronously to LocalStorage immediately on every input/interaction!
+    const nextPending = pendingSyncIds.includes(questionId) ? pendingSyncIds : [...pendingSyncIds, questionId];
+    setPendingSyncIds(nextPending);
+    writeAttemptDraft(attemptId, nextAnswers, current, nextPending);
+
+    if (immediateServerSync) {
+      void persistAnswer(questionId, nextAnswer);
+    }
+
     return nextAnswer;
   }
 
-  async function selectOption(optionId: string) {
-    const nextAnswer = patchAnswer(question.id, {
-      selectedOptionId: optionId,
-      confidenceLevel: answer.confidenceLevel ?? 2
-    });
-    await persistAnswer(question.id, nextAnswer);
+  function handleTextChange(questionId: string, patch: Partial<AnswerDraft>) {
+    const nextAnswer = patchAnswer(questionId, patch, false);
+
+    if (textDebounceTimerRef.current[questionId]) {
+      clearTimeout(textDebounceTimerRef.current[questionId]);
+    }
+
+    textDebounceTimerRef.current[questionId] = setTimeout(() => {
+      void persistAnswer(questionId, nextAnswer);
+    }, 1200);
   }
 
-  async function selectConfidence(confidenceLevel: number) {
-    const nextAnswer = patchAnswer(question.id, { confidenceLevel });
-    await persistAnswer(question.id, nextAnswer);
-  }
-
-  async function handleTextBlur() {
+  function handleTextBlur() {
     const nextAnswer = answers[question.id] ?? {};
-    await persistAnswer(question.id, {
+    if (textDebounceTimerRef.current[question.id]) {
+      clearTimeout(textDebounceTimerRef.current[question.id]);
+    }
+    void persistAnswer(question.id, {
       ...nextAnswer,
       confidenceLevel: nextAnswer.confidenceLevel ?? 2
     });
   }
 
+  function changeQuestion(nextIndex: number) {
+    setCurrent(nextIndex);
+    writeAttemptDraft(attemptId, answers, nextIndex, pendingSyncIds);
+  }
+
+  async function selectOption(optionId: string) {
+    const nextAnswer = patchAnswer(
+      question.id,
+      {
+        selectedOptionId: optionId,
+        confidenceLevel: answer.confidenceLevel ?? 2
+      },
+      true
+    );
+  }
+
+  async function selectConfidence(confidenceLevel: number) {
+    const nextAnswer = patchAnswer(question.id, { confidenceLevel }, true);
+  }
+
   function handleFileChange(file: File | undefined) {
-    patchAnswer(question.id, { fileName: file?.name });
+    patchAnswer(question.id, { fileName: file?.name }, false);
     setSaveMessage("Arquivo selecionado. O envio real da resposta por arquivo continua preparado como próxima etapa.");
+  }
+
+  async function handleFinishExam() {
+    setSaving(true);
+    setSaveMessage("Sincronizando respostas antes de avançar para a finalização...");
+
+    for (const [qid, qAns] of Object.entries(answers)) {
+      if (isAnswered(qAns, questions.find((q) => q.id === qid)?.type ?? "MULTIPLE_CHOICE")) {
+        await sendAnswerToServer(qid, qAns);
+      }
+    }
+
+    router.push(`/attempt/${attemptId}/feedback`);
   }
 
   return (
@@ -230,9 +441,19 @@ export function AttemptRunner({
                 {remainingSeconds == null ? "Sem limite" : formatSeconds(remainingSeconds)}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase tracking-[0.14em] text-white/60">Status</p>
-              <p className="mt-1 text-lg font-semibold text-white/90">{saving ? "Salvando..." : saveMessage || "Prova em andamento"}</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 min-w-[200px]">
+              <p className="text-xs uppercase tracking-[0.14em] text-white/60">Salvamento</p>
+              <div className="mt-1 flex items-center gap-2">
+                {saving ? (
+                  <span className="text-xs font-semibold text-amber-300 animate-pulse">⏳ Salvando no servidor...</span>
+                ) : saveMessage ? (
+                  <span className="text-xs font-semibold text-emerald-300">{saveMessage}</span>
+                ) : pendingSyncIds.length > 0 ? (
+                  <span className="text-xs font-semibold text-amber-300">💾 Salvo local ({pendingSyncIds.length} pendente(s))</span>
+                ) : (
+                  <span className="text-xs font-semibold text-emerald-300">💾 Salvo no dispositivo e servidor</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -263,7 +484,7 @@ export function AttemptRunner({
                           ? "border-emerald-300 bg-emerald-100 text-emerald-900"
                           : "border-white/10 bg-white/5 text-white/80"
                     ].join(" ")}
-                    onClick={() => setCurrent(index)}
+                    onClick={() => changeQuestion(index)}
                     type="button"
                   >
                     {index + 1} {answered ? "·✅" : "·❌"}
@@ -358,7 +579,7 @@ export function AttemptRunner({
               placeholder="Digite uma resposta curta"
               value={answer.shortTextAnswer ?? ""}
               onBlur={handleTextBlur}
-              onChange={(event) => patchAnswer(question.id, { shortTextAnswer: event.target.value })}
+              onChange={(event) => handleTextChange(question.id, { shortTextAnswer: event.target.value })}
             />
           </section>
         ) : question.type === "LONG_TEXT" ? (
@@ -369,7 +590,7 @@ export function AttemptRunner({
               placeholder="Digite sua resposta"
               value={answer.longTextAnswer ?? ""}
               onBlur={handleTextBlur}
-              onChange={(event) => patchAnswer(question.id, { longTextAnswer: event.target.value })}
+              onChange={(event) => handleTextChange(question.id, { longTextAnswer: event.target.value })}
             />
           </section>
         ) : (
@@ -408,16 +629,16 @@ export function AttemptRunner({
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <button className="btn-secondary w-full sm:w-auto" disabled={current === 0} onClick={() => setCurrent((value) => value - 1)} type="button">
+        <button className="btn-secondary w-full sm:w-auto" disabled={current === 0} onClick={() => changeQuestion(current - 1)} type="button">
           Anterior
         </button>
         {current < questions.length - 1 ? (
-          <button className="btn-primary w-full sm:w-auto" onClick={() => setCurrent((value) => value + 1)} type="button">
+          <button className="btn-primary w-full sm:w-auto" onClick={() => changeQuestion(current + 1)} type="button">
             Próxima
           </button>
         ) : (
-          <button className="btn-primary w-full sm:w-auto" onClick={() => router.push(`/attempt/${attemptId}/feedback`)} type="button">
-            Finalizar prova
+          <button className="btn-primary w-full sm:w-auto" disabled={saving} onClick={handleFinishExam} type="button">
+            {saving ? "Salvando respostas..." : "Finalizar prova"}
           </button>
         )}
       </div>

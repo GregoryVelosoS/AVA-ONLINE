@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { normalizePublicCode } from "@/lib/exam-status";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type Discipline = {
   id: string;
@@ -70,10 +71,10 @@ export function ExamCreateForm({
       })
     });
 
-    const payload = (await response.json()) as { error?: string; id?: string };
+    const payload = (await response.json()) as { error?: unknown; id?: string };
 
     if (!response.ok) {
-      setError(payload.error || "Não foi possível criar a prova.");
+      setError(extractApiErrorMessage(payload.error, "Não foi possível criar a prova."));
       return;
     }
 

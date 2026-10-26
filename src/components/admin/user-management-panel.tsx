@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBanner } from "@/components/ui/status-banner";
+import { extractApiErrorMessage } from "@/lib/api-errors";
 
 type UserItem = {
   id: string;
@@ -101,9 +102,9 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
       })
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as { error?: unknown };
     if (!response.ok) {
-      setError(payload.error || "Não foi possível criar o usuário.");
+      setError(extractApiErrorMessage(payload.error, "Não foi possível criar o usuário."));
       return;
     }
 
@@ -139,9 +140,9 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
       })
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as { error?: unknown };
     if (!response.ok) {
-      setError(payload.error || "Não foi possível atualizar o usuário.");
+      setError(extractApiErrorMessage(payload.error, "Não foi possível atualizar o usuário."));
       return;
     }
 
@@ -163,9 +164,9 @@ export function UserManagementPanel({ users, currentUserId }: Props) {
       method: "DELETE"
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as { error?: unknown };
     if (!response.ok) {
-      setError(payload.error || "Não foi possível excluir o usuário.");
+      setError(extractApiErrorMessage(payload.error, "Não foi possível excluir o usuário."));
       return;
     }
 

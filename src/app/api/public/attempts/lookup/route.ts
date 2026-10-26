@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db/prisma";
 import { normalizeAttemptLookupCode } from "@/lib/attempt-lookup";
 import { attemptLookupSchema } from "@/server/validators/schemas";
+import { finalizeAttempt, isAttemptTimeExpired, timeoutFeedbackDefaults } from "@/server/services/attempts";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -14,14 +15,18 @@ export async function POST(request: NextRequest) {
   const resultLookupCode = normalizeAttemptLookupCode(parsed.data.resultLookupCode);
   const attempt = await prisma.studentAttempt.findUnique({
     where: { resultLookupCode },
-    select: {
-      id: true,
-      status: true
+    include: {
+      exam: true
     }
   });
 
   if (!attempt) {
     return NextResponse.json({ error: "Tentativa não encontrada." }, { status: 404 });
+  }
+
+  if (attempt.status !== "SUBMITTED" && isAttemptTimeExpired(attempt)) {
+    await finalizeAttempt(attempt.id, timeoutFeedbackDefaults);
+    attempt.status = "SUBMITTED";
   }
 
   if (attempt.status !== "SUBMITTED") {

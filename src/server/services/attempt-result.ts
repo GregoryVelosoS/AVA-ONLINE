@@ -22,13 +22,27 @@ function round(value: number, decimals = 1) {
   return Number(value.toFixed(decimals));
 }
 
-function computeDurationSeconds(startedAt: Date, submittedAt: Date | null, storedDurationSeconds: number | null) {
+function computeDurationSeconds(
+  startedAt: Date,
+  submittedAt: Date | null,
+  storedDurationSeconds: number | null,
+  timeLimitMinutes?: number | null
+) {
+  const maxLimitSeconds = timeLimitMinutes ? timeLimitMinutes * 60 : null;
+  let seconds: number;
+
   if (typeof storedDurationSeconds === "number" && storedDurationSeconds >= 0) {
-    return storedDurationSeconds;
+    seconds = storedDurationSeconds;
+  } else {
+    const end = submittedAt ?? new Date();
+    seconds = Math.max(0, Math.round((end.getTime() - startedAt.getTime()) / 1000));
   }
 
-  const end = submittedAt ?? new Date();
-  return Math.max(0, Math.round((end.getTime() - startedAt.getTime()) / 1000));
+  if (maxLimitSeconds != null) {
+    return Math.min(seconds, maxLimitSeconds);
+  }
+
+  return seconds;
 }
 
 export type AttemptResultQuestion = {
@@ -281,7 +295,12 @@ export const getAttemptResultSummary = unstable_cache(
     status: attempt.status,
     startedAt: attempt.startedAt,
     submittedAt: attempt.submittedAt,
-    durationSeconds: computeDurationSeconds(attempt.startedAt, attempt.submittedAt, attempt.durationSeconds),
+    durationSeconds: computeDurationSeconds(
+      attempt.startedAt,
+      attempt.submittedAt,
+      attempt.durationSeconds,
+      attempt.exam.timeLimitMinutes
+    ),
     exam: {
       id: attempt.exam.id,
       title: attempt.exam.title,
