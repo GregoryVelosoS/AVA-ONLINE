@@ -135,12 +135,17 @@ export function getQuestionSupportAssetUrl(value?: string | null) {
     return value;
   }
 
-  if (value.startsWith("/api/assets/question-support/")) {
+  if (value.startsWith("/assets/question-support/")) {
     return value;
   }
 
+  if (value.startsWith("/api/assets/question-support/")) {
+    const raw = value.replace("/api/assets/question-support/", "");
+    return `/assets/question-support/${raw.replace(/^\/+/, "")}`;
+  }
+
   const clean = value.replace(/^\/+/, "");
-  return `/api/assets/question-support/${clean}`;
+  return `/assets/question-support/${clean}`;
 }
 
 export async function ensureUploadDirectories() {
@@ -212,7 +217,9 @@ export async function saveQuestionSupportAsset(input: {
   const extension = sanitizeFileNamePart(getExtension(input.originalName));
   const fileName = `${input.kind}-${randomUUID()}${extension}`;
   
-  const targetDir = path.join(isVercelRuntime ? os.tmpdir() : process.cwd(), "public", "assets", "question-support");
+  const targetDir = isVercelRuntime
+    ? path.join(os.tmpdir(), "question-support")
+    : path.join(process.cwd(), "public", "assets", "question-support");
   await mkdir(targetDir, { recursive: true });
   const target = path.join(targetDir, fileName);
 
@@ -228,8 +235,23 @@ export async function readQuestionSupportAsset(fileName: string) {
     throw new Error("INVALID_ASSET_PATH");
   }
 
-  const target = path.join(questionSupportDir, safeName);
-  return readFile(target);
+  const candidatePaths = [
+    path.join(process.cwd(), "public", "assets", "question-support", safeName),
+    path.join(process.cwd(), "uploads", "question-support", safeName),
+    path.join(questionSupportDir, safeName),
+    path.join(os.tmpdir(), "question-support", safeName),
+    path.join(os.tmpdir(), "public", "assets", "question-support", safeName)
+  ];
+
+  for (const candidate of candidatePaths) {
+    try {
+      return await readFile(candidate);
+    } catch {
+      // continue
+    }
+  }
+
+  throw new Error("ASSET_NOT_FOUND");
 }
 
 export async function deleteManagedQuestionSupportAsset(fileName?: string | null) {

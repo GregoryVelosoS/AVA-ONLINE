@@ -1,4 +1,5 @@
 import type { QuestionListItem } from "@/components/admin/question-management-list";
+import { getQuestionSupportAssetUrl } from "@/lib/assets";
 
 const questionTypeLabels: Record<string, string> = {
   FILE_UPLOAD: "Arquivo",
@@ -68,7 +69,7 @@ export function exportQuestionsToPDF(questions: QuestionListItem[]) {
       visualSupportHtml = `
         <div class="visual-support">
           <p class="support-label">Imagem de Suporte:</p>
-          <img src="${q.supportImagePath}" alt="Suporte Visual" style="max-width: 100%; max-height: 300px; object-fit: contain; margin-top: 8px;" />
+          <img src="${getQuestionSupportAssetUrl(q.supportImagePath) || ""}" alt="Suporte Visual" style="max-width: 100%; max-height: 300px; object-fit: contain; margin-top: 8px;" />
         </div>
       `;
     }
