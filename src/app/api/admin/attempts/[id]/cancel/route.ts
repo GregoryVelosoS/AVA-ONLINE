@@ -1,30 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/server/auth/guards";
+import { requireReportsSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db/prisma";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function POST(_: NextRequest, context: RouteContext) {
-  await requireAdminSession();
+  try {
+    await requireReportsSession();
 
-  const { id } = await context.params;
+    const { id } = await context.params;
 
-  const attempt = await prisma.studentAttempt.findUnique({
-    where: { id }
-  });
+    const attempt = await prisma.studentAttempt.findUnique({
+      where: { id }
+    });
 
-  if (!attempt) {
-    return NextResponse.json({ error: "Tentativa não encontrada" }, { status: 404 });
-  }
-
-  const updated = await prisma.studentAttempt.update({
-    where: { id },
-    data: {
-      status: "CANCELED"
+    if (!attempt) {
+      return NextResponse.json({ error: "Tentativa não encontrada" }, { status: 404 });
     }
-  });
 
-  return NextResponse.json(updated);
+    const updated = await prisma.studentAttempt.update({
+      where: { id },
+      data: {
+        status: "CANCELED"
+      }
+    });
+
+    revalidateTag("analytics");
+    revalidatePath("/admin/reports");
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Erro ao desativar tentativa:", error);
+    const message = error instanceof Error ? error.message : "Erro interno ao desativar a tentativa.";
+    return NextResponse.json(
+      { error: message },
+      { status: error instanceof Error && error.message === "UNAUTHORIZED" ? 401 : 500 }
+    );
+  }
 }

@@ -66,8 +66,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
       if (res.ok) {
         router.refresh();
       } else {
-        alert("Falha ao desativar a tentativa.");
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Falha ao desativar a tentativa.");
       }
+    } catch {
+      alert("Erro de conexão ao desativar a tentativa.");
     } finally {
       setCancelingId(null);
     }
@@ -84,8 +87,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
       if (res.ok) {
         router.refresh();
       } else {
-        alert("Falha ao reativar a tentativa.");
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Falha ao reativar a tentativa.");
       }
+    } catch {
+      alert("Erro de conexão ao reativar a tentativa.");
     } finally {
       setCancelingId(null);
     }
@@ -102,8 +108,11 @@ export function ExamAnalyticsDashboard({ analytics }: { analytics: ExamAnalytics
       if (res.ok) {
         router.refresh();
       } else {
-        alert("Falha ao excluir a tentativa.");
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Falha ao excluir a tentativa.");
       }
+    } catch {
+      alert("Erro de conexão ao excluir a tentativa.");
     } finally {
       setCancelingId(null);
     }

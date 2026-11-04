@@ -6,32 +6,38 @@ import { systemResetSchema } from "@/server/validators/schemas";
 const confirmationPhrase = "RESETAR BANCO";
 
 export async function POST(request: NextRequest) {
-  const session = await requireAdminSession();
-  const body = await request.json();
-  const parsed = systemResetSchema.safeParse(body);
+  try {
+    const session = await requireAdminSession();
+    const body = await request.json();
+    const parsed = systemResetSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    if (parsed.data.confirmationText !== confirmationPhrase) {
+      return NextResponse.json(
+        {
+          error: `Digite exatamente "${confirmationPhrase}" para confirmar o reset.`
+        },
+        { status: 400 }
+      );
+    }
+
+    const backup = await createSystemBackup({
+      initiatedBy: session.sub,
+      reason: "pre-reset-admin"
+    });
+
+    await wipeDatabase();
+
+    return NextResponse.json({
+      backup,
+      message: "Base resetada com backup automático concluído."
+    });
+  } catch (error) {
+    console.error("Database reset error:", error);
+    const message = error instanceof Error ? error.message : "Erro ao resetar banco de dados.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  if (parsed.data.confirmationText !== confirmationPhrase) {
-    return NextResponse.json(
-      {
-        error: `Digite exatamente "${confirmationPhrase}" para confirmar o reset.`
-      },
-      { status: 400 }
-    );
-  }
-
-  const backup = await createSystemBackup({
-    initiatedBy: session.sub,
-    reason: "pre-reset-admin"
-  });
-
-  await wipeDatabase();
-
-  return NextResponse.json({
-    backup,
-    message: "Base resetada com backup automático concluído."
-  });
 }
